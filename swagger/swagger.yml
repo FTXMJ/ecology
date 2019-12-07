@@ -1,0 +1,280 @@
+swagger: "2.0"
+info:
+  title: beego Test API
+  description: beego has a very cool tools to autogenerate documents for your API
+  version: 1.0.0
+  termsOfService: http://beego.me/
+  contact:
+    email: astaxie@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+basePath: /v1
+paths:
+  /ecology/create_new_warehouse__新增生态仓库:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: user_id
+        description: 当前用户的id   ---- 放在 header
+        required: true
+        type: string
+      - in: query
+        name: coin_number
+        description: 铸(发)币的数量
+        required: true
+        type: string
+      - in: query
+        name: levelstr
+        description: 等级数据
+        required: true
+        type: string
+      - in: query
+        name: ecology_id
+        description: 生态仓库id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+  /ecology/operation_formula_list____算力表信息修改:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: force_id
+        description: 算力信息的id  如果是删除多条，　用　, 逗号隔开
+        required: true
+        type: string
+      - in: query
+        name: action
+        description: 具体的操作　　delete=删除　update=更新　insert=新增    更新必须传这条数据的全部数据回来，id 除外，和新增一样，删除只要ｉｄ就够
+        required: true
+        type: string
+      - in: query
+        name: levelstr
+        description: 等级名字
+        required: true
+        type: string
+      - in: query
+        name: low_hold
+        description: 低位
+        required: true
+        type: string
+      - in: query
+        name: high_hold
+        description: 高位
+        required: true
+        type: string
+      - in: query
+        name: return_multiple
+        description: 杠杆
+        required: true
+        type: string
+      - in: query
+        name: hold_return_rate
+        description: 本金自由算力
+        required: true
+        type: string
+      - in: query
+        name: recommend_return_rate
+        description: 直推算力
+        required: true
+        type: string
+      - in: query
+        name: team_return_rate
+        description: 动态算力
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+  /ecology/operation_super_formula_list___超级节点算力表信息修改:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: super_force_id
+        description: 超级节点的算力信息的id  如果是删除多条，　用　, 逗号隔开
+        required: true
+        type: string
+      - in: query
+        name: action
+        description: 具体的操作　　delete=删除　update=更新　insert=新增    更新必须传这条数据的全部数据回来，id 除外，和新增一样，删除只要id就够
+        required: true
+        type: string
+      - in: query
+        name: levelstr
+        description: 等级名字
+        required: true
+        type: string
+      - in: query
+        name: coin_number
+        description: 要求的持币数量
+        required: true
+        type: string
+      - in: query
+        name: force
+        description: '算力　　要以小数的格式返回　　如 : 15% = 0.15'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+  /ecology/show_ecology_index___生态首页展示:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: user_id
+        description: 当前用户的id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: 生态首页展示
+  /ecology/show_formula_list____算力表显示___后台操作__or__用户查看__都可:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+  /ecology/show_super_formula_list____超级节点算力表显示___后台操作__or_用户查看__都可:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+  /ecology/to_change_into_USDD__转USDD到生态仓库:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: user_id
+        description: 用户id   ---- 放在 header
+        required: true
+        type: string
+      - in: query
+        name: ecology_id
+        description: 生态仓库id的id
+        type: string
+      - in: query
+        name: coin_number
+        description: 铸(发)币的数量
+        required: true
+        type: string
+      - in: query
+        name: levelstr
+        description: 等级数据
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+  /ecology/upgrade_warehouse__交易的历史记录:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: ecology_id
+        description: 生态仓库id的id
+        type: string
+      - in: query
+        name: page_count
+        description: 分页信息　－　数据总条数
+        required: true
+        type: string
+      - in: query
+        name: total_page
+        description: 分页信息　－　总页数
+        required: true
+        type: string
+      - in: query
+        name: current_page
+        description: 分页信息　－　当前页数
+        required: true
+        type: string
+      - in: query
+        name: page_size
+        description: 分页信息　－　每页数据量
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+  /ecology/upgrade_warehouse__升级生态仓库:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: user_id
+        description: 用户id   ---- 放在 header
+        required: true
+        type: string
+      - in: query
+        name: ecology_id
+        description: 生态仓库id的id
+        type: string
+      - in: query
+        name: cion_number
+        description: 铸(发)币的数量
+        required: true
+        type: string
+      - in: query
+        name: levelstr
+        description: 升级后的等级
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+tags:
+- name: ecology
+  description: |
+    后台管理
