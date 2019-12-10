@@ -13,7 +13,7 @@ func NewOrm() orm.Ormer {
 	return db
 }
 
-func init()  {
+func init() {
 	dsn := beego.AppConfig.String("mysql::db")
 	//if dsn == "" {
 	//	dsn = "root:Passwd123!@(101.132.79.34:3306)/ecology?charset=utf8&loc=Asia%2FShanghai&loc=Local"
@@ -25,6 +25,10 @@ func init()  {
 		new(CalculationPower),
 		new(Formula),
 		new(TxIdList),
+		new(SuperForceTable),
+		new(ForceTable),
+		new(DailyDividendTasks),
+		new(SuperPeerTable),
 		new(User))
 	orm.Debug = true // 是否开启调试模式 调试模式下会打印出sql语句
 	orm.RegisterDataBase("default", "mysql", dsn, 3, 50)

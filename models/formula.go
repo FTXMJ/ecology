@@ -59,6 +59,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 		var u_sers []User
 		o.QueryTable("user").Filter("father_id", u_ser.FatherId).All(&u_sers)
 		count := 0
+		if len(u_sers) < 1 {return nil}
 		for _, v := range u_sers {
 			account := Account{}
 			o.QueryTable("account").Filter("user_id", v.UserId).Filter("level", "代言人").One(&account)
@@ -76,6 +77,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 		var u_sers []User
 		o.QueryTable("user").Filter("father_id", u_ser.FatherId).All(&u_sers)
 		count := 0
+		if len(u_sers) < 1 {return nil}
 		for _, v := range u_sers {
 			account := Account{}
 			o.QueryTable("account").Filter("user_id", v.UserId).Filter("level", "网红").One(&account)

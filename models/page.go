@@ -3,7 +3,7 @@ package models
 // Page 分页参数  ---  历史信息
 type HostryPageInfo struct {
 	Items []HostryValues //数据列表
-	Page  Page       //分页信息
+	Page  Page           //分页信息
 }
 
 type Page struct {
@@ -53,7 +53,7 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 	//listle, _ := o.Limit(page.PageSize, (page.PageNo-1)*page.PageSize).OrderBy("-createtime").All(&list)
 	start := (page.CurrentPage-1)*page.PageSize - 1
 	end := page.PageSize + 1
-	listle := last_values[start:end]
+	listle := last_values[start : start+end]
 	page.CurrentPage = (page.Count / page.PageSize) + 1 //总页数
 	if page.Count <= 5 {
 		page.CurrentPage = 1
@@ -130,4 +130,30 @@ func QuickSortAgreement(arr []HostryValues, start, end int) {
 	if end-index > 1 {
 		QuickSortAgreement(arr, index+1, end)
 	}
+}
+
+// Page 分页参数  ---  历史信息
+type HostryPageInfo_test struct {
+	Items___数据列表 []HostryValues_test //数据列表
+	Page___分页信息  Page_test           //分页信息
+}
+
+type Page_test struct {
+	TotalPage__总页数     int //总页数
+	CurrentPage___当前页数 int //当前页数
+	PageSize___每页数据条数  int //每页数据条数
+	Count___总数据量       int //总数据量
+}
+
+type HostryValues_test struct {
+	Id                     int
+	UserId___              string
+	CurrentRevenue___上期支出  float64 //上期支出
+	CurrentOutlay____本期支出  float64 //本期支出
+	OpeningBalance___上期c余额 float64 //上期c余额
+	CurrentBalance___本期余额  float64 //本期余额
+	CreateDate___创建时间      string  //创建时间
+	Comment___评论_          string  //评论
+	TxId__任务id_            string  //任务id
+	Account____生态仓库id      int     //生态仓库id
 }

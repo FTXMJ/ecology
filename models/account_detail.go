@@ -55,6 +55,9 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer,user_id,comment, tx_id string, money_o
 		TxId:           tx_id,
 		Account:        account_id,
 	}
+	if account_new.CurrentBalance < 0 {
+		account_new.CurrentBalance = 0
+	}
 	_,err_acc := o.Insert(&account_new)
 	if err_acc!=nil{
 		return err_acc

@@ -17,8 +17,8 @@ type BackStageManagement struct {
 // @Tags 算力表显示   后台操作　or 用户查看　都可
 // @Accept  json
 // @Produce json
-// @Success 200
-// @router /show_formula_list____算力表显示___后台操作__or__用户查看__都可 [Post]
+// @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
+// @router /show_formula_list [post]
 func (this *BackStageManagement) ShowFormulaList() {
 	var (
 		data       *common.ResponseData
@@ -48,8 +48,8 @@ func (this *BackStageManagement) ShowFormulaList() {
 // @Param hold_return_rate query string true "本金自由算力"
 // @Param recommend_return_rate query string true "直推算力"
 // @Param team_return_rate query string true "动态算力"
-// @Success 200
-// @router /operation_formula_list____算力表信息修改 [Post]
+// @Success 200___算力表信息修改
+// @router /operation_formula_list [post]
 func (this *BackStageManagement) OperationFormulaList() {
 	var (
 		data                      *common.ResponseData
@@ -92,7 +92,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 		_, err := o.QueryTable("force_table").
 			Filter("id", id).
 			Update(orm.
-			Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "": team_return_rate})
+			Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
 		if err != nil {
 			data = common.NewErrorResponse(500)
 			return
@@ -125,8 +125,8 @@ func (this *BackStageManagement) OperationFormulaList() {
 // @Tags 超级节点算力表显示   后台操作　or 用户查看　都可
 // @Accept  json
 // @Produce json
-// @Success 200
-// @router /show_super_formula_list____超级节点算力表显示___后台操作__or_用户查看__都可 [Post]
+// @Success 200__超级节点算力表显示后台操作or用户查看都可以  {object} models.SuperForceTable_test
+// @router /show_super_formula_list [post]
 func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
@@ -152,8 +152,8 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 // @Param levelstr query string true "等级名字"
 // @Param coin_number query string true "要求的持币数量"
 // @Param force query string true "算力　　要以小数的格式返回　　如 : 15% = 0.15 "
-// @Success 200
-// @router /operation_super_formula_list___超级节点算力表信息修改 [Post]
+// @Success 200___超级节点算力表信息修改
+// @router /operation_super_formula_list [post]
 func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
 		data           *common.ResponseData

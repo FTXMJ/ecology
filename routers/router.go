@@ -15,11 +15,12 @@ import (
 
 func init() {
 	//自动化文档
-	ns := beego.NewNamespace("/v1",
+	ns := beego.NewNamespace("/api/v1",
 		beego.NSNamespace("/ecology",
 			beego.NSInclude(
 				&controllers.EcologyIndexController{},
 				&controllers.BackStageManagement{},
+				&controllers.FirstController{},
 			),
 		),
 	)

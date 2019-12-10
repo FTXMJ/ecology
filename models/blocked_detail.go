@@ -63,6 +63,9 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer,user_id, comment, tx_id string, coin_o
 		Account:        account_id,
 	}
 	blocked_new.CurrentBalance = blocked_old.CurrentBalance+coin_in*for_mula.ReturnMultiple-coin_out
+	if blocked_new.CurrentBalance < 0 {
+		blocked_new.CurrentBalance = 0
+	}
 	_,err:=o.Insert(&blocked_new)
 	if err != nil {
 		return err
@@ -76,6 +79,20 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer,user_id, comment, tx_id string, coin_o
 	_,err_up :=o.QueryTable("account").Filter("id",account_id).Update(orm.Params{"bocked_balance":blocked_new.CurrentBalance})
 	if err_up!=nil{
 		return err_up
+	}
+
+	super_peer_table := SuperPeerTable{}
+	err_super :=o.QueryTable("super_peer_table").Filter("user_id",user_id).One(&super_peer_table)
+	if err_super!=nil{
+		return err_super
+	}
+	coin := super_peer_table.CoinNumber+(coin_in*for_mula.ReturnMultiple)-coin_out
+	if coin < 0 {
+		coin = 0
+	}
+	_,err_super_up :=o.QueryTable("super_peer_table").Filter("user_id",user_id).Update(orm.Params{"coin_number":coin})
+	if err_super_up!=nil{
+		return err_super_up
 	}
 	return nil
 }

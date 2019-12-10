@@ -14,21 +14,41 @@ type EcologyIndexController struct {
 // @Tags 生态首页展示
 // @Accept  json
 // @Produce json
-// @Param user_id query string true "当前用户的id"
-// @Success 200  生态首页展示
-// @router /show_ecology_index___生态首页展示 [Post]
+// @Success 200___生态首页展示 {object} models.Ecology_index_ob_test
+// @router /show_ecology_index [Get
 func (this *EcologyIndexController) ShowEcologyIndex() {
 	var (
 		data          *common.ResponseData
 		account_index []models.Account
-		user_id       = this.GetString("user_id")
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	//TODO 调用老罗的钱包接口
-	usdd := 0.0
+
+	token := GetJwtValues(this.Ctx)
+	user_id := token.UserID
+	user := models.User{
+		UserId:   user_id,
+	}
+	/*user := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDAzZWIyODdlYjVkNDBhOGE0MDJiOTkzOGY1MzA2MzUiLCJuYW1lIjoiIiwibW9iaWxlIjoiIiwiZW1haWwiOiIyNDQzMDg2NTAyQHFxLmNvbSIsImV4cCI6MTU3NjcyMTE0NSwiaXNzIjoibmV3dHJla1dhbmciLCJuYmYiOjE1NzU0MjQxNDV9.CvJDlkSFYnj2lTadt8IyJYv8jm_w_UCMU_k4RL6fLlI"
+	j := NewJWT()
+	// parseToken 解析token包含的信息
+	tocken, _ := j.ParseToken(user)
+	user_id := tocken.UserID*/
+	b,user_str := generateToken(user)
+	if b != true {
+		data = common.NewErrorResponse(500)
+		//TODO log
+		return
+	}
+	coins,errping := models.PingWallet(user_str)
+	if errping != nil {
+		data = common.NewErrorResponse(500)
+		//TODO log
+		return
+	}
+	usdd := coins
 	i, erracc := models.NewOrm().QueryTable("account").Filter("user_id", user_id).All(&account_index)
 	if erracc != nil {
 		data = common.NewErrorResponse(500)
@@ -45,23 +65,28 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	}
 	indexValues.Usdd = usdd
 	indexValues.Ecological_poject_bool = true
-	for o, v := range account_index {
-		var formula_index models.Formula
-		errfor := models.NewOrm().QueryTable("formula").Filter("ecology_id", v.Id).One(&formula_index)
-		if errfor != nil {
-			data = common.NewErrorResponse(500)
-			//TODO log
-			return
+	if len(account_index)>0{
+		for _, v := range account_index {
+			var formula_index models.Formula
+			errfor := models.NewOrm().QueryTable("formula").Filter("ecology_id", v.Id).One(&formula_index)
+			if errfor != nil {
+				data = common.NewErrorResponse(500)
+				//TODO log
+				return
+			}
+			f := models.Formulaindex{
+				Level:               v.Level,
+				BockedBalance:       v.BockedBalance,
+				ReturnMultiple:      formula_index.ReturnMultiple,
+				ToDayRate:           formula_index.HoldReturnRate + formula_index.ReturnMultiple + formula_index.TeamReturnRate,
+				HoldReturnRate:      formula_index.HoldReturnRate,
+				RecommendReturnRate: formula_index.RecommendReturnRate,
+				TeamReturnRate:      formula_index.TeamReturnRate,
+			}
+			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
-		indexValues.Ecological_poject[o].Level = v.Level
-		indexValues.Ecological_poject[o].BockedBalance = v.BockedBalance
-		indexValues.Ecological_poject[o].ReturnMultiple = formula_index.ReturnMultiple
-		indexValues.Ecological_poject[o].ToDayRate = formula_index.HoldReturnRate + formula_index.ReturnMultiple + formula_index.TeamReturnRate
-		indexValues.Ecological_poject[o].HoldReturnRate = formula_index.HoldReturnRate
-		indexValues.Ecological_poject[o].RecommendReturnRate = formula_index.RecommendReturnRate
-		indexValues.Ecological_poject[o].TeamReturnRate = formula_index.TeamReturnRate
 	}
-	models.SuperLevelSet(usdd, &indexValues)
+	models.SuperLevelSet(user_id, &indexValues)
 	data = common.NewResponse(indexValues)
 	return
 }
@@ -72,9 +97,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 // @Param user_id query string true "当前用户的id   ---- 放在 header"
 // @Param coin_number query string true "铸(发)币的数量"
 // @Param levelstr query string true "等级数据"
-// @Param ecology_id query string true "生态仓库id"
-// @Success 200
-// @router /create_new_warehouse__新增生态仓库 [Post]
+// @Success 200____新增生态仓库
+// @router /create_new_warehouse [Post]
 func (this *EcologyIndexController) CreateNewWarehouse() {
 	var (
 		data *common.ResponseData
@@ -185,8 +209,8 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 // @Param ecology_id query string int "生态仓库id的id"
 // @Param coin_number query string true "铸(发)币的数量"
 // @Param levelstr query string true "等级数据"
-// @Success 200
-// @router /to_change_into_USDD__转USDD到生态仓库 [Post]
+// @Success 200___转USDD到生态仓库
+// @router /to_change_into_USDD [Post]
 func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	var (
 		data *common.ResponseData
@@ -264,8 +288,8 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 // @Param ecology_id query string int "生态仓库id的id"
 // @Param cion_number query string true "铸(发)币的数量"
 // @Param levelstr query string true "升级后的等级"
-// @Success 200
-// @router /upgrade_warehouse__升级生态仓库 [Post]
+// @Success 200____升级生态仓库
+// @router /upgrade_warehouse [Post]
 func (this *EcologyIndexController) UpgradeWarehouse() {
 	var (
 		data *common.ResponseData
@@ -354,6 +378,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 	o.Commit()
 	data = common.NewResponse(nil)
+	this.StopRun()
 	return
 }
 
@@ -365,8 +390,8 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 // @Param total_page query string true "分页信息　－　总页数"
 // @Param current_page query string true "分页信息　－　当前页数"
 // @Param page_size query string true "分页信息　－　每页数据量"
-// @Success 200
-// @router /upgrade_warehouse__交易的历史记录 [Post]
+// @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
+// @router /upgrade_warehouse [Post]
 func (this *EcologyIndexController) ReturnPageListHostry() {
 	var (
 		data            *common.ResponseData

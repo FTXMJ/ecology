@@ -2,9 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 )
 
 //生态钱包
@@ -41,7 +41,7 @@ type Ecology_index_obj struct {
 
 //页面显示的　超级节点结构
 type SuperPeer struct {
-	Usdd        float64 //总币数
+	Usdd        float64 //总币数ForceTable_test
 	Level       string  //超级节点的独立属性
 	TodayABouns float64 // 今日分红
 }
@@ -62,66 +62,116 @@ type Formulaindex struct {
 //从　body.form 读数据的数据格式
 type NetValueType struct {
 	CoinNumber float64 `form:"coin_number" json:"coin_number"`
-	EcologyId int `form:"ecology_id" json:"ecology_id"`
-	LevelStr string `form:"levelstr" json:"level_str"`
+	EcologyId  int     `form:"ecology_id" json:"ecology_id"`
+	LevelStr   string  `form:"levelstr" json:"level_str"`
+}
+
+type data_wallet struct {
+	Code int `json:"code"`
+	Msg string `json:"msg"`
+	Data []WalletInfo `json:"data"`
+}
+
+// 老罗的钱包数据结构
+type WalletInfo struct {
+	Balance     float64    `json:"balance"`
+	CurrencyId int    `json:"currency_id"`
+	Decimals    int    `json:"decimals"`
+	Name        string `json:"name"`
+	Symbol      string `json:"symbol"`
 }
 
 // 调用远端接口
-func PingWallet(token string, coin_id string) (float64,error) {
+func PingWallet(token string) (float64, error) {
 	client := &http.Client{}
 	//生成要访问的url
-	url := ""
+	url := beego.AppConfig.String("api::apiurl_add_coin")
 	//提交请求
-	reqest, errnr := http.NewRequest("POST", url, nil)
+	reqest, errnr := http.NewRequest("GET", url, nil)
 
 	//增加header选项
 	reqest.Header.Add("Authorization", token)
 
 	if errnr != nil {
-		return 0,errnr
+		return 0, errnr
 	}
 	//处理返回结果
 	response, errdo := client.Do(reqest)
 	defer response.Body.Close()
-	if errdo!=nil{
-		return  0,errdo
+	if errdo != nil {
+		return 0, errdo
 	}
-	b,_ := ioutil.ReadAll(response.Body)
-	m := make(map[string]string)
-	json.Unmarshal(b,&m)
-
-	tfor_number,_ := strconv.ParseFloat(m["money"], 64)
-	return tfor_number,nil
+	bys,err_read := ioutil.ReadAll(response.Body)
+	if err_read!=nil {
+		return 0, err_read
+	}
+	values := data_wallet{}
+	err := json.Unmarshal(bys,&values)
+	if err!=nil {
+		return 0, err_read
+	}
+	coins := 0.0
+	for _,v := range values.Data{
+		coins += v.Balance
+	}
+	return coins, nil
 }
 
-func SuperLevelSet(usdd float64,ec_obj *Ecology_index_obj) {
-	if usdd >= 30000 && usdd < 100000 && usdd < 200000 {
+// 判断是否达到超级节点的要求 --- 页面显示
+func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
+	s_f_t := []SuperForceTable{}
+	NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	s_p_t := SuperPeerTable{}
+	NewOrm().QueryTable("super_peer_table").Filter("user_id",user_id).One(&s_p_t)
+
+	for i := 0; i < len(s_f_t); i++ {
+		for j := 1; j < len(s_f_t)-1; j++ {
+			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
+				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
+			}
+		}
+	}
+	index := []int{}
+	for i, v := range s_f_t {
+		if s_p_t.CoinNumber > float64(v.CoinNumberRule) {
+			index = append(index, i)
+		}
+	}
+	if len(index) > 0 {
 		ec_obj.Super_peer_bool = true
-		ec_obj.Super_peer.Level = "分红节点"
-		ec_obj.Super_peer.Usdd = usdd
-		// TODO  分红
-		ec_obj.Super_peer.TodayABouns = 998
-	}else if usdd >= 100000 && usdd < 200000 {
-		ec_obj.Super_peer_bool = true
-		ec_obj.Super_peer.Level = "超级节点"
-		ec_obj.Super_peer.Usdd = usdd
-		// TODO  分红
-		ec_obj.Super_peer.TodayABouns = 998
-	}else if usdd >= 200000 {
-		ec_obj.Super_peer_bool = true
-		ec_obj.Super_peer.Level = "创世节点"
-		ec_obj.Super_peer.Usdd = usdd
-		// TODO  分红
-		ec_obj.Super_peer.TodayABouns = 998
-	}else {
-		ec_obj.Super_peer_bool = false
+		ec_obj.Super_peer.Level = s_f_t[index[len(index)-1]].Level
+		ec_obj.Super_peer.Usdd = s_p_t.CoinNumber
 	}
 }
 
 
-/*
-接口地址　 :=    ???
-token    :=    在头里面
-访问类型　:=    post
-返回给我　:=    用户的　ＴＦＯＲ　数量    [键值对返回　　－　放在　body　里]
-*/
+
+
+
+type Ecology_index_ob_test struct {
+	Usdd___usdd数量                   float64
+	Ecological_poject___生态项目      []Formulaindex_test //生态项目
+	Ecological_poject_bool___是否有生态仓库没有就是false bool
+	Super_peer___超级节点信息             SuperPeer_test //超级节点
+	Super_peer_bool__是否显示超级节点        bool
+}
+
+//页面显示的　超级节点结构
+type SuperPeer_test struct {
+	Usdd___总币数ForceTable_test        float64 //总币数ForceTable_test
+	Level___超级节点的独立属性       string  //超级节点的独立属性
+	TodayABouns___今日分红 float64 // 今日分红
+}
+
+// 页面显示的　生态仓库结构
+type Formulaindex_test struct {
+	Level___等级               string
+	BockedBalance___持币数量       float64 //持币数量
+	LowHold___低位             int     //低位
+	HighHold___高位            int     //高位
+	ReturnMultiple___杠杆      float64 //杠杆
+	ToDayRate___今日算力           float64 //今日算力
+	HoldReturnRate___自由算力      float64 //本金自由算力
+	RecommendReturnRate___直推算力 float64 //直推算力
+	TeamReturnRate____动态算力      float64 //动态算力
+}

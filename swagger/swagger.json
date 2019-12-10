@@ -13,9 +13,9 @@
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         }
     },
-    "basePath": "/v1",
+    "basePath": "/api/v1",
     "paths": {
-        "/ecology/create_new_warehouse__新增生态仓库": {
+        "/ecology/create_new_warehouse": {
             "post": {
                 "tags": [
                     "ecology"
@@ -47,23 +47,16 @@
                         "description": "等级数据",
                         "required": true,
                         "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "ecology_id",
-                        "description": "生态仓库id",
-                        "required": true,
-                        "type": "string"
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "200____新增生态仓库": {
                         "description": ""
                     }
                 }
             }
         },
-        "/ecology/operation_formula_list____算力表信息修改": {
+        "/ecology/operation_formula_list": {
             "post": {
                 "tags": [
                     "ecology"
@@ -140,13 +133,13 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "200___算力表信息修改": {
                         "description": ""
                     }
                 }
             }
         },
-        "/ecology/operation_super_formula_list___超级节点算力表信息修改": {
+        "/ecology/operation_super_formula_list": {
             "post": {
                 "tags": [
                     "ecology"
@@ -195,41 +188,14 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "200___超级节点算力表信息修改": {
                         "description": ""
                     }
                 }
             }
         },
-        "/ecology/show_ecology_index___生态首页展示": {
-            "post": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "user_id",
-                        "description": "当前用户的id",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "生态首页展示"
-                    }
-                }
-            }
-        },
-        "/ecology/show_formula_list____算力表显示___后台操作__or__用户查看__都可": {
-            "post": {
+        "/ecology/show_ecology_index": {
+            "get": {
                 "tags": [
                     "ecology"
                 ],
@@ -240,13 +206,16 @@
                     "application/json"
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
+                    "200___生态首页展示": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Ecology_index_ob_test"
+                        }
                     }
                 }
             }
         },
-        "/ecology/show_super_formula_list____超级节点算力表显示___后台操作__or_用户查看__都可": {
+        "/ecology/show_formula_list": {
             "post": {
                 "tags": [
                     "ecology"
@@ -258,13 +227,55 @@
                     "application/json"
                 ],
                 "responses": {
-                    "200": {
+                    "200__算力表显示后台操or用户查_都可": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.ForceTable_test"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecology/show_super_formula_list": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200__超级节点算力表显示后台操作or用户查看都可以": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuperForceTable_test"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecology/test_read_all": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200___测试": {
                         "description": ""
                     }
                 }
             }
         },
-        "/ecology/to_change_into_USDD__转USDD到生态仓库": {
+        "/ecology/to_change_into_USDD": {
             "post": {
                 "tags": [
                     "ecology"
@@ -305,13 +316,13 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "200___转USDD到生态仓库": {
                         "description": ""
                     }
                 }
             }
         },
-        "/ecology/upgrade_warehouse__交易的历史记录": {
+        "/ecology/upgrade_warehouse": {
             "post": {
                 "tags": [
                     "ecology"
@@ -359,64 +370,236 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/upgrade_warehouse__升级生态仓库": {
-            "post": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "user_id",
-                        "description": "用户id   ---- 放在 header",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "ecology_id",
-                        "description": "生态仓库id的id",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "cion_number",
-                        "description": "铸(发)币的数量",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "levelstr",
-                        "description": "升级后的等级",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
+                    "200____交易的历史记录": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.HostryPageInfo_test"
+                        }
                     }
                 }
             }
         }
     },
-    "tags": [
-        {
-            "name": "ecology",
-            "description": "后台管理\n"
+    "definitions": {
+        "models.Ecology_index_ob_test": {
+            "title": "Ecology_index_ob_test",
+            "type": "object",
+            "properties": {
+                "Ecological_poject___生态项目": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Formulaindex_test"
+                    }
+                },
+                "Ecological_poject_bool___是否有生态仓库没有就是false": {
+                    "type": "boolean"
+                },
+                "Super_peer___超级节点信息": {
+                    "$ref": "#/definitions/models.SuperPeer_test"
+                },
+                "Super_peer_bool__是否显示超级节点": {
+                    "type": "boolean"
+                },
+                "Usdd___usdd数量": {
+                    "type": "number",
+                    "format": "double"
+                }
+            }
+        },
+        "models.ForceTable_test": {
+            "title": "ForceTable_test",
+            "type": "object",
+            "properties": {
+                "HighHold___高位": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "HoldReturnRate____自由算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Id__id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "Level___等级": {
+                    "type": "string"
+                },
+                "LowHold___充值或者升级的低位": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "RecommendReturnRate____直推算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "ReturnMultiple___杠杆": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "TeamReturnRate____动态算力__团队算力": {
+                    "type": "number",
+                    "format": "double"
+                }
+            }
+        },
+        "models.Formulaindex_test": {
+            "title": "Formulaindex_test",
+            "type": "object",
+            "properties": {
+                "BockedBalance___持币数量": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "HighHold___高位": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "HoldReturnRate___自由算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Level___等级": {
+                    "type": "string"
+                },
+                "LowHold___低位": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "RecommendReturnRate___直推算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "ReturnMultiple___杠杆": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "TeamReturnRate____动态算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "ToDayRate___今日算力": {
+                    "type": "number",
+                    "format": "double"
+                }
+            }
+        },
+        "models.HostryPageInfo_test": {
+            "title": "HostryPageInfo_test",
+            "type": "object",
+            "properties": {
+                "Items___数据列表": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.HostryValues_test"
+                    }
+                },
+                "Page___分页信息": {
+                    "$ref": "#/definitions/models.Page_test"
+                }
+            }
+        },
+        "models.HostryValues_test": {
+            "title": "HostryValues_test",
+            "type": "object",
+            "properties": {
+                "Account____生态仓库id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "Comment___评论_": {
+                    "type": "string"
+                },
+                "CreateDate___创建时间": {
+                    "type": "string"
+                },
+                "CurrentBalance___本期余额": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "CurrentOutlay____本期支出": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "CurrentRevenue___上期支出": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "OpeningBalance___上期c余额": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "TxId__任务id_": {
+                    "type": "string"
+                },
+                "UserId___": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Page_test": {
+            "title": "Page_test",
+            "type": "object",
+            "properties": {
+                "Count___总数据量": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "CurrentPage___当前页数": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "PageSize___每页数据条数": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "TotalPage__总页数": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "models.SuperForceTable_test": {
+            "title": "SuperForceTable_test",
+            "type": "object",
+            "properties": {
+                "BonusCalculation____分红比例": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "CoinNumberRule___币数": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "Id__id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "Level___等级": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SuperPeer_test": {
+            "title": "SuperPeer_test",
+            "type": "object",
+            "properties": {
+                "Level___超级节点的独立属性": {
+                    "type": "string"
+                },
+                "TodayABouns___今日分红": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Usdd___总币数ForceTable_test": {
+                    "type": "number",
+                    "format": "double"
+                }
+            }
         }
-    ]
+    }
 }

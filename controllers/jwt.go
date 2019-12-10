@@ -62,16 +62,31 @@ func CheckLogin(ctx *context.Context) {
 			ctx.WriteString(`{"code": "400","msg": "数据格式不正确"}`)
 			return
 		}
+		if tockken.FatherId == "father_id err" {
+			ctx.WriteString(`{"code": "401","msg": "登录信息错误，请重新登录！"}`)
+			return
+		}
 		user := []models.User{}
 		models.NewOrm().QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
 		if len(user) == 0 {
 			user := models.User{
 				Name:   tockken.Name,
 				UserId: tockken.UserID,
-				FatherId:tockken.FatherId,
+			}
+			if tockken.FatherId != "" {
+				user.FatherId = tockken.FatherId
 			}
 			erruser := user.Insert()
 			if erruser != nil {
+				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+				return
+			}
+			super_peer := models.SuperPeerTable{
+				UserId:     tockken.UserID,
+				CoinNumber: 0,
+			}
+			super_peer_err := super_peer.Insert()
+			if super_peer_err != nil {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
