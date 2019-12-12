@@ -4,15 +4,16 @@ import (
 	"ecology1/models"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )
 
-/*func init() {
+func init() {
 	//拦截器验证登录
 	beego.InsertFilter("/*", beego.BeforeExec, CheckLogin)
-}*/
+}
 
 // 一些常量
 var (
@@ -41,67 +42,68 @@ type JWT struct {
 //验证登录
 func CheckLogin(ctx *context.Context) {
 	api := ctx.Request.URL.Path
-	//不包含在内的验证登录
-	if api != "/v1/user/login" && //登录页面
-		api != "/v1/user/register" && //注册
-		api != "/v1/user/forgetPassword" { //忘记密码
-		token := ctx.Request.Header.Get("Authorization")
-		if token == "" {
-			fmt.Println("拦截：", api)
-			ctx.WriteString(`{"code": "500","msg": "未经允许的访问，已拦截！"}`)
-			return
-		}
-		j := NewJWT()
-		// parseToken 解析token包含的信息
-		tockken, err := j.ParseToken(token)
-		if err != nil {
-			if err == TokenExpired {
-				ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
-				return
-			}
-			ctx.WriteString(`{"code": "400","msg": "数据格式不正确"}`)
-			return
-		}
-		user := []models.User{}
-		o := models.NewOrm()
-		o.Begin()
-		o.QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
-		if len(user) == 0 {
-			f, err_get_user := models.PingUser(token)
-			if err_get_user != nil {
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
-				return
-			}
-			user := models.User{
-				Name:     tockken.Name,
-				UserId:   tockken.UserID,
-				FatherId: f.(string),
-			}
-			_, erruser := o.Insert(&user)
-			if erruser != nil {
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
-				return
-			}
-			super_peer := models.SuperPeerTable{
-				UserId:     tockken.UserID,
-				CoinNumber: 0,
-			}
-			_, super_peer_err := o.Insert(&super_peer)
-			if super_peer_err != nil {
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
-				return
-			}
-			account_def := models.Account{
-				UserId: tockken.UserID,
-			}
-			_, account_def_err := o.Insert(&account_def)
-			if account_def_err != nil {
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
-				return
-			}
-			o.Commit()
-		}
+	token := ctx.Request.Header.Get("Authorization")
+	if token == "" {
+		fmt.Println("拦截：", api)
+		ctx.WriteString(`{"code": "500","msg": "未经允许的访问，已拦截！"}`)
+		fmt.Println(generateToken(models.User{
+			Name:     "test",
+			UserId:   "123",
+			FatherId: "12",
+		}))
+		return
 	}
+	j := NewJWT()
+	// parseToken 解析token包含的信息
+	tockken, err := j.ParseToken(token)
+	if err != nil {
+		if err == TokenExpired {
+			ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
+			return
+		}
+		ctx.WriteString(`{"code": "400","msg": "数据格式不正确"}`)
+		return
+	}
+	user := []models.User{}
+	o := models.NewOrm()
+	o.Begin()
+	o.QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
+	if len(user) == 0 {
+		f, err_get_user := models.PingUser(token)
+		if err_get_user != nil {
+			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+			return
+		}
+		user := models.User{
+			Name:     tockken.Name,
+			UserId:   tockken.UserID,
+			FatherId: f.(string),
+		}
+		_, erruser := o.Insert(&user)
+		if erruser != nil {
+			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+			return
+		}
+		super_peer := models.SuperPeerTable{
+			UserId:     tockken.UserID,
+			CoinNumber: 0,
+		}
+		_, super_peer_err := o.Insert(&super_peer)
+		if super_peer_err != nil {
+			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+			return
+		}
+		account_def := models.Account{
+			UserId: tockken.UserID,
+		}
+		_, account_def_err := o.Insert(&account_def)
+		if account_def_err != nil {
+			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+			return
+		}
+		o.Commit()
+	}
+
 }
 
 // 获取jst里面的value
