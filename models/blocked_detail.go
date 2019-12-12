@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"github.com/astaxie/beego/orm"
 	"time"
 )
@@ -35,7 +34,6 @@ func (this *BlockedDetail) Update() (err error) {
 }
 
 func FindLimitOneAndSaveBlo_d(o orm.Ormer,user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	fmt.Println("account_id :",account_id)
 	blocked_old := BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
@@ -51,18 +49,16 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer,user_id, comment, tx_id string, coin_o
 		return err_for
 	}
 	blocked_new := BlockedDetail{
-		Id:             0,
 		UserId:         user_id,
 		CurrentRevenue: coin_in,
 		CurrentOutlay:  coin_out,
 		OpeningBalance: blocked_old.CurrentBalance,
-		CurrentBalance: blocked_old.CurrentBalance + coin_in - coin_out,
+		CurrentBalance: blocked_old.CurrentBalance+coin_in*for_mula.ReturnMultiple-coin_out,
 		CreateDate:     time.Now(),
 		Comment:        comment,
 		TxId:           tx_id,
 		Account:        account_id,
 	}
-	blocked_new.CurrentBalance = blocked_old.CurrentBalance+coin_in*for_mula.ReturnMultiple-coin_out
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
@@ -71,16 +67,19 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer,user_id, comment, tx_id string, coin_o
 		return err
 	}
 
+	// 更新任务完成状态
 	_,err_txid := o.QueryTable("tx_id_list").Filter("tx_id",tx_id).Update(orm.Params{"state":"true"})
 	if err_txid!=nil{
 		return err_txid
 	}
 
+	//更新生态仓库属性
 	_,err_up :=o.QueryTable("account").Filter("id",account_id).Update(orm.Params{"bocked_balance":blocked_new.CurrentBalance})
 	if err_up!=nil{
 		return err_up
 	}
 
+	// 超级节点表生成与更新
 	super_peer_table := SuperPeerTable{}
 	err_super :=o.QueryTable("super_peer_table").Filter("user_id",user_id).One(&super_peer_table)
 	if err_super!=nil{
@@ -94,14 +93,34 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer,user_id, comment, tx_id string, coin_o
 	if err_super_up!=nil{
 		return err_super_up
 	}
+
+	//  直推收益
+	user := User{}
+	o.QueryTable("user").Filter("user_id",user_id).One(&user)
+	ForAddCoin(o,user.FatherId,coin_in,0.1)
+
 	return nil
 }
 
 //　把所有算力的值加起来
-func AddFormula(coin_in,ganggan,ziyou,jiasu,dongtai float64) float64 {
-	va := coin_in *ganggan
-	va += coin_in * ziyou
-	va += coin_in * jiasu
-	va += coin_in * dongtai
-	return va
+func ForAddCoin(o orm.Ormer,father_id string,coin float64,proportion float64) error {
+	user := User{}
+	if err := o.QueryTable("user").Filter("user_id",father_id).One(&user);err!=nil{
+		return err
+	}
+	account := Account{}
+	erraccount := o.QueryTable("account").Filter("user_id",father_id).One(&account)
+	if erraccount != nil {
+		return erraccount
+	}
+	new_coin := account.BockedBalance + (coin * proportion)
+	_,err_up := o.QueryTable("account").Filter("user_id",father_id).Update(orm.Params{"bocked_balance":new_coin})
+	if err_up != nil {
+		return err_up
+	}
+
+	if (coin * proportion*0.1) > 1 {
+		ForAddCoin(o,user.FatherId,(coin * proportion),proportion*0.1)
+	}
+	return nil
 }

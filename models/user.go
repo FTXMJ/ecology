@@ -2,9 +2,9 @@ package models
 
 //用户表
 type User struct {
-	Id     int    `orm:"column(id);pk;auto"`
-	Name   string `orm:column(name)`    // 对应 monggodb 的fallname
-	UserId string `orm:column(user_id)` //对应 monggodb 的user_id
+	Id       int    `orm:"column(id);pk;auto"`
+	Name     string `orm:column(name)`      // 对应 monggodb 的fallname
+	UserId   string `orm:column(user_id)`   //对应 monggodb 的user_id
 	FatherId string `orm:column(father_id)` //父亲id
 }
 

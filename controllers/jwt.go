@@ -67,7 +67,9 @@ func CheckLogin(ctx *context.Context) {
 			return
 		}
 		user := []models.User{}
-		models.NewOrm().QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
+		o := models.NewOrm()
+		o.Begin()
+		o.QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
 		if len(user) == 0 {
 			user := models.User{
 				Name:   tockken.Name,
@@ -76,7 +78,7 @@ func CheckLogin(ctx *context.Context) {
 			if tockken.FatherId != "" {
 				user.FatherId = tockken.FatherId
 			}
-			erruser := user.Insert()
+			_,erruser := o.Insert(&user)
 			if erruser != nil {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
@@ -85,11 +87,20 @@ func CheckLogin(ctx *context.Context) {
 				UserId:     tockken.UserID,
 				CoinNumber: 0,
 			}
-			super_peer_err := super_peer.Insert()
+			_,super_peer_err := o.Insert(&super_peer)
 			if super_peer_err != nil {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
+			account_def := models.Account{
+				UserId:     tockken.UserID,
+			}
+			_,account_def_err := o.Insert(&account_def)
+			if account_def_err != nil {
+				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+				return
+			}
+			o.Commit()
 		}
 	}
 }

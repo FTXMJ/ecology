@@ -15,6 +15,78 @@
     },
     "basePath": "/api/v1",
     "paths": {
+        "/ecology/add_account": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/add_formula": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/add_user": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/check": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/create_new_warehouse": {
             "post": {
                 "tags": [
@@ -51,6 +123,24 @@
                 ],
                 "responses": {
                     "200____新增生态仓库": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/create_user": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200___测试": {
                         "description": ""
                     }
                 }
@@ -257,24 +347,6 @@
                 }
             }
         },
-        "/ecology/test_read_all": {
-            "post": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200___测试": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/ecology/to_change_into_USDD": {
             "post": {
                 "tags": [
@@ -375,6 +447,24 @@
                         "schema": {
                             "$ref": "#/definitions/models.HostryPageInfo_test"
                         }
+                    }
+                }
+            }
+        },
+        "/ecology/yanshi": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }

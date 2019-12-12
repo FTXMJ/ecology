@@ -90,9 +90,54 @@ func init() {
 
     beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
         beego.ControllerComments{
+            Method: "AddAccount",
+            Router: `/add_account`,
+            AllowHTTPMethods: []string{"GET"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+        beego.ControllerComments{
+            Method: "AddFormula",
+            Router: `/add_formula`,
+            AllowHTTPMethods: []string{"GET"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+        beego.ControllerComments{
+            Method: "AddUser",
+            Router: `/add_user`,
+            AllowHTTPMethods: []string{"GET"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+        beego.ControllerComments{
+            Method: "Check",
+            Router: `/check`,
+            AllowHTTPMethods: []string{"GET"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+        beego.ControllerComments{
             Method: "CreateUserAbout",
-            Router: `/test_read_all`,
-            AllowHTTPMethods: []string{"Post"},
+            Router: `/create_user`,
+            AllowHTTPMethods: []string{"POST"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+        beego.ControllerComments{
+            Method: "DailyDividendAndRelease",
+            Router: `/yanshi`,
+            AllowHTTPMethods: []string{"GET"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

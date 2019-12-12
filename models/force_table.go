@@ -3,6 +3,7 @@ package models
 type ForceTable struct {
 	Id                  int     `orm:"column(id);pk;auto"`
 	Level               string  `orm:column(level)`
+	LevelInt               string  `orm:column(level_int)`          //等级数字
 	LowHold             int     `orm:column(low_hold)`              //低位
 	HighHold            int     `orm:column(high_hold)`             //高位
 	ReturnMultiple      float64 `orm:column(return_multiple)`       //杠杆

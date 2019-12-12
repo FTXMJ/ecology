@@ -44,7 +44,6 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer,user_id,comment, tx_id string, money_o
 		account_old.CurrentBalance = 0
 	}
 	account_new := AccountDetail{
-		Id:             0,
 		UserId:         user_id,
 		CurrentRevenue: money_in,
 		CurrentOutlay:  money_out,

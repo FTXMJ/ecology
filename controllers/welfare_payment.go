@@ -1,17 +1,10 @@
 package controllers
 
 import (
-	"ecology1/common"
 	"ecology1/models"
 	"ecology1/utils"
-	"encoding/json"
-	"errors"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/robfig/cron"
-	"io/ioutil"
-	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -163,76 +156,76 @@ func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer,user_id, comment, tx_id string, 
 	return nil
 }
 
-// 超级节点的分红
-func AddFormulaABonus(user_id string) error {
-	s_f_t := []models.SuperForceTable{}
-	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
-	s_p_t := models.SuperPeerTable{}
-	models.NewOrm().QueryTable("super_peer_table").Filter("user_id",user_id).One(&s_p_t)
-
-	for i := 0; i < len(s_f_t); i++ {
-		for j := 1; j < len(s_f_t)-1; j++ {
-			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
-				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
-			}
-		}
-	}
-	index := []int{}
-	for i, v := range s_f_t {
-		if s_p_t.CoinNumber > float64(v.CoinNumberRule) {
-			index = append(index, i)
-		}
-	}
-	if len(index) > 0 {
-		abonus := s_f_t[index[len(index)-1]].BonusCalculation * s_p_t.CoinNumber
-		// 调老罗接口
-		if err := PingAddWalletCoin(user_id,abonus);err!=nil{
-			return err
-		}
-	}
-	return nil
-}
-
-// 远端连接  -  给定分红收益
-func PingAddWalletCoin(user_id string,abonus float64) error{
-	user := models.User{
-		UserId:   user_id,
-	}
-	b,user_str := generateToken(user)
-	if b != true{
-		return errors.New("err")
-	}
-	client := &http.Client{}
-	//生成要访问的url
-	url := beego.AppConfig.String("api::apiurl_abonus")
-	//提交请求
-	reqest, errnr := http.NewRequest("POST", url, nil)
-
-	//增加header选项
-	reqest.Header.Add("Authorization", user_str)
-	reqest.Form.Add("coin",strconv.FormatFloat(abonus, 'E', -1, 64))
-	reqest.Form.Add("coin_type","TFOR")
-
-	if errnr != nil {
-		return errnr
-	}
-	//处理返回结果
-	response, errdo := client.Do(reqest)
-	defer response.Body.Close()
-	if errdo != nil {
-		return errdo
-	}
-	bys,err_read := ioutil.ReadAll(response.Body)
-	if err_read!=nil {
-		return err_read
-	}
-	values := common.ResponseData{}
-	err := json.Unmarshal(bys,&values)
-	if err!=nil {
-		return err_read
-	}
-	if values.Code != 200{
-		return errors.New("err")
-	}
-	return nil
-}
+//// 超级节点的分红
+//func AddFormulaABonus(user_id string) error {
+//	s_f_t := []models.SuperForceTable{}
+//	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+//	s_p_t := models.SuperPeerTable{}
+//	models.NewOrm().QueryTable("super_peer_table").Filter("user_id",user_id).One(&s_p_t)
+//
+//	for i := 0; i < len(s_f_t); i++ {
+//		for j := 1; j < len(s_f_t)-1; j++ {
+//			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
+//				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
+//			}
+//		}
+//	}
+//	index := []int{}
+//	for i, v := range s_f_t {
+//		if s_p_t.CoinNumber > float64(v.CoinNumberRule) {
+//			index = append(index, i)
+//		}
+//	}
+//	if len(index) > 0 {
+//		abonus := s_f_t[index[len(index)-1]].BonusCalculation * s_p_t.CoinNumber
+//		// 调老罗接口
+//		if err := PingAddWalletCoin(user_id,abonus);err!=nil{
+//			return err
+//		}
+//	}
+//	return nil
+//}
+//
+//// 远端连接  -  给定分红收益
+//func PingAddWalletCoin(user_id string,abonus float64) error{
+//	user := models.User{
+//		UserId:   user_id,
+//	}
+//	b,user_str := generateToken(user)
+//	if b != true{
+//		return errors.New("err")
+//	}
+//	client := &http.Client{}
+//	//生成要访问的url
+//	url := beego.AppConfig.String("api::apiurl_abonus")
+//	//提交请求
+//	reqest, errnr := http.NewRequest("POST", url, nil)
+//
+//	//增加header选项
+//	reqest.Header.Add("Authorization", user_str)
+//	reqest.Form.Add("coin",strconv.FormatFloat(abonus, 'E', -1, 64))
+//	reqest.Form.Add("coin_type","TFOR")
+//
+//	if errnr != nil {
+//		return errnr
+//	}
+//	//处理返回结果
+//	response, errdo := client.Do(reqest)
+//	defer response.Body.Close()
+//	if errdo != nil {
+//		return errdo
+//	}
+//	bys,err_read := ioutil.ReadAll(response.Body)
+//	if err_read!=nil {
+//		return err_read
+//	}
+//	values := common.ResponseData{}
+//	err := json.Unmarshal(bys,&values)
+//	if err!=nil {
+//		return err_read
+//	}
+//	if values.Code != 200{
+//		return errors.New("err")
+//	}
+//	return nil
+//}
