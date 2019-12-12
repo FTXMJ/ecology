@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"ecology1/models"
-	"ecology1/utils"
+	"ecology/models"
+	"ecology/utils"
 	"github.com/astaxie/beego/orm"
 	"github.com/robfig/cron"
 	"time"
@@ -10,49 +10,49 @@ import (
 
 var c = cron.New()
 
-func WelfarePayment()  {
+func WelfarePayment() {
 	o := models.NewOrm()
 	o.Begin()
 	task := models.DailyDividendTasks{
-		Time:           time.Now().Format("2006-01-02"),
-		State:          "false",
+		Time:  time.Now().Format("2006-01-02"),
+		State: "false",
 	}
-	if _,err := o.Insert(&task);err != nil{
+	if _, err := o.Insert(&task); err != nil {
 		//TODO logs
-		c.AddFunc("0 0/5 * * * ? *",WelfarePayment)
+		c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 		c.Start()
 		return
 	}
 	users := []models.User{}
-	_,err_read_user := o.QueryTable("user").All(&users)
+	_, err_read_user := o.QueryTable("user").All(&users)
 	if err_read_user != nil {
 		//TODO logs
-		c.AddFunc("0 0/5 * * * ? *",WelfarePayment)
+		c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 		c.Start()
 		return
 	}
-	for _,vuser := range users{
+	for _, vuser := range users {
 		accounts := []models.Account{}
-		int ,err := o.QueryTable("account").Filter("user_id",vuser.UserId).All(&accounts)
-		if err!=nil{
+		int, err := o.QueryTable("account").Filter("user_id", vuser.UserId).All(&accounts)
+		if err != nil {
 			//TODO logs
-			c.AddFunc("0 0/5 * * * ? *",WelfarePayment)
+			c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 			c.Start()
 			return
 		}
-		if int>0 {
-			for _,vaccount := range accounts{
-				if err := ABonus(o,vuser.UserId,vaccount);err!=nil{
+		if int > 0 {
+			for _, vaccount := range accounts {
+				if err := ABonus(o, vuser.UserId, vaccount); err != nil {
 					//TODO logs
-					c.AddFunc("0 0/5 * * * ? *",WelfarePayment)
+					c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 					c.Start()
 					return
 				}
 			}
 			err := AddFormulaABonus(vuser.UserId)
-			if err!=nil{
+			if err != nil {
 				//TODO logs
-				c.AddFunc("0 0/5 * * * ? *",WelfarePayment)
+				c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 				c.Start()
 				return
 			}
@@ -62,10 +62,10 @@ func WelfarePayment()  {
 	o.Commit()
 }
 
-func ABonus(o orm.Ormer,user_id string,account models.Account) error {
+func ABonus(o orm.Ormer, user_id string, account models.Account) error {
 	formula := models.Formula{}
-	err_formula := o.QueryTable("formula").Filter("ecology_id",account.Id).One(&formula)
-	if err_formula!=nil{
+	err_formula := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
+	if err_formula != nil {
 		//TODO logs
 		return err_formula
 	}
@@ -83,7 +83,7 @@ func ABonus(o orm.Ormer,user_id string,account models.Account) error {
 	}
 
 	//铸币交易记录
-	err_blo_d := FindLimitOneAndSaveBlo_dAbonus(o,user_id, "每日释放奖励", tx_id_blo_d, account.Id)
+	err_blo_d := FindLimitOneAndSaveBlo_dAbonus(o, user_id, "每日释放奖励", tx_id_blo_d, account.Id)
 	if err_blo_d != nil {
 		//TODO logs
 		return err_blo_d
@@ -93,7 +93,7 @@ func ABonus(o orm.Ormer,user_id string,account models.Account) error {
 }
 
 // 铸币表释放 以及 超级节点表的 同步数据
-func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer,user_id, comment, tx_id string, account_id int) error {
+func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer, user_id, comment, tx_id string, account_id int) error {
 	blocked_old := models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
@@ -104,11 +104,11 @@ func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer,user_id, comment, tx_id string, 
 		blocked_old.CurrentBalance = 0
 	}
 	for_mula := models.Formula{}
-	err_for := o.QueryTable("formula").Filter("ecology_id",account_id).One(&for_mula)
-	if err_for!=nil{
+	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
+	if err_for != nil {
 		return err_for
 	}
-	shifang := (blocked_old.CurrentBalance*for_mula.HoldReturnRate) +(blocked_old.CurrentBalance*for_mula.RecommendReturnRate) +(blocked_old.CurrentBalance*for_mula.TeamReturnRate)
+	shifang := (blocked_old.CurrentBalance * for_mula.HoldReturnRate) + (blocked_old.CurrentBalance * for_mula.RecommendReturnRate) + (blocked_old.CurrentBalance * for_mula.TeamReturnRate)
 	blocked_new := models.BlockedDetail{
 		Id:             0,
 		UserId:         user_id,
@@ -124,33 +124,33 @@ func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer,user_id, comment, tx_id string, 
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
-	blocked_new.CurrentBalance = blocked_old.CurrentBalance+0*for_mula.ReturnMultiple-shifang
-	_,err:=o.Insert(&blocked_new)
+	blocked_new.CurrentBalance = blocked_old.CurrentBalance + 0*for_mula.ReturnMultiple - shifang
+	_, err := o.Insert(&blocked_new)
 	if err != nil {
 		return err
 	}
 
-	_,err_txid := o.QueryTable("tx_id_list").Filter("tx_id",tx_id).Update(orm.Params{"state":"true"})
-	if err_txid!=nil{
+	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"state": "true"})
+	if err_txid != nil {
 		return err_txid
 	}
 
-	_,err_up :=o.QueryTable("account").Filter("id",account_id).Update(orm.Params{"bocked_balance":blocked_new.CurrentBalance})
-	if err_up!=nil{
+	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	if err_up != nil {
 		return err_up
 	}
 
 	super_peer_table := models.SuperPeerTable{}
-	err_super :=o.QueryTable("super_peer_table").Filter("user_id",user_id).One(&super_peer_table)
-	if err_super!=nil{
+	err_super := o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&super_peer_table)
+	if err_super != nil {
 		return err_super
 	}
-	coin := super_peer_table.CoinNumber+(0*for_mula.ReturnMultiple)-shifang
+	coin := super_peer_table.CoinNumber + (0 * for_mula.ReturnMultiple) - shifang
 	if coin < 0 {
 		coin = 0
 	}
-	_,err_super_up :=o.QueryTable("super_peer_table").Filter("user_id",user_id).Update(orm.Params{"coin_number":coin})
-	if err_super_up!=nil{
+	_, err_super_up := o.QueryTable("super_peer_table").Filter("user_id", user_id).Update(orm.Params{"coin_number": coin})
+	if err_super_up != nil {
 		return err_super_up
 	}
 	return nil

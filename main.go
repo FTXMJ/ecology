@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ecology1/controllers"
-	_ "ecology1/routers"
+	"ecology/controllers"
+	_ "ecology/routers"
 	"github.com/astaxie/beego"
 	"github.com/robfig/cron"
 )
@@ -19,7 +19,7 @@ func main() {
 		beego.SetStaticPath("/swagger", "swagger")
 	}
 
-	sk:= beego.AppConfig.DefaultString("jwt::SignKey","1233444")
+	sk := beego.AppConfig.DefaultString("jwt::SignKey", "1233444")
 	controllers.SetSignKey(sk)
 
 	beego.Run(":8080")

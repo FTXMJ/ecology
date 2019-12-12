@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"ecology1/common"
-	"ecology1/models"
+	"ecology/common"
+	"ecology/models"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"strconv"
@@ -92,7 +92,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 		_, err := o.QueryTable("force_table").
 			Filter("id", id).
 			Update(orm.
-			Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
+				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
 		if err != nil {
 			data = common.NewErrorResponse(500)
 			return
@@ -162,7 +162,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		action         = this.GetString("action")
 		levelstr       = this.GetString("levelstr")
 		coin_number, _ = this.GetInt("coin_number")
-		force_str          = this.GetString("force")
+		force_str      = this.GetString("force")
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -189,7 +189,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		_, err := o.QueryTable("super_force_table").
 			Filter("id", id).
 			Update(orm.
-			Params{"level":levelstr,"coin_number_rule":coin_number,"bonus_calculation":force})
+				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
 		if err != nil {
 			data = common.NewErrorResponse(500)
 			return

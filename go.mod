@@ -1,11 +1,10 @@
-module ecology1
+module ecology
 
 go 1.13
 
 require (
 	github.com/astaxie/beego v1.12.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/go-playground/validator/v10 v10.0.1
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/kr/pretty v0.1.0 // indirect
@@ -14,8 +13,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
+	github.com/stretchr/testify v1.4.0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v9 v9.30.2
 )

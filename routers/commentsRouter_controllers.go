@@ -7,7 +7,7 @@ import (
 
 func init() {
 
-	beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"],
+	beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"],
 		beego.ControllerComments{
 			Method:           "OperationFormulaList",
 			Router:           `/operation_formula_list`,
@@ -16,7 +16,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"],
+	beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"],
 		beego.ControllerComments{
 			Method:           "OperationSuperFormulaList",
 			Router:           `/operation_super_formula_list`,
@@ -25,7 +25,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"],
+	beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"],
 		beego.ControllerComments{
 			Method:           "ShowFormulaList",
 			Router:           `/show_formula_list`,
@@ -34,7 +34,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology1/controllers:BackStageManagement"],
+	beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"] = append(beego.GlobalControllerRouter["ecology/controllers:BackStageManagement"],
 		beego.ControllerComments{
 			Method:           "ShowSuperFormulaList",
 			Router:           `/show_super_formula_list`,
@@ -43,7 +43,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"],
+	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
 			Method:           "CreateNewWarehouse",
 			Router:           `/create_new_warehouse`,
@@ -52,7 +52,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"],
+	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
 			Method:           "ShowEcologyIndex",
 			Router:           `/show_ecology_index`,
@@ -61,7 +61,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"],
+	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
 			Method:           "ToChangeIntoUSDD",
 			Router:           `/to_change_into_USDD`,
@@ -70,7 +70,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"],
+	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
 			Method:           "UpgradeWarehouse",
 			Router:           `/upgrade_warehouse`,
@@ -79,7 +79,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology1/controllers:EcologyIndexController"],
+	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
 			Method:           "ReturnPageListHostry",
 			Router:           `/upgrade_warehouse`,
@@ -88,7 +88,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+	beego.GlobalControllerRouter["ecology/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology/controllers:FirstController"],
 		beego.ControllerComments{
 			Method:           "AddAccount",
 			Router:           `/add_account`,
@@ -97,7 +97,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+	beego.GlobalControllerRouter["ecology/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology/controllers:FirstController"],
 		beego.ControllerComments{
 			Method:           "AddFormula",
 			Router:           `/add_formula`,
@@ -106,7 +106,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+	beego.GlobalControllerRouter["ecology/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology/controllers:FirstController"],
 		beego.ControllerComments{
 			Method:           "AddUser",
 			Router:           `/add_user`,
@@ -115,7 +115,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+	beego.GlobalControllerRouter["ecology/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology/controllers:FirstController"],
 		beego.ControllerComments{
 			Method:           "Check",
 			Router:           `/check`,
@@ -124,7 +124,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+	beego.GlobalControllerRouter["ecology/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology/controllers:FirstController"],
 		beego.ControllerComments{
 			Method:           "CreateUserAbout",
 			Router:           `/create_user`,
@@ -133,7 +133,7 @@ func init() {
 			Filters:          nil,
 			Params:           nil})
 
-	beego.GlobalControllerRouter["ecology1/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology1/controllers:FirstController"],
+	beego.GlobalControllerRouter["ecology/controllers:FirstController"] = append(beego.GlobalControllerRouter["ecology/controllers:FirstController"],
 		beego.ControllerComments{
 			Method:           "DailyDividendAndRelease",
 			Router:           `/yanshi`,

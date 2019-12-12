@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"ecology1/models"
+	"ecology/models"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"

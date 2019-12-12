@@ -8,7 +8,7 @@
 package routers
 
 import (
-	"ecology1/controllers"
+	"ecology/controllers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
 )

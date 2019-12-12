@@ -1,15 +1,14 @@
 package controllers
 
 import (
-	"ecology1/common"
-	"ecology1/models"
+	"ecology/common"
+	"ecology/models"
 	"github.com/astaxie/beego"
 )
 
 type FirstController struct {
 	beego.Controller
 }
-
 
 // @Tags 创建
 // @Accept  json
@@ -30,7 +29,7 @@ type t struct {
 // @Produce json
 // @Success 200
 // @router /check [GET]
-func (this *FirstController)Check()  {
+func (this *FirstController) Check() {
 	var data *common.ResponseData
 	defer func() {
 		this.Data["json"] = data
@@ -45,7 +44,7 @@ func (this *FirstController)Check()  {
 // @Produce json
 // @Success 200
 // @router /add_user [GET]
-func (this *FirstController)AddUser()  {
+func (this *FirstController) AddUser() {
 	var data *common.ResponseData
 	defer func() {
 		this.Data["json"] = data
@@ -53,11 +52,11 @@ func (this *FirstController)AddUser()  {
 	}()
 
 	user := models.User{
-		Name:     "lxd",
-		UserId:   "靓仔",
+		Name:   "lxd",
+		UserId: "靓仔",
 	}
 	err := user.Insert()
-	if err!=nil{
+	if err != nil {
 		data = common.NewErrorResponse(500)
 		return
 	}
@@ -71,7 +70,7 @@ func (this *FirstController)AddUser()  {
 // @Produce json
 // @Success 200
 // @router /add_account [GET]
-func (this *FirstController)AddAccount()  {
+func (this *FirstController) AddAccount() {
 	var data *common.ResponseData
 	defer func() {
 		this.Data["json"] = data
@@ -86,7 +85,7 @@ func (this *FirstController)AddAccount()  {
 		Level:         "",
 	}
 	err := account.Insert()
-	if err!=nil{
+	if err != nil {
 		data = common.NewErrorResponse(500)
 		return
 	}
@@ -100,7 +99,7 @@ func (this *FirstController)AddAccount()  {
 // @Produce json
 // @Success 200
 // @router /add_formula [GET]
-func (this *FirstController)AddFormula()  {
+func (this *FirstController) AddFormula() {
 	var data *common.ResponseData
 	defer func() {
 		this.Data["json"] = data
@@ -118,7 +117,7 @@ func (this *FirstController)AddFormula()  {
 		TeamReturnRate:      0.04,
 	}
 	err := account.Insert()
-	if err!=nil{
+	if err != nil {
 		data = common.NewErrorResponse(500)
 		return
 	}

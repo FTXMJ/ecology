@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"ecology1/common"
-	"ecology1/consul"
-	"ecology1/models"
-	"ecology1/utils"
+	"ecology/common"
+	"ecology/consul"
+	"ecology/models"
+	"ecology/utils"
 	"encoding/json"
 	"errors"
 	"github.com/astaxie/beego"

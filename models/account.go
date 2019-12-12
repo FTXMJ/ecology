@@ -1,7 +1,7 @@
 package models
 
 import (
-	"ecology1/consul"
+	"ecology/consul"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"io/ioutil"

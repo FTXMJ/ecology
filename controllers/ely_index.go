@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"ecology1/common"
-	"ecology1/models"
-	"ecology1/utils"
+	"ecology/common"
+	"ecology/models"
+	"ecology/utils"
 	"github.com/astaxie/beego"
 	"strconv"
 	"time"
