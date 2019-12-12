@@ -21,6 +21,5 @@ func main() {
 
 	sk := beego.AppConfig.DefaultString("jwt::SignKey", "1233444")
 	controllers.SetSignKey(sk)
-
-	beego.Run(":8080")
+	beego.Run()
 }
