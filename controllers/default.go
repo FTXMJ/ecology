@@ -52,7 +52,6 @@ func (this *FirstController) AddUser() {
 	}()
 
 	user := models.User{
-		Name:   "lxd",
 		UserId: "靓仔",
 	}
 	err := user.Insert()

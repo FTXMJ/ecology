@@ -61,8 +61,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	indexValues.Ecological_poject_bool = true
 	if len(account_index) > 0 {
 		for _, v := range account_index {
-			var formula_index models.Formula
-			errfor := models.NewOrm().QueryTable("formula").Filter("ecology_id", v.Id).One(&formula_index)
+			var formula_index []models.Formula
+			_, errfor := models.NewOrm().QueryTable("formula").Filter("ecology_id", v.Id).All(&formula_index)
 			if errfor != nil {
 				data = common.NewErrorResponse(500)
 				//TODO log
@@ -71,11 +71,11 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			f := models.Formulaindex{
 				Level:               v.Level,
 				BockedBalance:       v.BockedBalance,
-				ReturnMultiple:      formula_index.ReturnMultiple,
-				ToDayRate:           formula_index.HoldReturnRate + formula_index.ReturnMultiple + formula_index.TeamReturnRate,
-				HoldReturnRate:      formula_index.HoldReturnRate,
-				RecommendReturnRate: formula_index.RecommendReturnRate,
-				TeamReturnRate:      formula_index.TeamReturnRate,
+				ReturnMultiple:      formula_index[0].ReturnMultiple,
+				ToDayRate:           formula_index[0].HoldReturnRate + formula_index[0].ReturnMultiple + formula_index[0].TeamReturnRate,
+				HoldReturnRate:      formula_index[0].HoldReturnRate,
+				RecommendReturnRate: formula_index[0].RecommendReturnRate,
+				TeamReturnRate:      formula_index[0].TeamReturnRate,
 			}
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}

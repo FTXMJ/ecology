@@ -11,7 +11,6 @@ import (
 //用户表
 type User struct {
 	Id       int    `orm:"column(id);pk;auto"`
-	Name     string `orm:column(name)`      // 对应 monggodb 的fallname
 	UserId   string `orm:column(user_id)`   //对应 monggodb 的user_id
 	FatherId string `orm:column(father_id)` //父亲id
 }
@@ -34,7 +33,7 @@ func (this *User) Update() (err error) {
 func PingUser(token string) (interface{}, error) {
 	client := &http.Client{}
 	//生成要访问的url
-	url := consul.GetUserApi + beego.AppConfig.String("consul::apiurl_get_user")
+	url := consul.GetUserApi + beego.AppConfig.String("api::apiurl_get_user")
 	//提交请求
 	reqest, errnr := http.NewRequest("GET", url, nil)
 
@@ -54,11 +53,17 @@ func PingUser(token string) (interface{}, error) {
 	if err_read != nil {
 		return "", err_read
 	}
-	values := make(map[string]interface{})
+	values := Response{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil {
 		return "", err
 	}
 	response.Body.Close()
-	return values["father_id"], nil
+	return values.Data["father_id"], nil
+}
+
+type Response struct {
+	Code int                    `json:"code""`
+	Msg  string                 `json:"msg"`
+	Data map[string]interface{} `json:"data"`
 }
