@@ -249,11 +249,6 @@ paths:
         description: 铸(发)币的数量
         required: true
         type: string
-      - in: query
-        name: levelstr
-        description: 等级数据
-        required: true
-        type: string
       responses:
         200___转USDD到生态仓库:
           description: ""

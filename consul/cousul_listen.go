@@ -6,6 +6,7 @@ import (
 	consulapi "github.com/hashicorp/consul/api"
 	"strconv"
 )
+
 var count int64
 
 // consul 服务端会自己发送请求，来进行健康检查
@@ -26,11 +27,11 @@ func registerServer() {
 	}
 	port, _ := strconv.Atoi(beego.AppConfig.String("consul::httpport"))
 	registration := new(consulapi.AgentServiceRegistration)
-	registration.ID = beego.AppConfig.String("consul::service_id")              // 服务节点的名称
-	registration.Name = beego.AppConfig.String("consul::service_name")         // 服务名称
-	registration.Port = port                           // 服务端口
-	registration.Address = beego.AppConfig.String("consul::httpip")         // 服务
-	registration.Check = &consulapi.AgentServiceCheck{ // 健康检查
+	registration.ID = beego.AppConfig.String("consul::service_id")     // 服务节点的名称
+	registration.Name = beego.AppConfig.String("consul::service_name") // 服务名称
+	registration.Port = port                                           // 服务端口
+	registration.Address = beego.AppConfig.String("consul::httpip")    // 服务
+	registration.Check = &consulapi.AgentServiceCheck{                 // 健康检查
 		HTTP:                           fmt.Sprintf("http://%s:%d%s", registration.Address, registration.Port, "/check"),
 		Timeout:                        "3s",
 		Interval:                       "5s",  // 健康检查间隔
@@ -44,6 +45,8 @@ func registerServer() {
 }
 
 var MicroClient *consulapi.Client
+var GetUserApi string
+var GetWalletApi string
 
 // 从consul中发现服务
 func init() {
@@ -56,20 +59,22 @@ func init() {
 	if err != nil {
 		//log.Log.Fatal("consul client error : ", err)
 	}
+	GetUserApi = GetService(beego.AppConfig.String("consul::user_tfor"), "http://192.168.8.126/api/v1")
+	GetWalletApi = GetService(beego.AppConfig.String("consul::wallet_tfor"), "http://192.168.8.126/api/v1")
 	//consulDeRegister()
 }
 
 func GetService(serviceid, defau string) string {
 	service, _, err := MicroClient.Agent().Service(serviceid, nil)
 	if err == nil {
-		return service.Address + ":" + strconv.Itoa(service.Port)
+		return "http://" + service.Address + ":" + strconv.Itoa(service.Port)
 	} else {
 		return defau
 	}
 }
 
 // 取消consul注册的服务
-func consulDeRegister()  {
+func consulDeRegister() {
 	// 创建连接consul服务配置
 	config := consulapi.DefaultConfig()
 	config.Address = beego.AppConfig.String("consul::consul_ip") + ":" + beego.AppConfig.String("consul::consul_port")

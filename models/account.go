@@ -1,10 +1,12 @@
 package models
 
 import (
+	"ecology1/consul"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 //生态钱包
@@ -66,55 +68,56 @@ type NetValueType struct {
 	LevelStr   string  `form:"levelstr" json:"level_str"`
 }
 
-type data_wallet struct {
-	Code int `json:"code"`
-	Msg string `json:"msg"`
-	Data []WalletInfo `json:"data"`
+type Data_wallet struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data string `json:"data"`
 }
 
 // 老罗的钱包数据结构
 type WalletInfo struct {
-	Balance     float64    `json:"balance"`
-	CurrencyId int    `json:"currency_id"`
-	Decimals    int    `json:"decimals"`
-	Name        string `json:"name"`
-	Symbol      string `json:"symbol"`
+	Balance    float64 `json:"balance"`
+	CurrencyId int     `json:"currency_id"`
+	Decimals   int     `json:"decimals"`
+	Name       string  `json:"name"`
+	Symbol     string  `json:"symbol"`
 }
 
 // 调用远端接口
-func PingWallet(token string) (float64, error) {
+func PingWallet(token string, coin_number float64) error {
 	client := &http.Client{}
 	//生成要访问的url
-	url := beego.AppConfig.String("api::apiurl_add_coin")
+	url := consul.GetWalletApi + beego.AppConfig.String("api::apiurl_get_all_wallet")
 	//提交请求
 	reqest, errnr := http.NewRequest("GET", url, nil)
 
 	//增加header选项
 	reqest.Header.Add("Authorization", token)
-
+	coin := strconv.FormatFloat(coin_number, 'E', -1, 64)
+	reqest.Form.Add("money", coin)
+	reqest.Form.Add("cion_type", "USDD")
 	if errnr != nil {
-		return 0, errnr
+		return errnr
 	}
+
 	//处理返回结果
 	response, errdo := client.Do(reqest)
-	defer response.Body.Close()
 	if errdo != nil {
-		return 0, errdo
+		return errdo
 	}
-	bys,err_read := ioutil.ReadAll(response.Body)
-	if err_read!=nil {
-		return 0, err_read
+
+	bys, err_read := ioutil.ReadAll(response.Body)
+	if err_read != nil {
+		return err_read
 	}
-	values := data_wallet{}
-	err := json.Unmarshal(bys,&values)
-	if err!=nil {
-		return 0, err_read
+
+	values := Data_wallet{}
+	err := json.Unmarshal(bys, &values)
+	if err != nil || values.Code != 200 {
+		return err
 	}
-	coins := 0.0
-	for _,v := range values.Data{
-		coins += v.Balance
-	}
-	return coins, nil
+	response.Body.Close()
+	return err
 }
 
 // 判断是否达到超级节点的要求 --- 页面显示
@@ -122,7 +125,7 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
 	s_f_t := []SuperForceTable{}
 	NewOrm().QueryTable("super_force_table").All(&s_f_t)
 	s_p_t := SuperPeerTable{}
-	NewOrm().QueryTable("super_peer_table").Filter("user_id",user_id).One(&s_p_t)
+	NewOrm().QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
 
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
@@ -144,34 +147,30 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
 	}
 }
 
-
-
-
-
 type Ecology_index_ob_test struct {
-	Usdd___usdd数量                   float64
-	Ecological_poject___生态项目      []Formulaindex_test //生态项目
+	Usdd___usdd数量                             float64
+	Ecological_poject___生态项目                  []Formulaindex_test //生态项目
 	Ecological_poject_bool___是否有生态仓库没有就是false bool
-	Super_peer___超级节点信息             SuperPeer_test //超级节点
-	Super_peer_bool__是否显示超级节点        bool
+	Super_peer___超级节点信息                       SuperPeer_test //超级节点
+	Super_peer_bool__是否显示超级节点                 bool
 }
 
 //页面显示的　超级节点结构
 type SuperPeer_test struct {
-	Usdd___总币数ForceTable_test        float64 //总币数ForceTable_test
-	Level___超级节点的独立属性       string  //超级节点的独立属性
-	TodayABouns___今日分红 float64 // 今日分红
+	Usdd___总币数ForceTable_test float64 //总币数ForceTable_test
+	Level___超级节点的独立属性         string  //超级节点的独立属性
+	TodayABouns___今日分红        float64 // 今日分红
 }
 
 // 页面显示的　生态仓库结构
 type Formulaindex_test struct {
-	Level___等级               string
+	Level___等级                 string
 	BockedBalance___持币数量       float64 //持币数量
-	LowHold___低位             int     //低位
-	HighHold___高位            int     //高位
-	ReturnMultiple___杠杆      float64 //杠杆
+	LowHold___低位               int     //低位
+	HighHold___高位              int     //高位
+	ReturnMultiple___杠杆        float64 //杠杆
 	ToDayRate___今日算力           float64 //今日算力
 	HoldReturnRate___自由算力      float64 //本金自由算力
 	RecommendReturnRate___直推算力 float64 //直推算力
-	TeamReturnRate____动态算力      float64 //动态算力
+	TeamReturnRate____动态算力     float64 //动态算力
 }

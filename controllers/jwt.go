@@ -62,23 +62,22 @@ func CheckLogin(ctx *context.Context) {
 			ctx.WriteString(`{"code": "400","msg": "数据格式不正确"}`)
 			return
 		}
-		if tockken.FatherId == "father_id err" {
-			ctx.WriteString(`{"code": "401","msg": "登录信息错误，请重新登录！"}`)
-			return
-		}
 		user := []models.User{}
 		o := models.NewOrm()
 		o.Begin()
 		o.QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
 		if len(user) == 0 {
+			f, err_get_user := models.PingUser(token)
+			if err_get_user != nil {
+				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
+				return
+			}
 			user := models.User{
-				Name:   tockken.Name,
-				UserId: tockken.UserID,
+				Name:     tockken.Name,
+				UserId:   tockken.UserID,
+				FatherId: f.(string),
 			}
-			if tockken.FatherId != "" {
-				user.FatherId = tockken.FatherId
-			}
-			_,erruser := o.Insert(&user)
+			_, erruser := o.Insert(&user)
 			if erruser != nil {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
@@ -87,15 +86,15 @@ func CheckLogin(ctx *context.Context) {
 				UserId:     tockken.UserID,
 				CoinNumber: 0,
 			}
-			_,super_peer_err := o.Insert(&super_peer)
+			_, super_peer_err := o.Insert(&super_peer)
 			if super_peer_err != nil {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
 			account_def := models.Account{
-				UserId:     tockken.UserID,
+				UserId: tockken.UserID,
 			}
-			_,account_def_err := o.Insert(&account_def)
+			_, account_def_err := o.Insert(&account_def)
 			if account_def_err != nil {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return

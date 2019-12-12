@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ecology1/common"
+	"ecology1/consul"
 	"ecology1/models"
 	"ecology1/utils"
 	"encoding/json"
@@ -14,15 +15,12 @@ import (
 	"time"
 )
 
-
-
-
 // @Tags test
 // @Accept  json
 // @Produce json
 // @Success 200
 // @router /yanshi [GET]
-func (this *FirstController)DailyDividendAndRelease()  {
+func (this *FirstController) DailyDividendAndRelease() {
 	o := models.NewOrm()
 	users := []models.User{}
 	o.QueryTable("user").All(&users)
@@ -82,7 +80,7 @@ type data_users struct {
 func GetTeams(user models.User) ([]string, error) {
 	client := &http.Client{}
 	//生成要访问的url
-	url := beego.AppConfig.String("api::apiurl_get_team")
+	url := consul.GetUserApi + beego.AppConfig.String("api::apiurl_get_team")
 	//提交请求
 	reqest, errnr := http.NewRequest("GET", url, nil)
 
@@ -110,7 +108,7 @@ func GetTeams(user models.User) ([]string, error) {
 	values := data_users{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil {
-		return nil, err_read
+		return nil, err
 	}
 	return values.Data, nil
 }
@@ -227,7 +225,7 @@ func AddFormulaABonus(user_id string) error {
 	s_f_t := []models.SuperForceTable{}
 	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
 	s_p_t := models.SuperPeerTable{}
-	models.NewOrm().QueryTable("super_peer_table").Filter("user_id",user_id).One(&s_p_t)
+	models.NewOrm().QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
 
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
@@ -245,7 +243,7 @@ func AddFormulaABonus(user_id string) error {
 	if len(index) > 0 {
 		abonus := s_f_t[index[len(index)-1]].BonusCalculation * s_p_t.CoinNumber
 		// 调老罗接口
-		if err := PingAddWalletCoin(user_id,abonus);err!=nil{
+		if err := PingAddWalletCoin(user_id, abonus); err != nil {
 			return err
 		}
 	}
@@ -253,12 +251,12 @@ func AddFormulaABonus(user_id string) error {
 }
 
 // 远端连接  -  给定分红收益
-func PingAddWalletCoin(user_id string,abonus float64) error{
+func PingAddWalletCoin(user_id string, abonus float64) error {
 	user := models.User{
-		UserId:   user_id,
+		UserId: user_id,
 	}
-	b,user_str := generateToken(user)
-	if b != true{
+	b, user_str := generateToken(user)
+	if b != true {
 		return errors.New("err")
 	}
 	client := &http.Client{}
@@ -269,8 +267,8 @@ func PingAddWalletCoin(user_id string,abonus float64) error{
 
 	//增加header选项
 	reqest.Header.Add("Authorization", user_str)
-	reqest.Form.Add("coin",strconv.FormatFloat(abonus, 'E', -1, 64))
-	reqest.Form.Add("coin_type","TFOR")
+	reqest.Form.Add("coin", strconv.FormatFloat(abonus, 'E', -1, 64))
+	reqest.Form.Add("coin_type", "TFOR")
 
 	if errnr != nil {
 		return errnr
@@ -281,16 +279,16 @@ func PingAddWalletCoin(user_id string,abonus float64) error{
 	if errdo != nil {
 		return errdo
 	}
-	bys,err_read := ioutil.ReadAll(response.Body)
-	if err_read!=nil {
+	bys, err_read := ioutil.ReadAll(response.Body)
+	if err_read != nil {
 		return err_read
 	}
 	values := common.ResponseData{}
-	err := json.Unmarshal(bys,&values)
-	if err!=nil {
+	err := json.Unmarshal(bys, &values)
+	if err != nil {
 		return err_read
 	}
-	if values.Code != 200{
+	if values.Code != 200 {
 		return errors.New("err")
 	}
 	return nil
