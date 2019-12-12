@@ -16,7 +16,7 @@ func main() {
 	//bee run -gendoc=true -downdoc=true
 	//bee pack -be GOOS=linux
 	if beego.DEV == "dev" {
-		beego.SetStaticPath("/swagger", "swagger")
+		beego.SetStaticPath("/api/v1/ecology/swagger", "swagger")
 	}
 
 	sk := beego.AppConfig.DefaultString("jwt::SignKey", "1233444")

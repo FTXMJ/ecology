@@ -42,7 +42,8 @@ type JWT struct {
 //验证登录
 func CheckLogin(ctx *context.Context) {
 	api := ctx.Request.URL.Path
-	if api != "/swagger" {
+	if api != "/api/v1/ecology/swagger" &&
+		api != "/api/v1/ecology/check" {
 
 		token := ctx.Request.Header.Get("Authorization")
 		if token == "" {
