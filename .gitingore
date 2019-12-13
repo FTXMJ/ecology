@@ -12,5 +12,5 @@
 ./docs
 /main
 /.idea
-.idea
-/tests
+./.idea
+./tests
