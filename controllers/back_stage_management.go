@@ -18,7 +18,7 @@ type BackStageManagement struct {
 // @Accept  json
 // @Produce json
 // @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
-// @router /show_formula_list [post]
+// @router /show_formula_list [POST]
 func (this *BackStageManagement) ShowFormulaList() {
 	var (
 		data       *common.ResponseData
@@ -48,7 +48,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 // @Param recommend_return_rate query string true "直推算力"
 // @Param team_return_rate query string true "动态算力"
 // @Success 200___算力表信息修改
-// @router /operation_formula_list [post]
+// @router /operation_formula_list [POST]
 func (this *BackStageManagement) OperationFormulaList() {
 	var (
 		data                      *common.ResponseData
@@ -125,7 +125,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 // @Accept  json
 // @Produce json
 // @Success 200__超级节点算力表显示后台操作or用户查看都可以  {object} models.SuperForceTable_test
-// @router /show_super_formula_list [post]
+// @router /show_super_formula_list [POST]
 func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
@@ -152,7 +152,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 // @Param coin_number query string true "要求的持币数量"
 // @Param force query string true "算力　　要以小数的格式返回　　如 : 15% = 0.15 "
 // @Success 200___超级节点算力表信息修改
-// @router /operation_super_formula_list [post]
+// @router /operation_super_formula_list [POST]
 func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
 		data           *common.ResponseData

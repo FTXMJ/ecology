@@ -589,6 +589,10 @@
                     "type": "number",
                     "format": "double"
                 },
+                "Id__生态仓库id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "Level___等级": {
                     "type": "string"
                 },

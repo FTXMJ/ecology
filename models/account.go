@@ -165,6 +165,7 @@ type SuperPeer_test struct {
 
 // 页面显示的　生态仓库结构
 type Formulaindex_test struct {
+	Id__生态仓库id                 int
 	Level___等级                 string
 	BockedBalance___持币数量       float64 //持币数量
 	LowHold___低位               int     //低位

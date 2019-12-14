@@ -17,7 +17,7 @@ type EcologyIndexController struct {
 // @Accept  json
 // @Produce json
 // @Success 200___生态首页展示 {object} models.Ecology_index_ob_test
-// @router /show_ecology_index [Get]
+// @router /show_ecology_index [GET]
 func (this *EcologyIndexController) ShowEcologyIndex() {
 	var (
 		data          *common.ResponseData
@@ -93,7 +93,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 // @Param coin_number query string true "铸(发)币的数量"
 // @Param levelstr query string true "等级数据"
 // @Success 200____新增生态仓库
-// @router /create_new_warehouse [Post]
+// @router /create_new_warehouse [POST]
 func (this *EcologyIndexController) CreateNewWarehouse() {
 	var (
 		data *common.ResponseData
@@ -208,7 +208,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 // @Param ecology_id query string int "生态仓库id的id"
 // @Param coin_number query string true "铸(发)币的数量"
 // @Success 200___转USDD到生态仓库
-// @router /to_change_into_USDD [Post]
+// @router /to_change_into_USDD [POST]
 func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	var (
 		data *common.ResponseData
@@ -304,7 +304,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 // @Param cion_number query string true "铸(发)币的数量"
 // @Param levelstr query string true "升级后的等级"
 // @Success 200____升级生态仓库
-// @router /upgrade_warehouse [Post]
+// @router /upgrade_warehouse [POST]
 func (this *EcologyIndexController) UpgradeWarehouse() {
 	var (
 		data *common.ResponseData
@@ -411,7 +411,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 // @Param current_page query string true "分页信息　－　当前页数"
 // @Param page_size query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /return_page_list_hostry [Get]
+// @router /return_page_list_hostry [GET]
 func (this *EcologyIndexController) ReturnPageListHostry() {
 	var (
 		data            *common.ResponseData
