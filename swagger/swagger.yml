@@ -188,7 +188,7 @@ paths:
         200___超级节点算力表信息修改:
           description: ""
   /ecology/return_page_list_hostry:
-    post:
+    get:
       tags:
       - ecology
       consumes:

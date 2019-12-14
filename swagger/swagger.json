@@ -285,7 +285,7 @@
             }
         },
         "/ecology/return_page_list_hostry": {
-            "post": {
+            "get": {
                 "tags": [
                     "ecology"
                 ],

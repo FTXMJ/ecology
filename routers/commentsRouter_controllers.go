@@ -56,7 +56,7 @@ func init() {
 		beego.ControllerComments{
 			Method:           "ReturnPageListHostry",
 			Router:           `/return_page_list_hostry`,
-			AllowHTTPMethods: []string{"Post"},
+			AllowHTTPMethods: []string{"Get"},
 			MethodParams:     param.Make(),
 			Filters:          nil,
 			Params:           nil})

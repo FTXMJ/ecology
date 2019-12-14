@@ -411,7 +411,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 // @Param current_page query string true "分页信息　－　当前页数"
 // @Param page_size query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /return_page_list_hostry [Post]
+// @router /return_page_list_hostry [Get]
 func (this *EcologyIndexController) ReturnPageListHostry() {
 	var (
 		data            *common.ResponseData
