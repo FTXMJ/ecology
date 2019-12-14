@@ -187,6 +187,44 @@ paths:
       responses:
         200___超级节点算力表信息修改:
           description: ""
+  /ecology/return_page_list_hostry:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: ecology_id
+        description: 生态仓库id的id
+        type: string
+      - in: query
+        name: page_count
+        description: 分页信息　－　数据总条数
+        required: true
+        type: string
+      - in: query
+        name: total_page
+        description: 分页信息　－　总页数
+        required: true
+        type: string
+      - in: query
+        name: current_page
+        description: 分页信息　－　当前页数
+        required: true
+        type: string
+      - in: query
+        name: page_size
+        description: 分页信息　－　每页数据量
+        required: true
+        type: string
+      responses:
+        200____交易的历史记录:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.HostryPageInfo_test'
   /ecology/show_ecology_index:
     get:
       tags:
@@ -262,34 +300,27 @@ paths:
       - application/json
       parameters:
       - in: query
+        name: user_id
+        description: 用户id   ---- 放在 header
+        required: true
+        type: string
+      - in: query
         name: ecology_id
         description: 生态仓库id的id
         type: string
       - in: query
-        name: page_count
-        description: 分页信息　－　数据总条数
+        name: cion_number
+        description: 铸(发)币的数量
         required: true
         type: string
       - in: query
-        name: total_page
-        description: 分页信息　－　总页数
-        required: true
-        type: string
-      - in: query
-        name: current_page
-        description: 分页信息　－　当前页数
-        required: true
-        type: string
-      - in: query
-        name: page_size
-        description: 分页信息　－　每页数据量
+        name: levelstr
+        description: 升级后的等级
         required: true
         type: string
       responses:
-        200____交易的历史记录:
+        200____升级生态仓库:
           description: ""
-          schema:
-            $ref: '#/definitions/models.HostryPageInfo_test'
   /ecology/yanshi:
     get:
       tags:

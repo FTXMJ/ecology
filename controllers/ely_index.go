@@ -69,6 +69,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				return
 			}
 			f := models.Formulaindex{
+				Id:                  v.Id,
 				Level:               v.Level,
 				BockedBalance:       v.BockedBalance,
 				ReturnMultiple:      formula_index[0].ReturnMultiple,
@@ -410,7 +411,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 // @Param current_page query string true "分页信息　－　当前页数"
 // @Param page_size query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /upgrade_warehouse [Post]
+// @router /return_page_list_hostry [Post]
 func (this *EcologyIndexController) ReturnPageListHostry() {
 	var (
 		data            *common.ResponseData

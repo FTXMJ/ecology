@@ -54,6 +54,15 @@ func init() {
 
 	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
+			Method:           "ReturnPageListHostry",
+			Router:           `/return_page_list_hostry`,
+			AllowHTTPMethods: []string{"Post"},
+			MethodParams:     param.Make(),
+			Filters:          nil,
+			Params:           nil})
+
+	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
+		beego.ControllerComments{
 			Method:           "ShowEcologyIndex",
 			Router:           `/show_ecology_index`,
 			AllowHTTPMethods: []string{"Get"},
@@ -73,15 +82,6 @@ func init() {
 	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
 		beego.ControllerComments{
 			Method:           "UpgradeWarehouse",
-			Router:           `/upgrade_warehouse`,
-			AllowHTTPMethods: []string{"Post"},
-			MethodParams:     param.Make(),
-			Filters:          nil,
-			Params:           nil})
-
-	beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"] = append(beego.GlobalControllerRouter["ecology/controllers:EcologyIndexController"],
-		beego.ControllerComments{
-			Method:           "ReturnPageListHostry",
 			Router:           `/upgrade_warehouse`,
 			AllowHTTPMethods: []string{"Post"},
 			MethodParams:     param.Make(),

@@ -31,7 +31,6 @@ func (this *BackStageManagement) ShowFormulaList() {
 	}()
 	o.QueryTable("force_table").All(&force_list)
 	models.QuickSortForce(force_list, 0, len(force_list)-1)
-
 	data = common.NewResponse(force_list)
 	return
 }

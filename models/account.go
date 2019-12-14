@@ -50,6 +50,7 @@ type SuperPeer struct {
 
 // 页面显示的　生态仓库结构
 type Formulaindex struct {
+	Id                  int
 	Level               string
 	BockedBalance       float64 //持币数量
 	LowHold             int     //低位
