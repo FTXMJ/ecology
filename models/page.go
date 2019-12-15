@@ -44,17 +44,26 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 	last_values := append_blo_to_public(blo_list, index_values)
 	QuickSortAgreement(last_values, 0, len(last_values)-1)
 	page.Count = len(last_values)
-	if page.PageSize < 5 {
-		page.PageSize = 5
+	if page.PageSize < 10 {
+		page.PageSize = 10
 	}
 	if page.CurrentPage == 0 {
 		page.CurrentPage = 1
 	}
 	//listle, _ := o.Limit(page.PageSize, (page.PageNo-1)*page.PageSize).OrderBy("-createtime").All(&list)
-	start := (page.CurrentPage-1)*page.PageSize - 1
-	end := page.PageSize + 1
-	listle := last_values[start : start+end]
-	page.CurrentPage = (page.Count / page.PageSize) + 1 //总页数
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	listle := []HostryValues{}
+	if end > len(last_values) {
+		for _, v := range last_values[start:] {
+			listle = append(listle, v)
+		}
+	} else {
+		for _, v := range last_values[start:end] {
+			listle = append(listle, v)
+		}
+	}
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}

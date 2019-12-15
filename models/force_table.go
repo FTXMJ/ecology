@@ -1,9 +1,9 @@
 package models
 
 type ForceTable struct {
-	Id                  int     `orm:"column(id);pk;auto"`
-	Level               string  `orm:column(level)`
-	LevelInt               string  `orm:column(level_int)`          //等级数字
+	Id    int    `orm:"column(id);pk;auto"`
+	Level string `orm:column(level)`
+	//LevelInt               string  `orm:column(level_int)`          //等级数字
 	LowHold             int     `orm:column(low_hold)`              //低位
 	HighHold            int     `orm:column(high_hold)`             //高位
 	ReturnMultiple      float64 `orm:column(return_multiple)`       //杠杆
@@ -11,7 +11,6 @@ type ForceTable struct {
 	RecommendReturnRate float64 `orm:column(recommend_return_rate)` //直推算力
 	TeamReturnRate      float64 `orm:column(team_return_rate)`      //动态算力
 }
-
 
 // 快速排序
 func QuickSortForce(arr []ForceTable, start, end int) {
@@ -44,7 +43,6 @@ func QuickSortForce(arr []ForceTable, start, end int) {
 		QuickSortForce(arr, index+1, end)
 	}
 }
-
 
 type ForceTable_test struct {
 	Id__id                       int     `orm:"column(id);pk;auto"`

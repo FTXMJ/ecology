@@ -18,7 +18,7 @@ type BackStageManagement struct {
 // @Accept  json
 // @Produce json
 // @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
-// @router /show_formula_list [POST]
+// @router /show_formula_list [GET]
 func (this *BackStageManagement) ShowFormulaList() {
 	var (
 		data       *common.ResponseData
@@ -125,7 +125,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 // @Accept  json
 // @Produce json
 // @Success 200__超级节点算力表显示后台操作or用户查看都可以  {object} models.SuperForceTable_test
-// @router /show_super_formula_list [POST]
+// @router /show_super_formula_list [GET]
 func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
