@@ -406,30 +406,24 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 // @Accept  json
 // @Produce json
 // @Param ecology_id query string int "生态仓库id的id"
-// @Param page_count query string true "分页信息　－　数据总条数"
-// @Param total_page query string true "分页信息　－　总页数"
-// @Param current_page query string true "分页信息　－　当前页数"
-// @Param page_size query string true "分页信息　－　每页数据量"
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
 // @router /return_page_list_hostry [GET]
 func (this *EcologyIndexController) ReturnPageListHostry() {
 	var (
 		data            *common.ResponseData
 		ecology_id, _   = this.GetInt("ecology_id")
-		page_count, _   = this.GetInt("page_count")
-		total_page, _   = this.GetInt("total_page")
-		current_page, _ = this.GetInt("current_page")
-		page_size, _    = this.GetInt("page_size")
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 	page := models.Page{
-		TotalPage:   total_page,
 		CurrentPage: current_page,
 		PageSize:    page_size,
-		Count:       page_count,
 	}
 	values, p, err := models.SelectHostery(ecology_id, page)
 	if err != nil {

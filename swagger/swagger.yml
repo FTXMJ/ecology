@@ -201,22 +201,12 @@ paths:
         description: 生态仓库id的id
         type: string
       - in: query
-        name: page_count
-        description: 分页信息　－　数据总条数
-        required: true
-        type: string
-      - in: query
-        name: total_page
-        description: 分页信息　－　总页数
-        required: true
-        type: string
-      - in: query
-        name: current_page
+        name: page
         description: 分页信息　－　当前页数
         required: true
         type: string
       - in: query
-        name: page_size
+        name: pageSize
         description: 分页信息　－　每页数据量
         required: true
         type: string

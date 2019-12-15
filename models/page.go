@@ -7,10 +7,10 @@ type HostryPageInfo struct {
 }
 
 type Page struct {
-	TotalPage   int //总页数
-	CurrentPage int //当前页数
-	PageSize    int //每页数据条数
-	Count       int //总数据量
+	TotalPage   int `json:"totalPage"`   //总页数
+	CurrentPage int `json:"currentPage"` //当前页数
+	PageSize    int `json:"pageSize"`    //每页数据条数
+	Count       int `json:"count"`       //总数据量
 }
 
 type HostryValues struct {
