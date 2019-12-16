@@ -157,8 +157,8 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 		TxId:        tx_id_acc_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: coin_number,
-		InCome:      0,
+		Expenditure: 0,
+		InCome:      coin_number,
 	}
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
@@ -173,8 +173,8 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 		TxId:        tx_id_blo_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: formula.ReturnMultiple * coin_number,
-		InCome:      0,
+		Expenditure: 0,
+		InCome:      formula.ReturnMultiple * coin_number,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
@@ -247,8 +247,8 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		TxId:        tx_id_acc_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: coin_number,
-		InCome:      0,
+		Expenditure: 0,
+		InCome:      coin_number,
 	}
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
@@ -271,8 +271,8 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		TxId:        tx_id_blo_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: formula.ReturnMultiple * coin_number,
-		InCome:      0,
+		Expenditure: 0,
+		InCome:      formula.ReturnMultiple * coin_number,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
@@ -372,8 +372,8 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		TxId:        tx_id_acc_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: coin_number,
-		InCome:      0,
+		Expenditure: 0,
+		InCome:      coin_number,
 	}
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
@@ -388,8 +388,8 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		TxId:        tx_id_blo_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: formula.ReturnMultiple * coin_number,
-		InCome:      0,
+		Expenditure: 0,
+		InCome:      formula.ReturnMultiple * coin_number,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
