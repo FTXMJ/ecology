@@ -273,6 +273,8 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		return
 	}
 
+	o.Commit()
+
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
@@ -292,7 +294,6 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		data = common.NewErrorResponse(500)
 		return
 	}
-	o.Commit()
 	data = common.NewResponse(nil)
 	return
 }
@@ -331,13 +332,8 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}()
 
 	formula := models.Formula{EcologyId: ecology_id}
-	err_read := o.Read(&formula)
+	err_read := o.Read(&formula, "ecology_id")
 	if err_read != nil {
-		//TODO logs
-		data = common.NewErrorResponse(500)
-		return
-	}
-	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
 		//TODO logs
 		data = common.NewErrorResponse(500)
 		return
@@ -345,6 +341,12 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 
 	errJu := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if errJu != nil {
+		//TODO logs
+		data = common.NewErrorResponse(500)
+		return
+	}
+
+	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
 		//TODO logs
 		data = common.NewErrorResponse(500)
 		return
@@ -369,7 +371,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	//任务表 USDD  铸币记录
 	tx_id_blo_d := utils.Shengchengstr("铸币记录", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_acc_d,
+		TxId:        tx_id_blo_d,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: formula.ReturnMultiple * coin_number,
@@ -381,6 +383,8 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		data = common.NewErrorResponse(500)
 		return
 	}
+
+	o.Commit()
 
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(user_id, "升级生态仓库　转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
@@ -397,9 +401,8 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		data = common.NewErrorResponse(500)
 		return
 	}
-	o.Commit()
+
 	data = common.NewResponse(nil)
-	this.StopRun()
 	return
 }
 
