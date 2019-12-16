@@ -80,7 +80,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			id, _ := strconv.Atoi(v)
 			_, err := o.QueryTable("force_table").Filter("id", id).Delete()
 			if err != nil {
-				data = common.NewErrorResponse(500)
+				data = common.NewErrorResponse(500, "算力表　删除失败!")
 				return
 			}
 			data = common.NewResponse(nil)
@@ -93,7 +93,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			Update(orm.
 				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
 		if err != nil {
-			data = common.NewErrorResponse(500)
+			data = common.NewErrorResponse(500, "算力表　更新失败!")
 			return
 		}
 		data = common.NewResponse(nil)
@@ -110,13 +110,13 @@ func (this *BackStageManagement) OperationFormulaList() {
 		}
 		_, err := o.Insert(&force)
 		if err != nil {
-			data = common.NewErrorResponse(500)
+			data = common.NewErrorResponse(500, "算力表新增失败!")
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
-		data = common.NewErrorResponse(500)
+		data = common.NewErrorResponse(500, "未知操作!")
 		return
 	}
 }
@@ -177,7 +177,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			id, _ := strconv.Atoi(v)
 			_, err := o.QueryTable("super_force_table").Filter("id", id).Delete()
 			if err != nil {
-				data = common.NewErrorResponse(500)
+				data = common.NewErrorResponse(500, "超级节点算力表 删除失败!")
 				return
 			}
 			data = common.NewResponse(nil)
@@ -190,7 +190,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			Update(orm.
 				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
 		if err != nil {
-			data = common.NewErrorResponse(500)
+			data = common.NewErrorResponse(500, "超级节点算力表 更新失败!")
 			return
 		}
 		data = common.NewResponse(nil)
@@ -203,13 +203,13 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		}
 		_, err := o.Insert(&super_force)
 		if err != nil {
-			data = common.NewErrorResponse(500)
+			data = common.NewErrorResponse(500, "超级节点算力表 新增失败!")
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
-		data = common.NewErrorResponse(500)
+		data = common.NewErrorResponse(500, "未知操作!")
 		return
 	}
 }

@@ -59,8 +59,8 @@ func init() {
 	if err != nil {
 		//log.Log.Fatal("consul client error : ", err)
 	}
-	GetUserApi = GetService(beego.AppConfig.String("api::user_tfor"), "http://192.168.8.126:8500/api/v1")
-	GetWalletApi = GetService(beego.AppConfig.String("api::wallet_tfor"), "http://192.168.8.126:8500/api/v1")
+	GetUserApi = GetService(beego.AppConfig.String("api::user_tfor"), "http://192.168.8.126:8089")
+	GetWalletApi = GetService(beego.AppConfig.String("api::wallet_tfor"), "http://192.168.8.126:8088")
 	//consulDeRegister()
 }
 

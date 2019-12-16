@@ -267,7 +267,7 @@ func PingAddWalletCoin(user_id string, abonus float64) error {
 
 	//增加header选项
 	reqest.Header.Add("Authorization", user_str)
-	reqest.Form.Add("coin", strconv.FormatFloat(abonus, 'E', -1, 64))
+	reqest.Form.Add("coin", strconv.FormatFloat(abonus, 'f', -1, 64))
 	reqest.Form.Add("coin_type", "TFOR")
 
 	if errnr != nil {

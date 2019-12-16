@@ -3,6 +3,8 @@ package models
 import (
 	"ecology/consul"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
@@ -71,9 +73,9 @@ type NetValueType struct {
 }
 
 type Data_wallet struct {
-	Code int    `json:"code"`
-	Msg  string `json:"msg"`
-	Data string `json:"data"`
+	Code int                    `json:"code""`
+	Msg  string                 `json:"msg"`
+	Data map[string]interface{} `json:"data"`
 }
 
 // 老罗的钱包数据结构
@@ -86,18 +88,19 @@ type WalletInfo struct {
 }
 
 // 调用远端接口
-func PingWallet(token string, coin_number float64) error {
+func PingWalletAdd(token string, coin_number float64) error {
 	client := &http.Client{}
 	//生成要访问的url
 	url := consul.GetWalletApi + beego.AppConfig.String("api::apiurl_get_all_wallet")
 	//提交请求
-	reqest, errnr := http.NewRequest("GET", url, nil)
+	reqest, errnr := http.NewRequest("POST", url, nil)
 
 	//增加header选项
 	reqest.Header.Add("Authorization", token)
-	coin := strconv.FormatFloat(coin_number, 'E', -1, 64)
+	coin := strconv.FormatFloat(coin_number, 'f', -1, 64)
+	reqest.ParseForm()
 	reqest.Form.Add("money", coin)
-	reqest.Form.Add("cion_type", "USDD")
+	reqest.Form.Add("symbol", "USDD")
 	if errnr != nil {
 		return errnr
 	}
@@ -112,14 +115,16 @@ func PingWallet(token string, coin_number float64) error {
 	if err_read != nil {
 		return err_read
 	}
-
+	fmt.Println(string(bys))
 	values := Data_wallet{}
 	err := json.Unmarshal(bys, &values)
-	if err != nil || values.Code != 200 {
-		return err
+	if err != nil {
+		return errors.New("钱包金额操作失败!")
+	} else if values.Code != 200 {
+		return errors.New(values.Msg)
 	}
 	response.Body.Close()
-	return err
+	return nil
 }
 
 // 判断是否达到超级节点的要求 --- 页面显示

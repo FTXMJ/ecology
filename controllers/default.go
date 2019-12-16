@@ -56,7 +56,7 @@ func (this *FirstController) AddUser() {
 	}
 	err := user.Insert()
 	if err != nil {
-		data = common.NewErrorResponse(500)
+		data = common.NewErrorResponse(500, "")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (this *FirstController) AddAccount() {
 	}
 	err := account.Insert()
 	if err != nil {
-		data = common.NewErrorResponse(500)
+		data = common.NewErrorResponse(500, "")
 		return
 	}
 
@@ -117,7 +117,7 @@ func (this *FirstController) AddFormula() {
 	}
 	err := account.Insert()
 	if err != nil {
-		data = common.NewErrorResponse(500)
+		data = common.NewErrorResponse(500, "")
 		return
 	}
 
