@@ -229,7 +229,7 @@ paths:
           schema:
             $ref: '#/definitions/models.Ecology_index_ob_test'
   /ecology/show_formula_list:
-    post:
+    get:
       tags:
       - ecology
       consumes:
@@ -242,7 +242,7 @@ paths:
           schema:
             $ref: '#/definitions/models.ForceTable_test'
   /ecology/show_super_formula_list:
-    post:
+    get:
       tags:
       - ecology
       consumes:
@@ -371,6 +371,9 @@ definitions:
     title: Formulaindex_test
     type: object
     properties:
+      Balance___投资总额:
+        type: number
+        format: double
       BockedBalance___持币数量:
         type: number
         format: double

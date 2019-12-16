@@ -31,6 +31,5 @@ func init() {
 		new(SuperPeerTable),
 		new(User))
 	orm.Debug = true // 是否开启调试模式 调试模式下会打印出sql语句
-	orm.RegisterDataBase("default", "mysql", dsn, 3, 50)
-	orm.SetMaxOpenConns("default", 3600)
+	orm.RegisterDataBase("default", "mysql", dsn, 3000, 3000)
 }

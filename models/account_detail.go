@@ -39,6 +39,7 @@ func FindLimitOneAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_i
 	account_old := AccountDetail{}
 	o.QueryTable("account_detail").
 		Filter("user_id", user_id).
+		Filter("account", account_id).
 		OrderBy("-create_date").
 		Limit(1).
 		One(&account_old)
@@ -59,6 +60,40 @@ func FindLimitOneAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_i
 	if account_new.CurrentBalance < 0 {
 		account_new.CurrentBalance = 0
 	}
+	_, err_acc := o.Insert(&account_new)
+	if err_acc != nil {
+		return err_acc
+	}
+
+	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"state": "true"})
+	if err_txid != nil {
+		return err_txid
+	}
+
+	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"balance": account_new.CurrentBalance})
+	if err_up != nil {
+		return err_acc
+	}
+	o.Commit()
+	return nil
+}
+
+func NewCreateAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
+	o := NewOrm()
+	o.Begin()
+
+	account_new := AccountDetail{
+		UserId:         user_id,
+		CurrentRevenue: money_in,
+		CurrentOutlay:  money_out,
+		OpeningBalance: 0,
+		CurrentBalance: money_in,
+		CreateDate:     time.Now(),
+		Comment:        comment,
+		TxId:           tx_id,
+		Account:        account_id,
+	}
+
 	_, err_acc := o.Insert(&account_new)
 	if err_acc != nil {
 		return err_acc

@@ -349,7 +349,7 @@
             }
         },
         "/ecology/show_formula_list": {
-            "post": {
+            "get": {
                 "tags": [
                     "ecology"
                 ],
@@ -370,7 +370,7 @@
             }
         },
         "/ecology/show_super_formula_list": {
-            "post": {
+            "get": {
                 "tags": [
                     "ecology"
                 ],
@@ -563,6 +563,10 @@
             "title": "Formulaindex_test",
             "type": "object",
             "properties": {
+                "Balance___投资总额": {
+                    "type": "number",
+                    "format": "double"
+                },
                 "BockedBalance___持币数量": {
                     "type": "number",
                     "format": "double"

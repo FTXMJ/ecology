@@ -53,6 +53,7 @@ type Formulaindex struct {
 	Id                  int
 	Level               string
 	BockedBalance       float64 //持币数量
+	Balance             float64 //投资总额
 	LowHold             int     //低位
 	HighHold            int     //高位
 	ReturnMultiple      float64 //杠杆
@@ -168,6 +169,7 @@ type Formulaindex_test struct {
 	Id__生态仓库id                 int
 	Level___等级                 string
 	BockedBalance___持币数量       float64 //持币数量
+	Balance___投资总额             float64 //投资总额
 	LowHold___低位               int     //低位
 	HighHold___高位              int     //高位
 	ReturnMultiple___杠杆        float64 //杠杆

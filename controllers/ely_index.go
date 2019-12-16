@@ -72,6 +72,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				Id:                  v.Id,
 				Level:               v.Level,
 				BockedBalance:       v.BockedBalance,
+				Balance:             v.Balance,
 				ReturnMultiple:      formula_index[0].ReturnMultiple,
 				ToDayRate:           formula_index[0].HoldReturnRate + formula_index[0].ReturnMultiple + formula_index[0].TeamReturnRate,
 				HoldReturnRate:      formula_index[0].HoldReturnRate,
@@ -183,7 +184,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	o.Commit()
 
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, account.Id)
+	err_acc_d := models.NewCreateAndSaveAcc_d(user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, account.Id)
 	if err_acc_d != nil {
 		//TODO logs
 		data = common.NewErrorResponse(500)
@@ -191,7 +192,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, account.Id)
+	err_blo_d := models.NewCreateAndSaveBlo_d(user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, account.Id)
 	if err_blo_d != nil {
 		//TODO logs
 		data = common.NewErrorResponse(500)

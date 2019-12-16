@@ -8,7 +8,7 @@ type TxIdList struct {
 	UserId      string  `orm:column(user_id)`     //任务id
 	CreateTime  string  `orm:column(create_time)` //任务id
 	Expenditure float64 `orm:column(expenditure)` //任务id
-	InCome      float64 `orm:column(income)`      //任务id
+	InCome      float64 `orm:column(in_come)`     //任务id
 }
 
 func (this *TxIdList) TableName() string {

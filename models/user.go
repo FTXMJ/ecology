@@ -3,6 +3,7 @@ package models
 import (
 	"ecology/consul"
 	"encoding/json"
+	"errors"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
@@ -34,6 +35,7 @@ func PingUser(token string) (interface{}, error) {
 	client := &http.Client{}
 	//生成要访问的url
 	url := consul.GetUserApi + beego.AppConfig.String("api::apiurl_get_user")
+	//url := "http://192.168.8.119:8089/api/v1/user/get-user-info"
 	//提交请求
 	reqest, errnr := http.NewRequest("GET", url, nil)
 
@@ -55,8 +57,8 @@ func PingUser(token string) (interface{}, error) {
 	}
 	values := Response{}
 	err := json.Unmarshal(bys, &values)
-	if err != nil {
-		return "", err
+	if err != nil || values.Data == nil {
+		return "", errors.New("没有用户信息　 err   func -- ")
 	}
 	response.Body.Close()
 	return values.Data["father_id"], nil
