@@ -49,6 +49,7 @@ func FindLimitOneAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in 
 	for_mula := Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
 	if err_for != nil {
+		o.Rollback()
 		return err_for
 	}
 	blocked_new := BlockedDetail{
@@ -67,18 +68,21 @@ func FindLimitOneAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in 
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
+		o.Rollback()
 		return err
 	}
 
 	// 更新任务完成状态
 	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"state": "true"})
 	if err_txid != nil {
+		o.Rollback()
 		return err_txid
 	}
 
 	//更新生态仓库属性
 	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
 	if err_up != nil {
+		o.Rollback()
 		return err_up
 	}
 
@@ -86,6 +90,7 @@ func FindLimitOneAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in 
 	super_peer_table := SuperPeerTable{}
 	err_super := o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&super_peer_table)
 	if err_super != nil {
+		o.Rollback()
 		return err_super
 	}
 	coin := super_peer_table.CoinNumber + (coin_in * for_mula.ReturnMultiple) - coin_out
@@ -94,13 +99,22 @@ func FindLimitOneAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in 
 	}
 	_, err_super_up := o.QueryTable("super_peer_table").Filter("user_id", user_id).Update(orm.Params{"coin_number": coin})
 	if err_super_up != nil {
+		o.Rollback()
 		return err_super_up
 	}
 
 	//  直推收益
 	user := User{}
-	o.QueryTable("user").Filter("user_id", user_id).One(&user)
-	ForAddCoin(o, user.FatherId, coin_in, 0.1)
+	erruser := o.QueryTable("user").Filter("user_id", user_id).One(&user)
+	if erruser != nil {
+		o.Rollback()
+		return erruser
+	}
+	errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
+	if errrr != nil {
+		o.Rollback()
+		return nil
+	}
 
 	o.Commit()
 	return nil
@@ -112,6 +126,7 @@ func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in flo
 	for_mula := Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
 	if err_for != nil {
+		o.Rollback()
 		return err_for
 	}
 	blocked_new := BlockedDetail{
@@ -127,18 +142,21 @@ func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in flo
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
+		o.Rollback()
 		return err
 	}
 
 	// 更新任务完成状态
 	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"state": "true"})
 	if err_txid != nil {
+		o.Rollback()
 		return err_txid
 	}
 
 	//更新生态仓库属性
 	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
 	if err_up != nil {
+		o.Rollback()
 		return err_up
 	}
 
@@ -146,6 +164,7 @@ func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in flo
 	super_peer_table := SuperPeerTable{}
 	err_super := o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&super_peer_table)
 	if err_super != nil {
+		o.Rollback()
 		return err_super
 	}
 	coin := super_peer_table.CoinNumber + (coin_in * for_mula.ReturnMultiple) - coin_out
@@ -154,13 +173,22 @@ func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in flo
 	}
 	_, err_super_up := o.QueryTable("super_peer_table").Filter("user_id", user_id).Update(orm.Params{"coin_number": coin})
 	if err_super_up != nil {
+		o.Rollback()
 		return err_super_up
 	}
 
 	//  直推收益
 	user := User{}
-	o.QueryTable("user").Filter("user_id", user_id).One(&user)
-	ForAddCoin(o, user.FatherId, coin_in, 0.1)
+	erruser := o.QueryTable("user").Filter("user_id", user_id).One(&user)
+	if erruser != nil {
+		o.Rollback()
+		return erruser
+	}
+	errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
+	if errrr != nil {
+		o.Rollback()
+		return errrr
+	}
 
 	o.Commit()
 	return nil

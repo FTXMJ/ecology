@@ -131,6 +131,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	formula := models.Formula{}
 	err_level := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if err_level != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, err_level)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -138,6 +139,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	formula.EcologyId = account.Id
 	_, err_insert := o.Insert(&formula)
 	if err_insert != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, err_insert)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -154,6 +156,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errtxid_acc)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -170,6 +173,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errtxid_blo)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return

@@ -36,33 +36,33 @@ func (this *Account) Update() (err error) {
 }
 
 type Ecology_index_obj struct {
-	Usdd                   float64
-	Ecological_poject      []Formulaindex //生态项目
-	Ecological_poject_bool bool
-	Super_peer             SuperPeer //超级节点
-	Super_peer_bool        bool
+	Usdd                   float64        `json:"usdd"`
+	Ecological_poject      []Formulaindex `json:"ecological_poject"` //生态项目
+	Ecological_poject_bool bool           `json:"ecological_poject_bool"`
+	Super_peer             SuperPeer      `json:"super_peer"` //超级节点
+	Super_peer_bool        bool           `json:"super_peer_bool"`
 }
 
 //页面显示的　超级节点结构
 type SuperPeer struct {
-	Usdd        float64 //总币数ForceTable_test
-	Level       string  //超级节点的独立属性
-	TodayABouns float64 // 今日分红
+	Usdd        float64 `json:"usdd"`          //总币数ForceTable_test
+	Level       string  `json:"level"`         //超级节点的独立属性
+	TodayABouns float64 `json:"today_a_bouns"` // 今日分红
 }
 
 // 页面显示的　生态仓库结构
 type Formulaindex struct {
-	Id                  int
-	Level               string
-	BockedBalance       float64 //持币数量
-	Balance             float64 //投资总额
-	LowHold             int     //低位
-	HighHold            int     //高位
-	ReturnMultiple      float64 //杠杆
-	ToDayRate           float64 //今日算力
-	HoldReturnRate      float64 //本金自由算力
-	RecommendReturnRate float64 //直推算力
-	TeamReturnRate      float64 //动态算力
+	Id                  int     `json:"id"`
+	Level               string  `json:"level"`
+	BockedBalance       float64 `json:"bocked_balance"`        //持币数量
+	Balance             float64 `json:"balance"`               //投资总额
+	LowHold             int     `json:"low_hold"`              //低位
+	HighHold            int     `json:"high_hold"`             //高位
+	ReturnMultiple      float64 `json:"return_multiple"`       //杠杆
+	ToDayRate           float64 `json:"to_day_rate"`           //今日算力
+	HoldReturnRate      float64 `json:"hold_return_rate"`      //本金自由算力
+	RecommendReturnRate float64 `json:"recommend_return_rate"` //直推算力
+	TeamReturnRate      float64 `json:"team_return_rate"`      //动态算力
 }
 
 //从　body.form 读数据的数据格式
@@ -155,31 +155,31 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
 }
 
 type Ecology_index_ob_test struct {
-	Usdd___usdd数量                             float64
-	Ecological_poject___生态项目                  []Formulaindex_test //生态项目
-	Ecological_poject_bool___是否有生态仓库没有就是false bool
-	Super_peer___超级节点信息                       SuperPeer_test //超级节点
-	Super_peer_bool__是否显示超级节点                 bool
+	usdd___usdd数量                             float64
+	ecological_poject___生态项目                  []Formulaindex_test //生态项目
+	ecological_poject_bool___是否有生态仓库没有就是false bool
+	super_peer___超级节点信息                       SuperPeer_test //超级节点
+	super_peer_bool__是否显示超级节点                 bool
 }
 
 //页面显示的　超级节点结构
 type SuperPeer_test struct {
-	Usdd___总币数ForceTable_test float64 //总币数ForceTable_test
-	Level___超级节点的独立属性         string  //超级节点的独立属性
-	TodayABouns___今日分红        float64 // 今日分红
+	usdd___总币数ForceTable_test float64 //总币数ForceTable_test
+	level___超级节点的独立属性         string  //超级节点的独立属性
+	today_a_bouns___今日分红      float64 // 今日分红
 }
 
 // 页面显示的　生态仓库结构
 type Formulaindex_test struct {
-	Id__生态仓库id                 int
-	Level___等级                 string
-	BockedBalance___持币数量       float64 //持币数量
-	Balance___投资总额             float64 //投资总额
-	LowHold___低位               int     //低位
-	HighHold___高位              int     //高位
-	ReturnMultiple___杠杆        float64 //杠杆
-	ToDayRate___今日算力           float64 //今日算力
-	HoldReturnRate___自由算力      float64 //本金自由算力
-	RecommendReturnRate___直推算力 float64 //直推算力
-	TeamReturnRate____动态算力     float64 //动态算力
+	id__生态仓库id                   int
+	level___等级                   string
+	bocked_balance___持币数量        float64 //持币数量
+	balance___投资总额               float64 //投资总额
+	low_hold___低位                int     //低位
+	high_hold___高位               int     //高位
+	return_multiple___杠杆         float64 //杠杆
+	to_day_rate___今日算力           float64 //今日算力
+	hold_return_rate___自由算力      float64 //本金自由算力
+	recommend_return_rate___直推算力 float64 //直推算力
+	team_return_rate____动态算力     float64 //动态算力
 }

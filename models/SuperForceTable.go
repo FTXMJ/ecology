@@ -8,16 +8,13 @@ type SuperForceTable struct {
 	BonusCalculation float64 `orm:column(bonus_calculation)`
 }
 
-
-
 // 超级节点算力表
 type SuperForceTable_test struct {
-	Id__id               int     `orm:"column(id);pk;auto"`
-	Level___等级            string  `orm:column(level)`
-	CoinNumberRule___币数   int     `orm:column(coin_number_rule)`
-	BonusCalculation____分红比例 float64 `orm:column(bonus_calculation)`
+	id__id                    int     `orm:"column(id);pk;auto"`
+	level___等级                string  `orm:column(level)`
+	coin_number_rule___币数     int     `orm:column(coin_number_rule)`
+	bonus_calculation____分红比例 float64 `orm:column(bonus_calculation)`
 }
-
 
 // 快速排序
 func QuickSortSuperForce(arr []SuperForceTable, start, end int) {

@@ -2,8 +2,8 @@ package models
 
 // Page 分页参数  ---  历史信息
 type HostryPageInfo struct {
-	Items []HostryValues //数据列表
-	Page  Page           //分页信息
+	Items []HostryValues `json:"items"` //数据列表
+	Page  Page           `json:"page"`  //分页信息
 }
 
 type Page struct {
@@ -14,16 +14,16 @@ type Page struct {
 }
 
 type HostryValues struct {
-	Id             int
-	UserId         string
-	CurrentRevenue float64 //上期支出
-	CurrentOutlay  float64 //本期支出
-	OpeningBalance float64 //上期余额
-	CurrentBalance float64 //本期余额
-	CreateDate     string  //创建时间
-	Comment        string  //评论
-	TxId           string  //任务id
-	Account        int     //生态仓库id
+	Id             int     `json:"id"`
+	UserId         string  `json:"user_id"`
+	CurrentRevenue float64 `json:"current_revenue"` //上期支出
+	CurrentOutlay  float64 `json:"current_outlay"`  //本期支出
+	OpeningBalance float64 `json:"opening_balance"` //上期余额
+	CurrentBalance float64 `json:"current_balance"` //本期余额
+	CreateDate     string  `json:"create_date"`     //创建时间
+	Comment        string  `json:"comment"`         //评论
+	TxId           string  `json:"tx_id"`           //任务id
+	Account        int     `json:"account"`         //生态仓库id
 }
 
 func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
@@ -143,26 +143,26 @@ func QuickSortAgreement(arr []HostryValues, start, end int) {
 
 // Page 分页参数  ---  历史信息
 type HostryPageInfo_test struct {
-	Items___数据列表 []HostryValues_test //数据列表
-	Page___分页信息  Page_test           //分页信息
+	items___数据列表 []HostryValues_test //数据列表
+	page___分页信息  Page_test           //分页信息
 }
 
 type Page_test struct {
-	TotalPage__总页数     int //总页数
-	CurrentPage___当前页数 int //当前页数
-	PageSize___每页数据条数  int //每页数据条数
-	Count___总数据量       int //总数据量
+	total_page__总页数     int //总页数
+	current_page___当前页数 int //当前页数
+	page_size___每页数据条数  int //每页数据条数
+	count___总数据量        int //总数据量
 }
 
 type HostryValues_test struct {
-	Id                     int
-	UserId___              string
-	CurrentRevenue___上期支出  float64 //上期支出
-	CurrentOutlay____本期支出  float64 //本期支出
-	OpeningBalance___上期c余额 float64 //上期c余额
-	CurrentBalance___本期余额  float64 //本期余额
-	CreateDate___创建时间      string  //创建时间
-	Comment___评论_          string  //评论
-	TxId__任务id_            string  //任务id
-	Account____生态仓库id      int     //生态仓库id
+	id                      int
+	user_id___              string
+	current_revenue___上期支出  float64 //上期支出
+	current_outlay____本期支出  float64 //本期支出
+	opening_balance___上期c余额 float64 //上期c余额
+	current_balance___本期余额  float64 //本期余额
+	create_date___创建时间      string  //创建时间
+	comment___评论_           string  //评论
+	tx_id__任务id_            string  //任务id
+	account____生态仓库id       int     //生态仓库id
 }
