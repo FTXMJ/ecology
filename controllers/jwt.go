@@ -44,9 +44,10 @@ func CheckLogin(ctx *context.Context) {
 	api := ctx.Request.URL.Path
 	if api != "/api/v1/ecology/swagger" &&
 		api != "/api/v1/ecology/check" {
-
 		token := ctx.Request.Header.Get("Authorization")
 		if token == "" {
+			_, a := generateToken(models.User{UserId: "77e3732c1e4541bebf3782b43631b8b1"})
+			fmt.Println(a)
 			fmt.Println("拦截：", api)
 			ctx.WriteString(`{"code": "500","msg": "未经允许的访问，已拦截！"}`)
 			fmt.Println(generateToken(models.User{
