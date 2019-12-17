@@ -1,6 +1,7 @@
 package models
 
 import (
+	"ecology/common"
 	"ecology/consul"
 	"encoding/json"
 	"errors"
@@ -8,7 +9,9 @@ import (
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 //生态钱包
@@ -87,26 +90,61 @@ type WalletInfo struct {
 	Symbol     string  `json:"symbol"`
 }
 
+func SendHttpPost(urls string, api string, data map[string]string, token string) (error, *common.ResponseData) {
+	form := url.Values{}
+	for k, v := range data {
+		form.Set(k, v)
+	}
+	u, err := url.ParseRequestURI("http://" + urls)
+	if err != nil {
+		//log.Log.Error(err)
+	}
+	u.Path = api
+	urlStr := u.String()
+
+	client := &http.Client{}
+	r, _ := http.NewRequest("POST", urlStr, strings.NewReader(form.Encode())) // URL-encoded payload
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	if token != "" {
+		r.Header.Set("Authorization", token)
+	}
+	resp, err := client.Do(r)
+	if err != nil {
+		return err, nil
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	var rep common.ResponseData
+	json.Unmarshal(body, &rep)
+	if rep.Code != 200 {
+		return errors.New(rep.Msg), nil
+	}
+	return nil, &rep
+}
+
 // 调用远端接口
 func PingWalletAdd(token string, coin_number float64) error {
-	client := &http.Client{}
 	//生成要访问的url
-	url := consul.GetWalletApi + beego.AppConfig.String("api::apiurl_get_all_wallet")
-	//提交请求
-	reqest, errnr := http.NewRequest("POST", url, nil)
+	apiurl := consul.GetWalletApi
+	resoure := beego.AppConfig.String("api::apiurl_get_all_wallet")
+	data := url.Values{}
+	data.Set("money", strconv.FormatFloat(coin_number, 'f', -1, 64))
+	data.Set("symbol", "USDD")
 
-	//增加header选项
-	reqest.Header.Add("Authorization", token)
-	coin := strconv.FormatFloat(coin_number, 'f', -1, 64)
-	reqest.ParseForm()
-	reqest.Form.Add("money", coin)
-	reqest.Form.Add("symbol", "USDD")
-	if errnr != nil {
-		return errnr
+	u, _ := url.ParseRequestURI(apiurl)
+	u.Path = resoure
+	urlStr := u.String()
+
+	client := &http.Client{}
+	req, err1 := http.NewRequest(`POST`, urlStr, strings.NewReader(data.Encode()))
+	if err1 != nil {
+		return err1
 	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", token)
 
 	//处理返回结果
-	response, errdo := client.Do(reqest)
+	response, errdo := client.Do(req)
 	if errdo != nil {
 		return errdo
 	}
