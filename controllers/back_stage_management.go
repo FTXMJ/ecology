@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ecology/common"
+	"ecology/logs"
 	"ecology/models"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
@@ -24,12 +25,18 @@ func (this *BackStageManagement) ShowFormulaList() {
 		data       *common.ResponseData
 		o          = models.NewOrm()
 		force_list []models.ForceTable
+		api_url    = this.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	o.QueryTable("force_table").All(&force_list)
+	_, err := o.QueryTable("force_table").All(&force_list)
+	if err != nil {
+		logs.Log.Error(api_url, err)
+		data = common.NewErrorResponse(500, "算力数据获取失败!")
+		return
+	}
 	models.QuickSortForce(force_list, 0, len(force_list)-1)
 	data = common.NewResponse(force_list)
 	return
@@ -53,6 +60,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 	var (
 		data                      *common.ResponseData
 		o                         = models.NewOrm()
+		api_url                   = this.Ctx.Request.RequestURI
 		force_id                  = this.GetString("force_id")
 		action                    = this.GetString("action")
 		levelstr                  = this.GetString("levelstr")
@@ -80,6 +88,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			id, _ := strconv.Atoi(v)
 			_, err := o.QueryTable("force_table").Filter("id", id).Delete()
 			if err != nil {
+				logs.Log.Error(api_url, err)
 				data = common.NewErrorResponse(500, "算力表　删除失败!")
 				return
 			}
@@ -93,6 +102,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			Update(orm.
 				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
 		if err != nil {
+			logs.Log.Error(api_url, err)
 			data = common.NewErrorResponse(500, "算力表　更新失败!")
 			return
 		}
@@ -110,12 +120,14 @@ func (this *BackStageManagement) OperationFormulaList() {
 		}
 		_, err := o.Insert(&force)
 		if err != nil {
+			logs.Log.Error(api_url, err)
 			data = common.NewErrorResponse(500, "算力表新增失败!")
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
+		logs.Log.Error(api_url, "未知操作!")
 		data = common.NewErrorResponse(500, "未知操作!")
 		return
 	}
@@ -130,13 +142,19 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
 		o          = models.NewOrm()
+		api_url    = this.Ctx.Request.RequestURI
 		force_list []models.SuperForceTable
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	o.QueryTable("super_force_table").All(&force_list)
+	_, err := o.QueryTable("super_force_table").All(&force_list)
+	if err != nil {
+		logs.Log.Error(api_url, err)
+		data = common.NewErrorResponse(500, "超级节点算力数据获取失败!")
+		return
+	}
 	models.QuickSortSuperForce(force_list, 0, len(force_list)-1)
 
 	data = common.NewResponse(force_list)
@@ -157,6 +175,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
 		data           *common.ResponseData
 		o              = models.NewOrm()
+		api_url        = this.Ctx.Request.RequestURI
 		super_force_id = this.GetString("super_force_id")
 		action         = this.GetString("action")
 		levelstr       = this.GetString("levelstr")
@@ -177,6 +196,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			id, _ := strconv.Atoi(v)
 			_, err := o.QueryTable("super_force_table").Filter("id", id).Delete()
 			if err != nil {
+				logs.Log.Error(api_url, err)
 				data = common.NewErrorResponse(500, "超级节点算力表 删除失败!")
 				return
 			}
@@ -190,6 +210,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			Update(orm.
 				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
 		if err != nil {
+			logs.Log.Error(api_url, err)
 			data = common.NewErrorResponse(500, "超级节点算力表 更新失败!")
 			return
 		}
@@ -203,12 +224,14 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		}
 		_, err := o.Insert(&super_force)
 		if err != nil {
+			logs.Log.Error(api_url, err)
 			data = common.NewErrorResponse(500, "超级节点算力表 新增失败!")
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
+		logs.Log.Error(api_url, "未知操作!")
 		data = common.NewErrorResponse(500, "未知操作!")
 		return
 	}
