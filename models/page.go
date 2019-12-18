@@ -1,5 +1,7 @@
 package models
 
+import "errors"
+
 // Page 分页参数  ---  历史信息
 type HostryPageInfo struct {
 	Items []HostryValues `json:"items"` //数据列表
@@ -42,6 +44,9 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 		return nil, page, blo_read_err
 	}
 	last_values := append_blo_to_public(blo_list, index_values)
+	if len(last_values) == 0 {
+		return []HostryValues{}, page, errors.New("没有历史交易记录!")
+	}
 	QuickSortAgreement(last_values, 0, len(last_values)-1)
 	page.Count = len(last_values)
 	if page.PageSize < 10 {
