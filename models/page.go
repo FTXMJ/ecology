@@ -37,7 +37,7 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 	}
 
 	var blo_list []BlockedDetail
-	_, blo_read_err := o.QueryTable("account_detail").Filter("account", ecology_id).All(&blo_list)
+	_, blo_read_err := o.QueryTable("blocked_detail").Filter("account", ecology_id).All(&blo_list)
 	if blo_read_err != nil {
 		return nil, page, blo_read_err
 	}
