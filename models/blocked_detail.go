@@ -34,7 +34,6 @@ func (this *BlockedDetail) Update() (err error) {
 }
 
 func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	o.Begin()
 	blocked_old := BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
@@ -115,12 +114,10 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		return nil
 	}
 
-	o.Commit()
 	return nil
 }
 
 func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	o.Begin()
 	for_mula := Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
 	if err_for != nil {
@@ -189,8 +186,6 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 			return errrr
 		}
 	}
-
-	o.Commit()
 	return nil
 }
 

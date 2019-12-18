@@ -34,7 +34,6 @@ func (this *AccountDetail) Update() (err error) {
 }
 
 func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
-	o.Begin()
 	account_old := AccountDetail{}
 	o.QueryTable("account_detail").
 		Filter("user_id", user_id).

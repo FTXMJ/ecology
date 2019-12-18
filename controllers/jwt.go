@@ -109,7 +109,8 @@ func CheckLogin(ctx *context.Context) {
 				return
 			}
 			formula := models.Formula{
-				EcologyId: account_def.Id,
+				EcologyId:      account_def.Id,
+				ReturnMultiple: 1,
 			}
 			_, err_for := o.Insert(&formula)
 			if err_for != nil {

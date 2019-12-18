@@ -295,6 +295,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 
 	oo := models.NewOrm()
+	o.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
@@ -312,6 +313,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
+	o.Commit()
 	data = common.NewResponse(nil)
 	return
 }
