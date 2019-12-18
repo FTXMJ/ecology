@@ -149,6 +149,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	tx_id_acc_d := utils.Shengchengstr("转入记录", user_id, "USDD")
 	acc_txid_dcmt := models.TxIdList{
 		TxId:        tx_id_acc_d,
+		State:       "false",
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
@@ -166,6 +167,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	tx_id_blo_d := utils.Shengchengstr("铸币记录", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
 		TxId:        tx_id_blo_d,
+		State:       "false",
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
@@ -244,6 +246,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	tx_id_acc_d := utils.Shengchengstr("转入记录", user_id, "USDD")
 	acc_txid_dcmt := models.TxIdList{
 		TxId:        tx_id_acc_d,
+		State:       "false",
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
@@ -268,6 +271,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	tx_id_blo_d := utils.Shengchengstr("铸币记录", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
 		TxId:        tx_id_blo_d,
+		State:       "false",
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
@@ -370,6 +374,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	tx_id_acc_d := utils.Shengchengstr("转入记录", user_id, "USDD")
 	acc_txid_dcmt := models.TxIdList{
 		TxId:        tx_id_acc_d,
+		State:       "false",
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
@@ -386,6 +391,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	tx_id_blo_d := utils.Shengchengstr("铸币记录", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
 		TxId:        tx_id_blo_d,
+		State:       "false",
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
