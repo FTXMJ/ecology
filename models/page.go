@@ -157,7 +157,7 @@ type Page_test struct {
 type HostryValues_test struct {
 	id                      int
 	user_id___              string
-	current_revenue___上期支出  float64 //上期支出
+	current_revenue___本期收入  float64 //上期支出
 	current_outlay____本期支出  float64 //本期支出
 	opening_balance___上期c余额 float64 //上期c余额
 	current_balance___本期余额  float64 //本期余额

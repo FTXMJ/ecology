@@ -49,7 +49,7 @@ func CheckLogin(ctx *context.Context) {
 			fmt.Println("拦截：", api)
 			ctx.WriteString(`{"code": "500","msg": "未经允许的访问，已拦截！"}`)
 			fmt.Println(generateToken(models.User{
-				UserId: "8a953f37ee6e47f18b2a177466c19c81",
+				UserId: "77e3732c1e4541bebf3782b43631b8b1",
 			}))
 			return
 		}
@@ -224,3 +224,10 @@ func (j *JWT) RefreshToken(tokenString string) (string, error) {
 	}
 	return "", TokenInvalid
 }
+
+/*j := &JWT{
+	[]byte(SignKey),
+}
+c := CustomClaims{UserID:"77e3732c1e4541bebf3782b43631b8b1"}
+s,_ := j.CreateToken(c)
+fmt.Println(s)*/
