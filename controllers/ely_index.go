@@ -6,6 +6,7 @@ import (
 	"ecology/models"
 	"ecology/utils"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 	"strconv"
 	"time"
 )
@@ -191,6 +192,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 
 	oo := models.NewOrm()
+	oo.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.NewCreateAndSaveAcc_d(oo, user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, account.Id)
 	if err_acc_d != nil {
@@ -206,6 +208,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
+	oo.Commit()
 	data = common.NewResponse(nil)
 	return
 }
@@ -255,6 +258,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errtxid_acc)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -263,6 +267,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	formula := models.Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", ecology_id).One(&formula)
 	if err_for != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, err_for)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -280,6 +285,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errtxid_blo)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -295,7 +301,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 
 	oo := models.NewOrm()
-	o.Begin()
+	oo.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
@@ -313,7 +319,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
-	o.Commit()
+	oo.Commit()
 	data = common.NewResponse(nil)
 	return
 }
@@ -353,9 +359,17 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		this.ServeJSON()
 	}()
 
+	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
+	if err_up_acc != nil {
+		logs.Log.Error(api_url, err_up_acc)
+		data = common.NewErrorResponse(500, "数据库操作失败!")
+		return
+	}
+
 	formula := models.Formula{EcologyId: ecology_id}
 	err_read := o.Read(&formula, "ecology_id")
 	if err_read != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, err_read)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -363,12 +377,14 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 
 	errJu := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if errJu != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errJu)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
 
 	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, err_up_for)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -386,6 +402,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errtxid_acc)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -403,6 +420,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
+		o.Rollback()
 		logs.Log.Error(api_url, errtxid_blo)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
@@ -418,6 +436,12 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 
 	oo := models.NewOrm()
+	err_oo := oo.Begin()
+	if err_oo != nil {
+		logs.Log.Error(api_url, err_oo)
+		data = common.NewErrorResponse(500, "数据库错误")
+		return
+	}
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "升级生态仓库　转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
@@ -433,7 +457,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
-
+	oo.Commit()
 	data = common.NewResponse(nil)
 	return
 }

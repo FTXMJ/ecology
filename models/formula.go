@@ -105,18 +105,20 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 		o.QueryTable("force_table").Filter("level", level).One(&force)
 		if _, err := o.QueryTable("account").Filter("user_id", father_account_id).Filter("bocked_balance__gte", force.LowHold).Update(orm.Params{"level": level}); err == nil {
 			account := Account{}
-			formula := Formula{}
 			o.QueryTable("account").Filter("user_id", father_account_id).One(&account)
-			err := NewOrm().QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
+			_, err := NewOrm().QueryTable("formula").Filter("ecology_id", account.Id).Update(
+				orm.Params{
+					"level":                 force.Level,
+					"low_hold":              force.LowHold,
+					"high_hold":             force.HighHold,
+					"return_multiple":       force.ReturnMultiple,
+					"hold_return_rate":      force.HoldReturnRate,
+					"recommend_return_rate": force.RecommendReturnRate,
+					"team_return_rate":      force.TeamReturnRate,
+				})
 			if err != nil {
 				return err
 			}
-			formula.Level = force.Level
-			formula.LowHold = force.LowHold
-			formula.HighHold = force.HighHold
-			formula.ReturnMultiple = force.ReturnMultiple
-			formula.RecommendReturnRate = force.RecommendReturnRate
-			formula.TeamReturnRate = force.TeamReturnRate
 			return nil
 		}
 		return errors.New("err")
@@ -125,18 +127,20 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 		o.QueryTable("force_table").Filter("level", level).One(&force)
 		if _, err := o.QueryTable("account").Filter("user_id", father_account_id).Filter("bocked_balance__gte", force.LowHold).Update(orm.Params{"level": level}); err == nil {
 			account := Account{}
-			formula := Formula{}
 			o.QueryTable("account").Filter("user_id", father_account_id).One(&account)
-			err := NewOrm().QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
+			_, err := NewOrm().QueryTable("formula").Filter("ecology_id", account.Id).Update(
+				orm.Params{
+					"level":                 force.Level,
+					"low_hold":              force.LowHold,
+					"high_hold":             force.HighHold,
+					"return_multiple":       force.ReturnMultiple,
+					"hold_return_rate":      force.HoldReturnRate,
+					"recommend_return_rate": force.RecommendReturnRate,
+					"team_return_rate":      force.TeamReturnRate,
+				})
 			if err != nil {
 				return err
 			}
-			formula.Level = force.Level
-			formula.LowHold = force.LowHold
-			formula.HighHold = force.HighHold
-			formula.ReturnMultiple = force.ReturnMultiple
-			formula.RecommendReturnRate = force.RecommendReturnRate
-			formula.TeamReturnRate = force.TeamReturnRate
 			return nil
 		}
 		return errors.New("err")
