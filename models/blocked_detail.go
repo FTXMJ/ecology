@@ -33,8 +33,7 @@ func (this *BlockedDetail) Update() (err error) {
 	return err
 }
 
-func FindLimitOneAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	o := NewOrm()
+func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
 	o.Begin()
 	blocked_old := BlockedDetail{}
 	o.QueryTable("blocked_detail").
@@ -120,8 +119,7 @@ func FindLimitOneAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in 
 	return nil
 }
 
-func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	o := NewOrm()
+func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
 	o.Begin()
 	for_mula := Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
@@ -194,15 +192,6 @@ func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in flo
 
 	o.Commit()
 	return nil
-}
-
-func RecursiveExecutionBlo_d(user_id string, tx_id_blo_d string, coin_number float64, ecology_id int) {
-	go_err := FindLimitOneAndSaveBlo_d(user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, ecology_id)
-	if go_err != nil {
-		//TODO logs
-		RecursiveExecutionAcc_d(user_id, tx_id_blo_d, coin_number, ecology_id)
-	}
-	//TODO logs
 }
 
 //　把所有算力的值加起来

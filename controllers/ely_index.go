@@ -190,8 +190,9 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 		return
 	}
 
+	oo := models.NewOrm()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.NewCreateAndSaveAcc_d(user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, account.Id)
+	err_acc_d := models.NewCreateAndSaveAcc_d(oo, user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, account.Id)
 	if err_acc_d != nil {
 		logs.Log.Error(api_url, err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -199,7 +200,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.NewCreateAndSaveBlo_d(user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, account.Id)
+	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, account.Id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -293,8 +294,9 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		return
 	}
 
+	oo := models.NewOrm()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
+	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
 		logs.Log.Error(api_url, err_acc_d)
 		//go models.RecursiveExecutionAcc_d(user_id, tx_id_acc_d, coin_number, ecology_id)
@@ -303,7 +305,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, ecology_id)
+	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		//go models.RecursiveExecutionBlo_d(user_id, tx_id_acc_d, coin_number, ecology_id)
@@ -413,8 +415,9 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		return
 	}
 
+	oo := models.NewOrm()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(user_id, "升级生态仓库　转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
+	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "升级生态仓库　转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
 		logs.Log.Error(api_url, err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -422,7 +425,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, ecology_id)
+	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "生态仓库铸币", tx_id_blo_d, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")

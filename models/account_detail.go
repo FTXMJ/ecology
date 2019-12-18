@@ -33,8 +33,7 @@ func (this *AccountDetail) Update() (err error) {
 	return err
 }
 
-func FindLimitOneAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
-	o := NewOrm()
+func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
 	o.Begin()
 	account_old := AccountDetail{}
 	o.QueryTable("account_detail").
@@ -62,24 +61,25 @@ func FindLimitOneAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_i
 	}
 	_, err_acc := o.Insert(&account_new)
 	if err_acc != nil {
+		o.Rollback()
 		return err_acc
 	}
 
 	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"state": "true"})
 	if err_txid != nil {
+		o.Rollback()
 		return err_txid
 	}
 
 	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"balance": account_new.CurrentBalance})
 	if err_up != nil {
+		o.Rollback()
 		return err_acc
 	}
-	o.Commit()
 	return nil
 }
 
-func NewCreateAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
-	o := NewOrm()
+func NewCreateAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
 	o.Begin()
 
 	account_new := AccountDetail{
@@ -111,15 +111,5 @@ func NewCreateAndSaveAcc_d(user_id, comment, tx_id string, money_out, money_in f
 		o.Rollback()
 		return err_acc
 	}
-	o.Commit()
 	return nil
-}
-
-func RecursiveExecutionAcc_d(user_id string, tx_id_acc_d string, coin_number float64, ecology_id int) {
-	go_err := FindLimitOneAndSaveAcc_d(user_id, "新增生态仓库转入-USDD", tx_id_acc_d, 0, coin_number, ecology_id)
-	if go_err != nil {
-		//TODO logs
-		RecursiveExecutionAcc_d(user_id, tx_id_acc_d, coin_number, ecology_id)
-	}
-	//TODO logs
 }
