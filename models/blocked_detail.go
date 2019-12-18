@@ -184,10 +184,12 @@ func NewCreateAndSaveBlo_d(user_id, comment, tx_id string, coin_out, coin_in flo
 		o.Rollback()
 		return erruser
 	}
-	errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
-	if errrr != nil {
-		o.Rollback()
-		return errrr
+	if user.FatherId != "" {
+		errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
+		if errrr != nil {
+			o.Rollback()
+			return errrr
+		}
 	}
 
 	o.Commit()

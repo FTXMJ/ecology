@@ -73,6 +73,7 @@ func CheckLogin(ctx *context.Context) {
 		if len(user) == 0 {
 			f, err_get_user := models.PingUser(token)
 			if err_get_user != nil {
+				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
@@ -86,6 +87,7 @@ func CheckLogin(ctx *context.Context) {
 
 			_, erruser := o.Insert(&user)
 			if erruser != nil {
+				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
@@ -95,6 +97,7 @@ func CheckLogin(ctx *context.Context) {
 			}
 			_, super_peer_err := o.Insert(&super_peer)
 			if super_peer_err != nil {
+				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
@@ -103,6 +106,7 @@ func CheckLogin(ctx *context.Context) {
 			}
 			_, account_def_err := o.Insert(&account_def)
 			if account_def_err != nil {
+				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
@@ -111,6 +115,7 @@ func CheckLogin(ctx *context.Context) {
 			}
 			_, err_for := o.Insert(&formula)
 			if err_for != nil {
+				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)"}`)
 				return
 			}
