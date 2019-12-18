@@ -454,7 +454,7 @@ func (this *EcologyIndexController) ReturnPageListHostry() {
 	values, p, err := models.SelectHostery(ecology_id, page)
 	if err != nil {
 		logs.Log.Error(api_url, err)
-		data = common.NewErrorResponse(500, "数据库操作失败!")
+		data = common.NewResponse(models.HostryPageInfo{})
 		return
 	}
 	hostory_list := models.HostryPageInfo{

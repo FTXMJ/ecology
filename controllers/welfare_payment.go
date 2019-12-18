@@ -26,7 +26,7 @@ func WelfarePayment() {
 	users := []models.User{}
 	_, err_read_user := o.QueryTable("user").All(&users)
 	if err_read_user != nil {
-		//TODO logs
+		o.Rollback()
 		c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 		c.Start()
 		return
@@ -36,6 +36,7 @@ func WelfarePayment() {
 		int, err := o.QueryTable("account").Filter("user_id", vuser.UserId).All(&accounts)
 		if err != nil {
 			//TODO logs
+			o.Rollback()
 			c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 			c.Start()
 			return
@@ -44,6 +45,7 @@ func WelfarePayment() {
 			for _, vaccount := range accounts {
 				if err := ABonus(o, vuser.UserId, vaccount); err != nil {
 					//TODO logs
+					o.Rollback()
 					c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 					c.Start()
 					return
@@ -52,6 +54,7 @@ func WelfarePayment() {
 			err := AddFormulaABonus(vuser.UserId)
 			if err != nil {
 				//TODO logs
+				o.Rollback()
 				c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
 				c.Start()
 				return

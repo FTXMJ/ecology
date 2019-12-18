@@ -64,6 +64,7 @@ func Worker(user models.User) error {
 	}
 	err_sort_a_r := SortABonusRelease(o, coins, user.UserId)
 	if err_sort_a_r != nil {
+		o.Rollback()
 		return err_sort_a_r
 	}
 	o.Commit()
@@ -157,6 +158,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
+		o.Rollback()
 		return errtxid_blo
 	}
 
@@ -175,6 +177,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	for_mula := models.Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&for_mula)
 	if err_for != nil {
+		o.Rollback()
 		return err_for
 	}
 	blocked_new := models.BlockedDetail{
@@ -194,12 +197,14 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
+		o.Rollback()
 		return err
 	}
 
 	//更新生态仓库属性
 	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
 	if err_up != nil {
+		o.Rollback()
 		return err_up
 	}
 
@@ -207,6 +212,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	super_peer_table := models.SuperPeerTable{}
 	err_super := o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&super_peer_table)
 	if err_super != nil {
+		o.Rollback()
 		return err_super
 	}
 	coin := super_peer_table.CoinNumber + (value * for_mula.TeamReturnRate) - 0
@@ -215,6 +221,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	_, err_super_up := o.QueryTable("super_peer_table").Filter("user_id", user_id).Update(orm.Params{"coin_number": coin})
 	if err_super_up != nil {
+		o.Rollback()
 		return err_super_up
 	}
 	return nil
