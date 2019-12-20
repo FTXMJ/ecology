@@ -7,16 +7,16 @@ import (
 
 //交易记录表
 type AccountDetail struct {
-	Id             int       `orm:"column(id);pk;auto"`
-	UserId         string    `orm:column(user_id)`
-	CurrentRevenue float64   `orm:column(current_revenue)` //本期收入
-	CurrentOutlay  float64   `orm:column(current_outlay)`  //本期支出
-	OpeningBalance float64   `orm:column(opening_balance)` //上期余额
-	CurrentBalance float64   `orm:column(current_balance)` //本期余额
-	CreateDate     time.Time `orm:column(create_date)`     //创建时间
-	Comment        string    `orm:column(comment)`         //备注
-	TxId           string    `orm:column(tx_id)`           //任务id
-	Account        int       `orm:column(account)`         //生态仓库id
+	Id             int     `orm:"column(id);pk;auto"`
+	UserId         string  `orm:column(user_id)`
+	CurrentRevenue float64 `orm:column(current_revenue)` //本期收入
+	CurrentOutlay  float64 `orm:column(current_outlay)`  //本期支出
+	OpeningBalance float64 `orm:column(opening_balance)` //上期余额
+	CurrentBalance float64 `orm:column(current_balance)` //本期余额
+	CreateDate     string  `orm:column(create_date)`     //创建时间
+	Comment        string  `orm:column(comment)`         //备注
+	TxId           string  `orm:column(tx_id)`           //任务id
+	Account        int     `orm:column(account)`         //生态仓库id
 }
 
 func (this *AccountDetail) TableName() string {
@@ -50,7 +50,7 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 		CurrentOutlay:  money_out,
 		OpeningBalance: account_old.CurrentBalance,
 		CurrentBalance: account_old.CurrentBalance + money_in - money_out,
-		CreateDate:     time.Now(),
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        comment,
 		TxId:           tx_id,
 		Account:        account_id,
@@ -87,7 +87,7 @@ func NewCreateAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_ou
 		CurrentOutlay:  money_out,
 		OpeningBalance: 0,
 		CurrentBalance: money_in,
-		CreateDate:     time.Now(),
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        comment,
 		TxId:           tx_id,
 		Account:        account_id,

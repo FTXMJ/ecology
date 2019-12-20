@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // 后台管理
@@ -237,7 +238,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 	}
 }
 
-// @Tags 交易的历史记录
+// @Tags root-历史
 // @Accept  json
 // @Produce json
 // @Param page query string true "分页信息　－　当前页数"
@@ -269,6 +270,65 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 		Items: values,
 		Page:  p,
 	}
+	data = common.NewResponse(hostory_list)
+	return
+}
+
+// @Tags root-历史-筛选
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param type query string true "查询的数据类型　　 =铸币表　account_detail=充值表"
+// @Param user_id query string true "用户id"
+// @Param tx_id query string true "订单id"
+// @Param start_time query string true "开始时间"
+// @Param end_time query string true "结束时间"
+// @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
+// @router /filter_history_info [POST]
+func (this *BackStageManagement) FilterHistoryInfo() {
+	var (
+		data              *common.ResponseData
+		current_page, _   = this.GetInt("page")
+		page_size, _      = this.GetInt("pageSize")
+		table_name        = this.GetString("type")
+		user_id           = this.GetString("user_id")
+		tx_id             = this.GetString("tx_id")
+		start_time_int, _ = this.GetInt64("start_time")
+		end_time_int, _   = this.GetInt64("end_time")
+		api_url           = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	start_time := time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
+	end_time := time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+
+	find_obj := models.FindObj{
+		UserId:    user_id,
+		TxId:      tx_id,
+		StartTime: start_time,
+		EndTime:   end_time,
+	}
+	p := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+
+	list, page, err := models.SelectPondMachinemsg(find_obj, p, table_name)
+	if err != nil {
+		logs.Log.Error(api_url, err)
+		data = common.NewResponse(models.HostryFindInfo{})
+		return
+	}
+	hostory_list := models.HostryFindInfo{
+		Items: list,
+		Page:  page,
+	}
+
 	data = common.NewResponse(hostory_list)
 	return
 }

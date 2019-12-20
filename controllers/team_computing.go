@@ -186,7 +186,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		CurrentOutlay:  value * for_mula.TeamReturnRate,
 		CurrentBalance: blocked_old.CurrentBalance + (value * for_mula.TeamReturnRate) - 0,
 		OpeningBalance: blocked_old.CurrentBalance,
-		CreateDate:     time.Now(),
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日团队收益",
 		TxId:           tx_id_blo_d,
 		Account:        account.Id,
