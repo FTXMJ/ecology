@@ -147,7 +147,7 @@
             }
         },
         "/ecology/filter_history_info": {
-            "post": {
+            "get": {
                 "tags": [
                     "ecology"
                 ],
@@ -175,7 +175,7 @@
                     {
                         "in": "query",
                         "name": "type",
-                        "description": "查询的数据类型　　blocked_detail=铸币表　account_detail=充值表",
+                        "description": "查询的数据类型　　 =铸币表　account_detail=充值表",
                         "required": true,
                         "type": "string"
                     },

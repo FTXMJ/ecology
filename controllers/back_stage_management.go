@@ -285,7 +285,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /filter_history_info [POST]
+// @router /filter_history_info [GET]
 func (this *BackStageManagement) FilterHistoryInfo() {
 	var (
 		data              *common.ResponseData

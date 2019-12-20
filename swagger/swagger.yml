@@ -94,7 +94,7 @@ paths:
         200___测试:
           description: ""
   /ecology/filter_history_info:
-    post:
+    get:
       tags:
       - ecology
       consumes:
@@ -114,7 +114,7 @@ paths:
         type: string
       - in: query
         name: type
-        description: 查询的数据类型　　blocked_detail=铸币表　account_detail=充值表
+        description: 查询的数据类型　　 =铸币表　account_detail=充值表
         required: true
         type: string
       - in: query
