@@ -81,7 +81,7 @@ func append_acc_to_public(acc []AccountDetail) []HostryValues {
 		hos_va := HostryValues{
 			Id:             v.Id,
 			UserId:         v.UserId,
-			CurrentRevenue: v.CurrentBalance,
+			CurrentRevenue: v.CurrentRevenue,
 			CurrentOutlay:  v.CurrentOutlay,
 			OpeningBalance: v.OpeningBalance,
 			CurrentBalance: v.CurrentBalance,
@@ -100,7 +100,7 @@ func append_blo_to_public(blo []BlockedDetail, hostry_values []HostryValues) []H
 		hos_va := HostryValues{
 			Id:             v.Id,
 			UserId:         v.UserId,
-			CurrentRevenue: v.CurrentBalance,
+			CurrentRevenue: v.CurrentRevenue,
 			CurrentOutlay:  v.CurrentOutlay,
 			OpeningBalance: v.OpeningBalance,
 			CurrentBalance: v.CurrentBalance,
