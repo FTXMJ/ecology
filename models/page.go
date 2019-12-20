@@ -30,6 +30,7 @@ type HostryValues struct {
 	Account        int     `json:"account"`         //生态仓库id
 }
 
+// user
 func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 	o := NewOrm()
 
@@ -42,6 +43,54 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 
 	var blo_list []BlockedDetail
 	_, blo_read_err := o.QueryTable("blocked_detail").Filter("account", ecology_id).All(&blo_list)
+	if blo_read_err != nil {
+		return nil, page, blo_read_err
+	}
+	last_values := append_blo_to_public(blo_list, index_values)
+	if len(last_values) == 0 {
+		return []HostryValues{}, page, errors.New("没有历史交易记录!")
+	}
+	QuickSortAgreement(last_values, 0, len(last_values)-1)
+	page.Count = len(last_values)
+	if page.PageSize < 10 {
+		page.PageSize = 10
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	//listle, _ := o.Limit(page.PageSize, (page.PageNo-1)*page.PageSize).OrderBy("-createtime").All(&list)
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	listle := []HostryValues{}
+	if end > len(last_values) {
+		for _, v := range last_values[start:] {
+			listle = append(listle, v)
+		}
+	} else {
+		for _, v := range last_values[start:end] {
+			listle = append(listle, v)
+		}
+	}
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+	return listle, page, nil
+}
+
+//root
+func SelectHosteryRoot(page Page) ([]HostryValues, Page, error) {
+	o := NewOrm()
+
+	var acc_list []AccountDetail
+	_, acc_read_err := o.QueryTable("account_detail").All(&acc_list)
+	index_values := append_acc_to_public(acc_list)
+	if acc_read_err != nil {
+		return nil, page, acc_read_err
+	}
+
+	var blo_list []BlockedDetail
+	_, blo_read_err := o.QueryTable("blocked_detail").All(&blo_list)
 	if blo_read_err != nil {
 		return nil, page, blo_read_err
 	}

@@ -284,6 +284,43 @@
                 }
             }
         },
+        "/ecology/return_page_hostry_root": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "description": "分页信息　－　当前页数",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageSize",
+                        "description": "分页信息　－　每页数据量",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____交易的历史记录": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.HostryPageInfo_test"
+                        }
+                    }
+                }
+            }
+        },
         "/ecology/return_page_list_hostry": {
             "get": {
                 "tags": [
@@ -645,7 +682,7 @@
                     "type": "number",
                     "format": "double"
                 },
-                "current_revenue___上期支出": {
+                "current_revenue___本期收入": {
                     "type": "number",
                     "format": "double"
                 },

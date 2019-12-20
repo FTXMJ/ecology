@@ -236,3 +236,39 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		return
 	}
 }
+
+// @Tags 交易的历史记录
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
+// @router /return_page_hostry_root [GET]
+func (this *BackStageManagement) ReturnPageHostryRoot() {
+	var (
+		data            *common.ResponseData
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		api_url         = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	page := models.Page{
+		CurrentPage: current_page,
+		PageSize:    page_size,
+	}
+	values, p, err := models.SelectHosteryRoot(page)
+	if err != nil {
+		logs.Log.Error(api_url, err)
+		data = common.NewResponse(models.HostryPageInfo{})
+		return
+	}
+	hostory_list := models.HostryPageInfo{
+		Items: values,
+		Page:  p,
+	}
+	data = common.NewResponse(hostory_list)
+	return
+}
