@@ -52,7 +52,7 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 	}
 	blocked_new := BlockedDetail{
 		UserId:         user_id,
-		CurrentRevenue: coin_in,
+		CurrentRevenue: coin_in * for_mula.ReturnMultiple,
 		CurrentOutlay:  coin_out,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CurrentBalance: blocked_old.CurrentBalance + coin_in*for_mula.ReturnMultiple - coin_out,
@@ -126,7 +126,7 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 	}
 	blocked_new := BlockedDetail{
 		UserId:         user_id,
-		CurrentRevenue: coin_in,
+		CurrentRevenue: coin_in * for_mula.ReturnMultiple,
 		CurrentOutlay:  coin_out,
 		OpeningBalance: 0,
 		CurrentBalance: coin_in * for_mula.ReturnMultiple,

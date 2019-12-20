@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 // Page 分页参数  ---  历史信息
 type HostryPageInfo struct {
@@ -85,7 +87,7 @@ func append_acc_to_public(acc []AccountDetail) []HostryValues {
 			CurrentOutlay:  v.CurrentOutlay,
 			OpeningBalance: v.OpeningBalance,
 			CurrentBalance: v.CurrentBalance,
-			CreateDate:     v.CreateDate.String(),
+			CreateDate:     v.CreateDate.String()[:len(v.CreateDate.String())-10],
 			Comment:        v.Comment,
 			TxId:           v.TxId,
 			Account:        v.Account,
@@ -104,7 +106,7 @@ func append_blo_to_public(blo []BlockedDetail, hostry_values []HostryValues) []H
 			CurrentOutlay:  v.CurrentOutlay,
 			OpeningBalance: v.OpeningBalance,
 			CurrentBalance: v.CurrentBalance,
-			CreateDate:     v.CreateDate.String(),
+			CreateDate:     v.CreateDate.String()[:len(v.CreateDate.String())-10],
 			Comment:        v.Comment,
 			TxId:           v.TxId,
 			Account:        v.Account,
