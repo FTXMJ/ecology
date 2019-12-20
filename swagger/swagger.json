@@ -69,84 +69,7 @@
                 }
             }
         },
-        "/ecology/check": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/create_new_warehouse": {
-            "post": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "user_id",
-                        "description": "当前用户的id   ---- 放在 header",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "coin_number",
-                        "description": "铸(发)币的数量",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "levelstr",
-                        "description": "等级数据",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200____新增生态仓库": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/create_user": {
-            "post": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200___测试": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/filter_history_info": {
+        "/ecology/admin/filter_history_info": {
             "get": {
                 "tags": [
                     "ecology"
@@ -218,7 +141,7 @@
                 }
             }
         },
-        "/ecology/operation_formula_list": {
+        "/ecology/admin/operation_formula_list": {
             "post": {
                 "tags": [
                     "ecology"
@@ -301,7 +224,7 @@
                 }
             }
         },
-        "/ecology/operation_super_formula_list": {
+        "/ecology/admin/operation_super_formula_list": {
             "post": {
                 "tags": [
                     "ecology"
@@ -356,7 +279,7 @@
                 }
             }
         },
-        "/ecology/return_page_hostry_root": {
+        "/ecology/admin/return_page_hostry_root": {
             "get": {
                 "tags": [
                     "ecology"
@@ -389,6 +312,83 @@
                         "schema": {
                             "$ref": "#/definitions/models.HostryPageInfo_test"
                         }
+                    }
+                }
+            }
+        },
+        "/ecology/check": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/create_new_warehouse": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "user_id",
+                        "description": "当前用户的id   ---- 放在 header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "coin_number",
+                        "description": "铸(发)币的数量",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "levelstr",
+                        "description": "等级数据",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____新增生态仓库": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/create_user": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200___测试": {
+                        "description": ""
                     }
                 }
             }

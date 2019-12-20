@@ -56,7 +56,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 // @Param recommend_return_rate query string true "直推算力"
 // @Param team_return_rate query string true "动态算力"
 // @Success 200___算力表信息修改
-// @router /operation_formula_list [POST]
+// @router /admin/operation_formula_list [POST]
 func (this *BackStageManagement) OperationFormulaList() {
 	var (
 		data                      *common.ResponseData
@@ -171,7 +171,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 // @Param coin_number query string true "要求的持币数量"
 // @Param force query string true "算力　　要以小数的格式返回　　如 : 15% = 0.15 "
 // @Success 200___超级节点算力表信息修改
-// @router /operation_super_formula_list [POST]
+// @router /admin/operation_super_formula_list [POST]
 func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
 		data           *common.ResponseData
@@ -244,7 +244,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /return_page_hostry_root [GET]
+// @router /admin/return_page_hostry_root [GET]
 func (this *BackStageManagement) ReturnPageHostryRoot() {
 	var (
 		data            *common.ResponseData
@@ -285,7 +285,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /filter_history_info [GET]
+// @router /admin/filter_history_info [GET]
 func (this *BackStageManagement) FilterHistoryInfo() {
 	var (
 		data              *common.ResponseData

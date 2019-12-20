@@ -44,56 +44,7 @@ paths:
       responses:
         "200":
           description: ""
-  /ecology/check:
-    get:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-  /ecology/create_new_warehouse:
-    post:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      parameters:
-      - in: query
-        name: user_id
-        description: 当前用户的id   ---- 放在 header
-        required: true
-        type: string
-      - in: query
-        name: coin_number
-        description: 铸(发)币的数量
-        required: true
-        type: string
-      - in: query
-        name: levelstr
-        description: 等级数据
-        required: true
-        type: string
-      responses:
-        200____新增生态仓库:
-          description: ""
-  /ecology/create_user:
-    post:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        200___测试:
-          description: ""
-  /ecology/filter_history_info:
+  /ecology/admin/filter_history_info:
     get:
       tags:
       - ecology
@@ -142,7 +93,7 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/models.HostryPageInfo_test'
-  /ecology/operation_formula_list:
+  /ecology/admin/operation_formula_list:
     post:
       tags:
       - ecology
@@ -199,7 +150,7 @@ paths:
       responses:
         200___算力表信息修改:
           description: ""
-  /ecology/operation_super_formula_list:
+  /ecology/admin/operation_super_formula_list:
     post:
       tags:
       - ecology
@@ -236,7 +187,7 @@ paths:
       responses:
         200___超级节点算力表信息修改:
           description: ""
-  /ecology/return_page_hostry_root:
+  /ecology/admin/return_page_hostry_root:
     get:
       tags:
       - ecology
@@ -260,6 +211,55 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/models.HostryPageInfo_test'
+  /ecology/check:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+  /ecology/create_new_warehouse:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: user_id
+        description: 当前用户的id   ---- 放在 header
+        required: true
+        type: string
+      - in: query
+        name: coin_number
+        description: 铸(发)币的数量
+        required: true
+        type: string
+      - in: query
+        name: levelstr
+        description: 等级数据
+        required: true
+        type: string
+      responses:
+        200____新增生态仓库:
+          description: ""
+  /ecology/create_user:
+    post:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        200___测试:
+          description: ""
   /ecology/return_page_list_hostry:
     get:
       tags:
