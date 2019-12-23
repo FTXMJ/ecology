@@ -1,6 +1,8 @@
 package models
 
 import (
+	"ecology/logs"
+	"ecology/utils"
 	"github.com/astaxie/beego/orm"
 	"time"
 )
@@ -10,7 +12,7 @@ type BlockedDetail struct {
 	Id             int     `orm:"column(id);pk;auto" json:"id"`
 	UserId         string  `orm:"column(user_id)" json:"user_id"`
 	CurrentRevenue float64 `orm:"column(current_revenue)" json:"current_revenue"` //上期支出
-	CurrentOutlay  float64 `orm:"column(current_outlay)" json:"current_outlay"`   //本期支出
+	CurrentOutlay  float64 `orm:"column(current_outlay)" json:"current_outlay"`   //本期收入
 	OpeningBalance float64 `orm:"column(opening_balance)" json:"opening_balance"` //上期余额
 	CurrentBalance float64 `orm:"column(current_balance)" json:"current_balance"` //本期余额
 	CreateDate     string  `orm:"column(create_date)" json:"create_date"`         //创建时间
@@ -111,7 +113,7 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 	errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
 	if errrr != nil {
 		o.Rollback()
-		return nil
+		return errrr
 	}
 
 	return nil
@@ -192,8 +194,8 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 //　把所有算力的值加起来
 func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64) error {
 	user := User{}
-	if err := o.QueryTable("user").Filter("user_id", father_id).One(&user); err != nil {
-		return err
+	if err_user := o.QueryTable("user").Filter("user_id", father_id).One(&user); err_user != nil {
+		return err_user
 	}
 	account := Account{}
 	erraccount := o.QueryTable("account").Filter("user_id", father_id).One(&account)
@@ -204,6 +206,52 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 	_, err_up := o.QueryTable("account").Filter("user_id", father_id).Update(orm.Params{"bocked_balance": new_coin})
 	if err_up != nil {
 		return err_up
+	}
+
+	//任务表 USDD  铸币记录
+	tx_id_blo_d := utils.Shengchengstr("直推收益", father_id, "USDD")
+	blo_txid_dcmt := TxIdList{
+		TxId:        tx_id_blo_d,
+		State:       "true",
+		UserId:      father_id,
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: 0,
+		InCome:      coin,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		logs.Log.Error("直推算力累加错误", errtxid_blo)
+		return errtxid_blo
+	}
+
+	blocked_old := BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", father_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(1).
+		One(&blocked_old)
+	if blocked_old.Id == 0 {
+		blocked_old.CurrentBalance = 0
+	}
+
+	blocked_new := BlockedDetail{
+		UserId:         father_id,
+		CurrentRevenue: coin,
+		CurrentOutlay:  0,
+		OpeningBalance: blocked_old.CurrentBalance,
+		CurrentBalance: blocked_old.CurrentBalance + coin,
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
+		Comment:        "直推收益",
+		TxId:           tx_id_blo_d,
+		Account:        account.Id,
+	}
+	if blocked_new.CurrentBalance < 0 {
+		blocked_new.CurrentBalance = 0
+	}
+	_, err := o.Insert(&blocked_new)
+	if err != nil {
+		return err
 	}
 
 	if (coin * proportion * 0.1) > 1 {
@@ -268,6 +316,10 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 		s_ql = s_ql + "create_date > ? and create_date < ? order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
+	} else {
+		s_ql = s_ql + "id>0 order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.StartTime, p.EndTime).QueryRows(&list)
+		err = er
 	}
 
 	if err != nil {
@@ -298,4 +350,19 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 		page.CurrentPage = 1
 	}
 	return list, page, nil
+}
+
+// 直推算力的计算　　　－－　　　当天
+func RecommendReturnRate(user_id, time string) (float64, error) {
+	blo := []BlockedDetail{}
+	sql_str := "SELECT * from blocked_detail where user_id = ? and create_date >= ? and comment = ? "
+	_, err := NewOrm().Raw(sql_str, user_id, time, "直推收益").QueryRows(&blo)
+	if err != nil {
+		return 0, err
+	}
+	zhitui := 0.0
+	for _, v := range blo {
+		zhitui += v.CurrentOutlay
+	}
+	return zhitui, nil
 }

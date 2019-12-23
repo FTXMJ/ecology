@@ -302,8 +302,15 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	start_time := time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
-	end_time := time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+	start_time := ""
+	end_time := ""
+	if start_time_int == 0 || end_time_int == 0 {
+		start_time = "2006-01-02 15:04:05"
+		end_time = time.Now().Format("2006-01-02 15:04:05")
+	} else {
+		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+	}
 
 	find_obj := models.FindObj{
 		UserId:    user_id,

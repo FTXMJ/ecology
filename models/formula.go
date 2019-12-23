@@ -33,8 +33,8 @@ func (this *Formula) Update() (err error) {
 }
 
 // 根据等级 进行算力的更新
-func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
-	if JudgeLevelFor_wh_mx(o, user_id, level) == nil {
+func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula, coin float64) error {
+	if JudgeLevelFor_wh_mx(o, user_id, level, coin) == nil {
 		force := ForceTable{}
 		err := NewOrm().QueryTable("force_table").Filter("level", level).One(&force)
 		if err != nil {
@@ -53,7 +53,7 @@ func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
 }
 
 // 验证当前用户的父亲用户是否达标  可以升级的条件
-func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
+func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string, coin float64) error {
 	if level == "代言人" {
 		var u_ser User
 		o.QueryTable("user").Filter("user_id", user_id).One(&u_ser)
@@ -70,7 +70,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 				count += 1
 			}
 			if count >= 2 {
-				return UpdateLevel(o, u_ser.FatherId, "网红")
+				return UpdateLevel(o, u_ser.FatherId, "网红", coin)
 			}
 		}
 		return nil
@@ -90,7 +90,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 				count += 1
 			}
 			if count >= 3 {
-				return UpdateLevel(o, u_ser.FatherId, "明星")
+				return UpdateLevel(o, u_ser.FatherId, "明星", coin)
 			}
 		}
 		return nil
@@ -99,7 +99,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 }
 
 // 升级父亲用户的 生态等级
-func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
+func UpdateLevel(o orm.Ormer, father_account_id, level string, coin float64) error {
 	if level == "网红" {
 		force := ForceTable{}
 		o.QueryTable("force_table").Filter("level", level).One(&force)
@@ -119,9 +119,13 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 			if err != nil {
 				return err
 			}
+			err_zhitui := ForAddCoin(o, father_account_id, coin, 0.1)
+			if err_zhitui != nil {
+				return err_zhitui
+			}
 			return nil
 		}
-		return errors.New("err")
+		return nil
 	} else if level == "明星" {
 		force := ForceTable{}
 		o.QueryTable("force_table").Filter("level", level).One(&force)
@@ -141,34 +145,13 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 			if err != nil {
 				return err
 			}
+			err_zhitui := ForAddCoin(o, father_account_id, coin, 0.1)
+			if err_zhitui != nil {
+				return err_zhitui
+			}
 			return nil
 		}
-		return errors.New("err")
+		return nil
 	}
 	return nil
-}
-
-// 给父亲级别的加上  加速算力  USDD
-func Add(coin_number float64, user_id string) error {
-	o := NewOrm()
-	o.Begin()
-	coin := coin_number
-	coust := 1.0
-	user := User{}
-	for {
-		coust = 0.1 * coust
-		coin = coin * coust
-		if coin < 1.0 {
-			return nil
-		}
-		o.QueryTable("user").Filter("user_id", user_id).One(&user)
-		account := Account{}
-		err := o.QueryTable("account").Filter("user_id", user.FatherId).One(&account)
-		if err == nil {
-			account.BockedBalance = account.BockedBalance + coin
-			account.Update()
-		} else {
-			return err
-		}
-	}
 }
