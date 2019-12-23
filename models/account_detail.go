@@ -17,6 +17,7 @@ type AccountDetail struct {
 	Comment        string  `orm:column(comment)`         //备注
 	TxId           string  `orm:column(tx_id)`           //任务id
 	Account        int     `orm:column(account)`         //生态仓库id
+	CoinType       string  `orm:"column(coin_type)"`     // 币种信息
 }
 
 func (this *AccountDetail) TableName() string {

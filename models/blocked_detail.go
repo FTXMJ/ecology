@@ -19,6 +19,7 @@ type BlockedDetail struct {
 	Comment        string  `orm:"column(comment)" json:"comment"`                 //评论
 	TxId           string  `orm:"column(tx_id)" json:"tx_id"`                     //任务id
 	Account        int     `orm:"column(account)" json:"account"`                 //生态仓库id
+	CoinType       string  `orm:"column(coin_type)" json:"coin_type"`             // 币种信息
 }
 
 func (this *BlockedDetail) TableName() string {
@@ -216,7 +217,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 		UserId:      father_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
-		InCome:      coin,
+		InCome:      (coin * proportion),
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
@@ -237,10 +238,10 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 
 	blocked_new := BlockedDetail{
 		UserId:         father_id,
-		CurrentRevenue: coin,
+		CurrentRevenue: (coin * proportion),
 		CurrentOutlay:  0,
 		OpeningBalance: blocked_old.CurrentBalance,
-		CurrentBalance: blocked_old.CurrentBalance + coin,
+		CurrentBalance: blocked_old.CurrentBalance + (coin * proportion),
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "直推收益",
 		TxId:           tx_id_blo_d,

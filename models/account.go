@@ -192,6 +192,24 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
 	}
 }
 
+//生成凑数信息
+func CouShu(a *Ecology_index_obj) {
+	b := Formulaindex{
+		Id:                  0,
+		Level:               "",
+		BockedBalance:       0,
+		Balance:             0,
+		LowHold:             0,
+		HighHold:            0,
+		ReturnMultiple:      0,
+		ToDayRate:           0,
+		HoldReturnRate:      0,
+		RecommendReturnRate: 0,
+		TeamReturnRate:      0,
+	}
+	a.Ecological_poject = append(a.Ecological_poject, b)
+}
+
 type Ecology_index_ob_test struct {
 	usdd___usdd数量                             float64
 	ecological_poject___生态项目                  []Formulaindex_test //生态项目

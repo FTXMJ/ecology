@@ -43,6 +43,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	}
 	indexValues := models.Ecology_index_obj{}
 	if 1 > i {
+		models.CouShu(&indexValues)
 		indexValues.Ecological_poject_bool = false
 		indexValues.Super_peer_bool = false
 		logs.Log.Error(api_url, "没有查询到用户的生态仓库!")
@@ -72,8 +73,9 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			}
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
 			if err != nil {
+				models.CouShu(&indexValues)
 				logs.Log.Error(api_url, "计算用户当前直推收益出错!")
-				data = common.NewResponse(models.Ecology_index_obj{})
+				data = common.NewResponse(indexValues)
 				return
 			}
 			f.ToDayRate = zhitui + (formula_index[0].HoldReturnRate * v.BockedBalance) + f.TeamReturnRate
@@ -138,7 +140,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 
 	//生态项目的算力表
 	formula := models.Formula{}
-	err_level := models.JudgeLevel(o, user_id, levelstr, &formula, coin_number)
+	err_level := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if err_level != nil {
 		o.Rollback()
 		logs.Log.Error(api_url, err_level)
@@ -383,7 +385,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		return
 	}
 
-	errJu := models.JudgeLevel(o, user_id, levelstr, &formula, coin_number)
+	errJu := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if errJu != nil {
 		o.Rollback()
 		logs.Log.Error(api_url, errJu)

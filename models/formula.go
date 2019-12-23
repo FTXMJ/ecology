@@ -33,8 +33,8 @@ func (this *Formula) Update() (err error) {
 }
 
 // 根据等级 进行算力的更新
-func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula, coin float64) error {
-	if JudgeLevelFor_wh_mx(o, user_id, level, coin) == nil {
+func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
+	if JudgeLevelFor_wh_mx(o, user_id, level) == nil {
 		force := ForceTable{}
 		err := NewOrm().QueryTable("force_table").Filter("level", level).One(&force)
 		if err != nil {
@@ -53,7 +53,7 @@ func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula, coin float
 }
 
 // 验证当前用户的父亲用户是否达标  可以升级的条件
-func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string, coin float64) error {
+func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 	if level == "代言人" {
 		var u_ser User
 		o.QueryTable("user").Filter("user_id", user_id).One(&u_ser)
@@ -70,7 +70,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string, coin float64) error
 				count += 1
 			}
 			if count >= 2 {
-				return UpdateLevel(o, u_ser.FatherId, "网红", coin)
+				return UpdateLevel(o, u_ser.FatherId, "网红")
 			}
 		}
 		return nil
@@ -90,7 +90,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string, coin float64) error
 				count += 1
 			}
 			if count >= 3 {
-				return UpdateLevel(o, u_ser.FatherId, "明星", coin)
+				return UpdateLevel(o, u_ser.FatherId, "明星")
 			}
 		}
 		return nil
@@ -99,7 +99,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string, coin float64) error
 }
 
 // 升级父亲用户的 生态等级
-func UpdateLevel(o orm.Ormer, father_account_id, level string, coin float64) error {
+func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 	if level == "网红" {
 		force := ForceTable{}
 		o.QueryTable("force_table").Filter("level", level).One(&force)
@@ -118,10 +118,6 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string, coin float64) err
 				})
 			if err != nil {
 				return err
-			}
-			err_zhitui := ForAddCoin(o, father_account_id, coin, 0.1)
-			if err_zhitui != nil {
-				return err_zhitui
 			}
 			return nil
 		}
@@ -144,10 +140,6 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string, coin float64) err
 				})
 			if err != nil {
 				return err
-			}
-			err_zhitui := ForAddCoin(o, father_account_id, coin, 0.1)
-			if err_zhitui != nil {
-				return err_zhitui
 			}
 			return nil
 		}
