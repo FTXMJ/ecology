@@ -349,7 +349,7 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
-	return list, page, nil
+	return listle, page, nil
 }
 
 // 直推算力的计算　　　－－　　　当天
