@@ -339,3 +339,40 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 	data = common.NewResponse(hostory_list)
 	return
 }
+
+// @Tags root-用户生态列表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
+// @Success 200____用户生态列表 {object} models.HostryPageInfo_test
+// @router /admin/user_ecology_list [GET]
+func (this *BackStageManagement) UserEcologyList() {
+	var (
+		data            *common.ResponseData
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		user_id         = this.GetString("user_id")
+		//api_url         = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+
+	u_e_obj, p := models.FindU_E_OBJ(page, user_id)
+	list := models.UEOBJList{
+		Items: u_e_obj,
+		Page:  p,
+	}
+	data = common.NewResponse(list)
+	return
+}

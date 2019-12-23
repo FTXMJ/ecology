@@ -262,6 +262,50 @@
                 }
             }
         },
+        "/ecology/admin/user_ecology_list": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "description": "分页信息　－　当前页数",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageSize",
+                        "description": "分页信息　－　每页数据量",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "user_id",
+                        "description": "用户id  不搜就传空，搜索就传user_id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____用户生态列表": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.HostryPageInfo_test"
+                        }
+                    }
+                }
+            }
+        },
         "/ecology/check": {
             "get": {
                 "tags": [

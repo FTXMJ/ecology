@@ -11,8 +11,8 @@ import (
 type BlockedDetail struct {
 	Id             int     `orm:"column(id);pk;auto" json:"id"`
 	UserId         string  `orm:"column(user_id)" json:"user_id"`
-	CurrentRevenue float64 `orm:"column(current_revenue)" json:"current_revenue"` //上期支出
-	CurrentOutlay  float64 `orm:"column(current_outlay)" json:"current_outlay"`   //本期收入
+	CurrentRevenue float64 `orm:"column(current_revenue)" json:"current_revenue"` //本期收入
+	CurrentOutlay  float64 `orm:"column(current_outlay)" json:"current_outlay"`   //本期支出
 	OpeningBalance float64 `orm:"column(opening_balance)" json:"opening_balance"` //上期余额
 	CurrentBalance float64 `orm:"column(current_balance)" json:"current_balance"` //本期余额
 	CreateDate     string  `orm:"column(create_date)" json:"create_date"`         //创建时间
@@ -353,7 +353,7 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 // 直推算力的计算　　　－－　　　当天
 func RecommendReturnRate(user_id, time string) (float64, error) {
 	blo := []BlockedDetail{}
-	sql_str := "SELECT * from blocked_detail where user_id = ? and create_date >= ? and comment = ? "
+	sql_str := "SELECT * from blocked_detail where user_id = ? and create_date <= ? and comment = ? "
 	_, err := NewOrm().Raw(sql_str, user_id, time, "直推收益").QueryRows(&blo)
 	if err != nil {
 		return 0, err
@@ -363,4 +363,76 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 		zhitui += v.CurrentOutlay
 	}
 	return zhitui, nil
+}
+
+type UEOBJList struct {
+	Items []U_E_OBJ `json:"items"` //数据列表
+	Page  Page      `json:"page"`  //分页信息
+}
+
+//用户生态列表　OBJ
+type U_E_OBJ struct {
+	UserId              string
+	Level               string
+	ReturnMultiple      float64 //杠杆
+	CoinAll             float64 //存币总和
+	ToBeReleased        float64 //待释放
+	Released            float64 //已释放
+	HoldReturnRate      float64 //本金自由算力
+	RecommendReturnRate float64 //直推算力
+	TeamReturnRate      float64 //动态算力
+}
+
+func FindU_E_OBJ(page Page, user_id string) ([]U_E_OBJ, Page) {
+	o := NewOrm()
+	users := []User{}
+	if user_id != "" {
+		o.Raw("select * from user where user_id=? ", user_id).QueryRows(&users)
+	} else {
+		o.Raw("select * from user order by id").QueryRows(&users)
+	}
+	user_e_objs := []U_E_OBJ{}
+	for _, v := range users {
+		user_e_obj := U_E_OBJ{}
+		account := Account{}
+		formula := Formula{}
+		blos := []BlockedDetail{}
+		o.Raw("select * from account where user_id=? ", v.UserId).QueryRow(&account)
+		o.Raw("select * from formula where ecology_id=? ", account.Id).QueryRow(&formula)
+		user_e_obj.UserId = v.UserId
+		user_e_obj.Level = account.Level
+		user_e_obj.ReturnMultiple = formula.ReturnMultiple
+		user_e_obj.CoinAll = account.Balance
+		user_e_obj.ToBeReleased = account.BockedBalance
+		o.Raw("select * from blocked_detail where user_id=? and comment=?", v.UserId, "每日释放").QueryRows(&blos)
+		zhichu := 0.0
+		for _, v := range blos {
+			zhichu += v.CurrentOutlay
+		}
+		user_e_obj.Released = zhichu
+		user_e_obj.HoldReturnRate = formula.HoldReturnRate * account.Balance
+		zhitui, _ := RecommendReturnRate(v.UserId, time.Now().Format("2006-01-02")+" 00:00:00")
+		user_e_obj.RecommendReturnRate = zhitui
+		user_e_obj.TeamReturnRate = formula.TeamReturnRate
+
+		user_e_objs = append(user_e_objs, user_e_obj)
+	}
+	page.Count = len(user_e_objs)
+	if page.PageSize < 5 {
+		page.PageSize = 5
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+	if end > len(user_e_objs) {
+		return user_e_objs[start:], page
+	} else {
+		return user_e_objs[start:end], page
+	}
 }

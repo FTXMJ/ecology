@@ -78,7 +78,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewResponse(indexValues)
 				return
 			}
-			f.ToDayRate = zhitui + (formula_index[0].HoldReturnRate * v.BockedBalance) + f.TeamReturnRate
+			f.ToDayRate = zhitui + (formula_index[0].HoldReturnRate * v.Balance) + f.TeamReturnRate
 			f.RecommendReturnRate = zhitui
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
