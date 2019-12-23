@@ -353,7 +353,7 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 // 直推算力的计算　　　－－　　　当天
 func RecommendReturnRate(user_id, time string) (float64, error) {
 	blo := []BlockedDetail{}
-	sql_str := "SELECT * from blocked_detail where user_id = ? and create_date >= ? and comment = ? "
+	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and comment=? "
 	_, err := NewOrm().Raw(sql_str, user_id, time, "直推收益").QueryRows(&blo)
 	if err != nil {
 		return 0, err
