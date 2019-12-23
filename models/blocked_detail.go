@@ -328,8 +328,8 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 	}
 
 	page.Count = len(list)
-	if page.PageSize < 10 {
-		page.PageSize = 10
+	if page.PageSize < 5 {
+		page.PageSize = 5
 	}
 	if page.CurrentPage == 0 {
 		page.CurrentPage = 1
