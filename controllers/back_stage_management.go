@@ -279,7 +279,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Produce json
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
-// @Param type query string true "查询的数据类型　　 =铸币表　account_detail=充值表"
+// @Param type query string true "查询的数据类型　　 blocked_detail=铸币表　account_detail=充值表"
 // @Param user_id query string true "用户id"
 // @Param tx_id query string true "订单id"
 // @Param start_time query string true "开始时间"

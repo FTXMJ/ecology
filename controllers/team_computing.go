@@ -15,12 +15,7 @@ import (
 	"time"
 )
 
-// @Tags test
-// @Accept  json
-// @Produce json
-// @Success 200
-// @router /yanshi [GET]
-func (this *FirstController) DailyDividendAndRelease() {
+func DailyDividendAndRelease() {
 	o := models.NewOrm()
 	users := []models.User{}
 	o.QueryTable("user").All(&users)

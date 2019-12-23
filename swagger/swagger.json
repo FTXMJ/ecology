@@ -15,60 +15,6 @@
     },
     "basePath": "/api/v1",
     "paths": {
-        "/ecology/add_account": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/add_formula": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/add_user": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/ecology/admin/filter_history_info": {
             "get": {
                 "tags": [
@@ -98,7 +44,7 @@
                     {
                         "in": "query",
                         "name": "type",
-                        "description": "查询的数据类型　　 =铸币表　account_detail=充值表",
+                        "description": "查询的数据类型　　 blocked_detail=铸币表　account_detail=充值表",
                         "required": true,
                         "type": "string"
                     },
@@ -375,24 +321,6 @@
                 }
             }
         },
-        "/ecology/create_user": {
-            "post": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200___测试": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/ecology/return_page_list_hostry": {
             "get": {
                 "tags": [
@@ -581,24 +509,6 @@
                 ],
                 "responses": {
                     "200____升级生态仓库": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/ecology/yanshi": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
                         "description": ""
                     }
                 }

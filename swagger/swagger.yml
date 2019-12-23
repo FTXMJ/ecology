@@ -11,39 +11,6 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 basePath: /api/v1
 paths:
-  /ecology/add_account:
-    get:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-  /ecology/add_formula:
-    get:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-  /ecology/add_user:
-    get:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
   /ecology/admin/filter_history_info:
     get:
       tags:
@@ -65,7 +32,7 @@ paths:
         type: string
       - in: query
         name: type
-        description: 查询的数据类型　　 =铸币表　account_detail=充值表
+        description: 查询的数据类型　　 blocked_detail=铸币表　account_detail=充值表
         required: true
         type: string
       - in: query
@@ -249,17 +216,6 @@ paths:
       responses:
         200____新增生态仓库:
           description: ""
-  /ecology/create_user:
-    post:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        200___测试:
-          description: ""
   /ecology/return_page_list_hostry:
     get:
       tags:
@@ -383,17 +339,6 @@ paths:
         type: string
       responses:
         200____升级生态仓库:
-          description: ""
-  /ecology/yanshi:
-    get:
-      tags:
-      - ecology
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
           description: ""
 definitions:
   models.Ecology_index_ob_test:
