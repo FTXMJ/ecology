@@ -111,12 +111,8 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		o.Rollback()
 		return erruser
 	}
-	errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
-	if errrr != nil {
-		o.Rollback()
-		return errrr
-	}
 
+	ForAddCoin(o, user.FatherId, coin_in, 0.1)
 	return nil
 }
 
