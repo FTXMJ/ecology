@@ -27,14 +27,14 @@ type HostryValues_test struct {
 }
 
 type ForceTable_test struct {
-	id__id                         int     `orm:"column(id);pk;auto"`
-	level___等级                     string  `orm:column(level)`
-	low_hold___充值或者升级的低位           int     `orm:column(low_hold)`              //低位
-	high_hold___高位                 int     `orm:column(high_hold)`             //高位
-	return_multiple___杠杆           float64 `orm:column(return_multiple)`       //杠杆
-	hold_return_rate____自由算力       float64 `orm:column(hold_return_rate)`      //本金自由算力
-	recommend_return_rate____直推算力  float64 `orm:column(recommend_return_rate)` //直推算力
-	team_return_rate____动态算力__团队算力 float64 `orm:column(team_return_rate)`      //动态算力
+	id__id                         int
+	level___等级                     string
+	low_hold___充值或者升级的低位           int     //低位
+	high_hold___高位                 int     //高位
+	return_multiple___杠杆           float64 //杠杆
+	hold_return_rate____自由算力       float64 //本金自由算力
+	recommend_return_rate____直推算力  float64 //直推算力
+	team_return_rate____动态算力__团队算力 float64 //动态算力
 }
 
 type Ecology_index_ob_test struct {
@@ -69,8 +69,43 @@ type Formulaindex_test struct {
 
 // 超级节点算力表
 type SuperForceTable_test struct {
-	id__id                    int     `orm:"column(id);pk;auto"`
-	level___等级                string  `orm:column(level)`
-	coin_number_rule___币数     int     `orm:column(coin_number_rule)`
-	bonus_calculation____分红比例 float64 `orm:column(bonus_calculation)`
+	id__id                    int
+	level___等级                string
+	coin_number_rule___币数     int
+	bonus_calculation____分红比例 float64
+}
+
+// user coin flow information
+type FlowList_test struct {
+	Items___数据列表 []Flow_test //数据列表
+	Page___分页    Page        //分页信息
+}
+
+// user ecology information
+type Flow_test struct {
+	UserId___用户id              string
+	HoldReturnRate___本金自由算力    float64 //本金自由算力
+	RecommendReturnRate___直推算力 float64 //直推算力
+	TeamReturnRate___动态算力      float64 //动态算力
+	Released___已释放             float64 //已释放
+	UpdateTime___最后更新时间        string  // 最后更新时间
+}
+
+// user ecology information
+type UEOBJList_test struct {
+	Items___数据列表 []U_E_OBJ_test //数据列表
+	Page___分页    Page           //分页信息
+}
+
+// user ecology information object
+type U_E_OBJ_test struct {
+	UserId___用户id              string
+	Level___等级                 string
+	ReturnMultiple___杠杆        float64 //杠杆
+	CoinAll___存币总和             float64 //存币总和
+	ToBeReleased___待释放         float64 //待释放
+	Released___已释放             float64 //已释放
+	HoldReturnRate___本金自由算力    float64 //本金自由算力
+	RecommendReturnRate___直推算力 float64 //直推算力
+	TeamReturnRate___动态算力      float64 //动态算力
 }

@@ -346,7 +346,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
-// @Success 200____用户生态列表
+// @Success 200____用户生态列表 {object} models.UEOBJList_test
 // @router /admin/user_ecology_list [GET]
 func (this *BackStageManagement) UserEcologyList() {
 	var (
@@ -385,7 +385,7 @@ func (this *BackStageManagement) UserEcologyList() {
 // @Param user_id query string true "用户id"
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
-// @Success 200____算力流水表 {object} models.HostryPageInfo_test
+// @Success 200____算力流水表 {object} models.FlowList_test
 // @router /admin/computational_flow [GET]
 func (this *BackStageManagement) ComputationalFlow() {
 	var (

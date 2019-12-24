@@ -67,7 +67,7 @@
                     "200____算力流水表": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/models.HostryPageInfo_test"
+                            "$ref": "#/definitions/models.FlowList_test"
                         }
                     }
                 }
@@ -356,7 +356,10 @@
                 ],
                 "responses": {
                     "200____用户生态列表": {
-                        "description": ""
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.UEOBJList_test"
+                        }
                     }
                 }
             }
@@ -640,6 +643,49 @@
                 }
             }
         },
+        "models.FlowList_test": {
+            "title": "FlowList_test",
+            "type": "object",
+            "properties": {
+                "Items___数据列表": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Flow_test"
+                    }
+                },
+                "Page___分页": {
+                    "$ref": "#/definitions/models.Page"
+                }
+            }
+        },
+        "models.Flow_test": {
+            "title": "Flow_test",
+            "type": "object",
+            "properties": {
+                "HoldReturnRate___本金自由算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "RecommendReturnRate___直推算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Released___已释放": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "TeamReturnRate___动态算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "UpdateTime___最后更新时间": {
+                    "type": "string"
+                },
+                "UserId___用户id": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ForceTable_test": {
             "title": "ForceTable_test",
             "type": "object",
@@ -783,6 +829,28 @@
                 }
             }
         },
+        "models.Page": {
+            "title": "Page",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "currentPage": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "totalPage": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
         "models.Page_test": {
             "title": "Page_test",
             "type": "object",
@@ -840,6 +908,61 @@
                 "usdd___总币数ForceTable_test": {
                     "type": "number",
                     "format": "double"
+                }
+            }
+        },
+        "models.UEOBJList_test": {
+            "title": "UEOBJList_test",
+            "type": "object",
+            "properties": {
+                "Items___数据列表": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.U_E_OBJ_test"
+                    }
+                },
+                "Page___分页": {
+                    "$ref": "#/definitions/models.Page"
+                }
+            }
+        },
+        "models.U_E_OBJ_test": {
+            "title": "U_E_OBJ_test",
+            "type": "object",
+            "properties": {
+                "CoinAll___存币总和": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "HoldReturnRate___本金自由算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Level___等级": {
+                    "type": "string"
+                },
+                "RecommendReturnRate___直推算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "Released___已释放": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "ReturnMultiple___杠杆": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "TeamReturnRate___动态算力": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "ToBeReleased___待释放": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "UserId___用户id": {
+                    "type": "string"
                 }
             }
         }
