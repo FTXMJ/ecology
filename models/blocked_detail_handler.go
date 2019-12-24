@@ -323,11 +323,11 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		level += "2"
 	}
 	if level == "1" {
-		s_ql = s_ql + "user_id=? order by create_date desc"
+		s_ql = s_ql + "and user_id=? order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.UserId).QueryRows(&list)
 		err = er
 	} else if level == "12" {
-		s_ql = s_ql + "user_id=? and create_date>=? and create_date<=? order by create_date desc"
+		s_ql = s_ql + "and user_id=? and create_date>=? and create_date<=? order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	} else if level == "2" {
@@ -335,7 +335,7 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	} else {
-		s_ql = s_ql + "id>0 order by create_date desc"
+		s_ql = s_ql + "and id>0 order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	}
@@ -351,6 +351,9 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	}
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
+	if end > len(list) {
+		end = len(list)
+	}
 	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 	if page.Count <= 5 {
 		page.CurrentPage = 1
