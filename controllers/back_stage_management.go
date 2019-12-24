@@ -279,7 +279,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Produce json
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
-// @Param type query string true "查询的数据类型　　 blocked_detail=铸币表　account_detail=充值表"
+// @Param type query string true "查询的s数据类型　　 blocked_detail=铸币表　account_detail=充值表"
 // @Param user_id query string true "用户id"
 // @Param tx_id query string true "订单id"
 // @Param start_time query string true "开始时间"
@@ -346,7 +346,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
-// @Success 200____用户生态列表 {object} models.HostryPageInfo_test
+// @Success 200____用户生态列表
 // @router /admin/user_ecology_list [GET]
 func (this *BackStageManagement) UserEcologyList() {
 	var (
@@ -375,4 +375,54 @@ func (this *BackStageManagement) UserEcologyList() {
 	}
 	data = common.NewResponse(list)
 	return
+}
+
+// @Tags root-算力流水表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param user_id query string true "用户id"
+// @Param start_time query string true "开始时间"
+// @Param end_time query string true "结束时间"
+// @Success 200____算力流水表 {object} models.HostryPageInfo_test
+// @router /admin/computational＿flow [GET]
+func (this *BackStageManagement) ComputationalFlow() {
+	var (
+		data              *common.ResponseData
+		current_page, _   = this.GetInt("page")
+		page_size, _      = this.GetInt("pageSize")
+		user_id           = this.GetString("user_id")
+		start_time_int, _ = this.GetInt64("start_time")
+		end_time_int, _   = this.GetInt64("end_time")
+		//api_url         = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	start_time := ""
+	end_time := ""
+	if start_time_int == 0 || end_time_int == 0 {
+		start_time = "2006-01-02 15:04:05"
+		end_time = time.Now().Format("2006-01-02 15:04:05")
+	} else {
+		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+	}
+
+	find_obj := models.FindObj{
+		UserId:    user_id,
+		TxId:      "",
+		StartTime: start_time,
+		EndTime:   end_time,
+	}
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+
+	models.SelectPondMachinemsg(find_obj, page, "blocked_detail")
 }

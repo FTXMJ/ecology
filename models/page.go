@@ -196,29 +196,3 @@ func QuickSortAgreement(arr []HostryValues, start, end int) {
 		QuickSortAgreement(arr, index+1, end)
 	}
 }
-
-// Page 分页参数  ---  历史信息
-type HostryPageInfo_test struct {
-	items___数据列表 []HostryValues_test //数据列表
-	page___分页信息  Page_test           //分页信息
-}
-
-type Page_test struct {
-	total_page__总页数     int //总页数
-	current_page___当前页数 int //当前页数
-	page_size___每页数据条数  int //每页数据条数
-	count___总数据量        int //总数据量
-}
-
-type HostryValues_test struct {
-	id                      int
-	user_id___              string
-	current_revenue___本期收入  float64 //上期支出
-	current_outlay____本期支出  float64 //本期支出
-	opening_balance___上期c余额 float64 //上期c余额
-	current_balance___本期余额  float64 //本期余额
-	create_date___创建时间      string  //创建时间
-	comment___评论_           string  //评论
-	tx_id__任务id_            string  //任务id
-	account____生态仓库id       int     //生态仓库id
-}

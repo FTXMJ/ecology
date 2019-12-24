@@ -11,6 +11,45 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 basePath: /api/v1
 paths:
+  /ecology/admin/computational＿flow:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: page
+        description: 分页信息　－　当前页数
+        required: true
+        type: string
+      - in: query
+        name: pageSize
+        description: 分页信息　－　每页数据量
+        required: true
+        type: string
+      - in: query
+        name: user_id
+        description: 用户id
+        required: true
+        type: string
+      - in: query
+        name: start_time
+        description: 开始时间
+        required: true
+        type: string
+      - in: query
+        name: end_time
+        description: 结束时间
+        required: true
+        type: string
+      responses:
+        200____算力流水表:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.HostryPageInfo_test'
   /ecology/admin/filter_history_info:
     get:
       tags:
@@ -32,7 +71,7 @@ paths:
         type: string
       - in: query
         name: type
-        description: 查询的数据类型　　 blocked_detail=铸币表　account_detail=充值表
+        description: 查询的s数据类型　　 blocked_detail=铸币表　account_detail=充值表
         required: true
         type: string
       - in: query
@@ -205,8 +244,6 @@ paths:
       responses:
         200____用户生态列表:
           description: ""
-          schema:
-            $ref: '#/definitions/models.HostryPageInfo_test'
   /ecology/check:
     get:
       tags:
