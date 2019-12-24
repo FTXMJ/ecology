@@ -15,12 +15,20 @@ import (
 	"time"
 )
 
-func DailyDividendAndRelease() {
+type Test struct {
+	beego.Controller
+}
+
+// @Tags 测试每日释放
+// @Accept  json
+// @Produce json
+// @Success 200
+// @router /test_mrsf [GET]
+func (this *Test) DailyDividendAndRelease() {
 	o := models.NewOrm()
 	users := []models.User{}
 	o.QueryTable("user").All(&users)
 	Producer(users)
-	//TODO logs 打印成功信息
 }
 
 func Producer(users []models.User) {
@@ -49,7 +57,7 @@ func Worker(user models.User) error {
 			if err != nil {
 				return err
 			}
-			// 去处理这些数据
+			// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
 			coin, err_handler := HandlerOperation(team_user)
 			if err_handler != nil {
 				return err_handler
@@ -57,6 +65,7 @@ func Worker(user models.User) error {
 			coins = append(coins, coin)
 		}
 	}
+	// 去掉最大的 并更新分红和释放
 	err_sort_a_r := SortABonusRelease(o, coins, user.UserId)
 	if err_sort_a_r != nil {
 		o.Rollback()

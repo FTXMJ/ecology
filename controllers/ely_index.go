@@ -36,7 +36,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	token := GetJwtValues(this.Ctx)
 	user_id := token.UserID
 
-	i, erracc := models.NewOrm().QueryTable("account").Filter("user_id", user_id).All(&account_index)
+	o := models.NewOrm()
+	i, erracc := o.QueryTable("account").Filter("user_id", user_id).All(&account_index)
 	if erracc != nil {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		logs.Log.Error(api_url, erracc)
@@ -55,7 +56,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	if len(account_index) > 0 {
 		for _, v := range account_index {
 			var formula_index []models.Formula
-			_, errfor := models.NewOrm().QueryTable("formula").Filter("ecology_id", v.Id).All(&formula_index)
+			_, errfor := o.QueryTable("formula").Filter("ecology_id", v.Id).All(&formula_index)
 			if errfor != nil {
 				data = common.NewErrorResponse(500, "数据库操作失败!")
 				logs.Log.Error(api_url, errfor)

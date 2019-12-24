@@ -351,6 +351,17 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/models.SuperForceTable_test'
+  /ecology/test_mrsf:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
   /ecology/to_change_into_USDD:
     post:
       tags:

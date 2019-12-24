@@ -118,8 +118,9 @@ func CheckLogin(ctx *context.Context) {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)5"}`)
 				return
 			}
-			o.Commit()
+
 		}
+		o.Commit()
 	}
 }
 
