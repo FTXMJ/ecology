@@ -227,8 +227,8 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 		return err
 	}
 
-	if (coin * proportion * 0.1) > 1 {
-		ForAddCoin(o, user.FatherId, (coin * proportion), proportion*0.1)
+	if coin*proportion > 1 {
+		ForAddCoin(o, user.FatherId, (coin * proportion), proportion)
 	}
 	return nil
 }
