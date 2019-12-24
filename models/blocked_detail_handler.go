@@ -310,7 +310,7 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 
 // 释放流水查询－－处理
 func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) {
-	var list []Flow
+	var list []BlockedDetail
 	level := ""
 	var err error
 	s_ql := "select * from " + table_name + " where comment=? "
@@ -318,18 +318,18 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		level += "1"
 	}
 	if p.StartTime != "" && p.EndTime != "" {
-		level += "3"
+		level += "2"
 	}
 	if level == "1" {
 		s_ql = s_ql + "user_id=? order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.UserId).QueryRows(&list)
 		err = er
-	} else if level == "13" {
-		s_ql = s_ql + "user_id=? and create_date>? and create_date<? order by create_date desc"
+	} else if level == "12" {
+		s_ql = s_ql + "user_id=? and create_date>=? and create_date<=? order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
-	} else if level == "3" {
-		s_ql = s_ql + "create_date > ? and create_date < ? order by create_date desc"
+	} else if level == "2" {
+		s_ql = s_ql + "and create_date>=? and create_date<=? order by create_date desc"
 		_, er := NewOrm().Raw(s_ql, "每日释放", p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	} else {
@@ -340,7 +340,6 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	if err != nil {
 		return []Flow{}, Page{}, err
 	}
-
 	page.Count = len(list)
 	if page.PageSize < 5 {
 		page.PageSize = 5
@@ -350,21 +349,50 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	}
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
-	listle := []Flow{}
-	if end > len(list) {
-		for _, v := range list[start:] {
-			listle = append(listle, v)
-		}
-	} else {
-		for _, v := range list[start:end] {
-			listle = append(listle, v)
-		}
-	}
 	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
-	return listle, page, nil
+	flows := []Flow{}
+	for _, v := range list[start:end] {
+		flow := Flow{}
+		t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
+		time_start := t.AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
+		time_end := t.AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
+		//　直推算力
+		zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
+		if err_zt != nil {
+			return []Flow{}, Page{}, err_zt
+		}
+		//　算力
+		formula := Formula{
+			EcologyId: v.Account,
+		}
+		o := NewOrm()
+		err_read := o.Read(&formula, "ecology_id")
+		if err_read != nil {
+			return []Flow{}, Page{}, err_read
+		}
+		// 	已近释放
+		blo := []BlockedDetail{}
+		_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放", time_start).QueryRows(&blo)
+		if err_raw != nil {
+			return []Flow{}, Page{}, err_raw
+		}
+		coin := 0.0
+		for _, v := range blo {
+			coin += v.CurrentOutlay
+		}
+		flow.UserId = v.UserId
+		flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
+		flow.RecommendReturnRate = zhitui
+		flow.TeamReturnRate = formula.TeamReturnRate
+		flow.Released = coin
+		flow.UpdateTime = v.CreateDate
+		flows = append(flows, flow)
+	}
+
+	return flows, page, nil
 }
 
 // 直推算力的计算　　　－－　　　当天
@@ -372,6 +400,21 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 	blo := []BlockedDetail{}
 	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and comment=? "
 	_, err := NewOrm().Raw(sql_str, user_id, time, "直推收益").QueryRows(&blo)
+	if err != nil {
+		return 0, err
+	}
+	zhitui := 0.0
+	for _, v := range blo {
+		zhitui += v.CurrentRevenue
+	}
+	return zhitui, nil
+}
+
+// 直推算力的计算　　　－－　　　任意天
+func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64, error) {
+	blo := []BlockedDetail{}
+	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=? "
+	_, err := NewOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").QueryRows(&blo)
 	if err != nil {
 		return 0, err
 	}

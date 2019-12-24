@@ -37,8 +37,8 @@ type UEOBJList struct {
 
 // user coin flow information
 type FlowList struct {
-	Items []U_E_OBJ `json:"items"` //数据列表
-	Page  Page      `json:"page"`  //分页信息
+	Items []Flow `json:"items"` //数据列表
+	Page  Page   `json:"page"`  //分页信息
 }
 
 // history information

@@ -15,7 +15,7 @@
     },
     "basePath": "/api/v1",
     "paths": {
-        "/ecology/admin/computational＿flow": {
+        "/ecology/admin/computational_flow": {
             "get": {
                 "tags": [
                     "ecology"

@@ -386,7 +386,7 @@ func (this *BackStageManagement) UserEcologyList() {
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
 // @Success 200____算力流水表 {object} models.HostryPageInfo_test
-// @router /admin/computational＿flow [GET]
+// @router /admin/computational_flow [GET]
 func (this *BackStageManagement) ComputationalFlow() {
 	var (
 		data              *common.ResponseData
@@ -395,7 +395,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 		user_id           = this.GetString("user_id")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
-		//api_url         = this.Controller.Ctx.Request.RequestURI
+		api_url           = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -424,5 +424,17 @@ func (this *BackStageManagement) ComputationalFlow() {
 		Count:       0,
 	}
 
-	models.SelectPondMachinemsg(find_obj, page, "blocked_detail")
+	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
+	user_SF_information := models.FlowList{
+		Items: flows,
+		Page:  p,
+	}
+	if err != nil {
+		logs.Log.Error(api_url, err)
+		data = common.NewErrorResponse(500, "数据库错误")
+		return
+	}
+
+	data = common.NewResponse(user_SF_information)
+	return
 }

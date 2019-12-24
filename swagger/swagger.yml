@@ -11,7 +11,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 basePath: /api/v1
 paths:
-  /ecology/admin/computational＿flow:
+  /ecology/admin/computational_flow:
     get:
       tags:
       - ecology
