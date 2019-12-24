@@ -62,10 +62,10 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				return
 			}
 			f := models.Formulaindex{
-				Id:             v.Id,
-				Level:          v.Level,
-				BockedBalance:  v.BockedBalance,
-				Balance:        v.Balance,
+				Id:    v.Id,
+				Level: v.Level,
+				//BockedBalance:  v.BockedBalance,
+				//Balance:        v.Balance,
 				ReturnMultiple: formula_index[0].ReturnMultiple,
 				//ToDayRate:           formula_index[0].HoldReturnRate + formula_index[0].RecommendReturnRate + formula_index[0].TeamReturnRate,
 				//HoldReturnRate: formula_index[0].HoldReturnRate * v.BockedBalance,
@@ -86,6 +86,11 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			meiri, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", to_day_rate), 64)
 			f.ToDayRate = meiri
 			f.RecommendReturnRate = zhitui
+			blo_bal, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.BockedBalance), 64)
+			f.BockedBalance = blo_bal
+			bal, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.Balance), 64)
+			f.Balance = bal
+
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
 	}
