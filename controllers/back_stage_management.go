@@ -4,6 +4,7 @@ import (
 	"ecology/common"
 	"ecology/logs"
 	"ecology/models"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"strconv"
@@ -368,9 +369,29 @@ func (this *BackStageManagement) UserEcologyList() {
 		Count:       0,
 	}
 
-	u_e_obj, p := models.FindU_E_OBJ(page, user_id)
+	u_e_obj_list, p := models.FindU_E_OBJ(page, user_id)
+	u_e_objs := []models.U_E_OBJ{}
+	for _, v := range u_e_obj_list {
+		u_e_obj := models.U_E_OBJ{}
+		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.HoldReturnRate), 64)
+		u_e_obj.HoldReturnRate = hold
+		reco, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.RecommendReturnRate), 64)
+		u_e_obj.RecommendReturnRate = reco
+		rele, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.Released), 64)
+		u_e_obj.Released = rele
+		team, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.TeamReturnRate), 64)
+		u_e_obj.TeamReturnRate = team
+		tobe, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.ToBeReleased), 64)
+		u_e_obj.ToBeReleased = tobe
+		coin, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.CoinAll), 64)
+		u_e_obj.CoinAll = coin
+		u_e_obj.Level = v.Level
+		u_e_obj.UserId = v.UserId
+		u_e_obj.ReturnMultiple = v.ReturnMultiple
+		u_e_objs = append(u_e_objs, u_e_obj)
+	}
 	list := models.UEOBJList{
-		Items: u_e_obj,
+		Items: u_e_objs,
 		Page:  p,
 	}
 	data = common.NewResponse(list)
@@ -425,16 +446,30 @@ func (this *BackStageManagement) ComputationalFlow() {
 	}
 
 	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
-	user_SF_information := models.FlowList{
-		Items: flows,
-		Page:  p,
-	}
 	if err != nil {
 		logs.Log.Error(api_url, err)
 		data = common.NewErrorResponse(500, "数据库错误")
 		return
 	}
-
+	var flowss []models.Flow
+	for _, v := range flows {
+		flow := models.Flow{}
+		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.HoldReturnRate), 64)
+		flow.HoldReturnRate = hold
+		reco, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.RecommendReturnRate), 64)
+		flow.RecommendReturnRate = reco
+		rele, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.Released), 64)
+		flow.Released = rele
+		team, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.TeamReturnRate), 64)
+		flow.TeamReturnRate = team
+		flow.UserId = v.UserId
+		flow.UpdateTime = v.UpdateTime
+		flowss = append(flowss, flow)
+	}
+	user_SF_information := models.FlowList{
+		Items: flowss,
+		Page:  p,
+	}
 	data = common.NewResponse(user_SF_information)
 	return
 }
