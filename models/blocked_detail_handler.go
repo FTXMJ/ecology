@@ -3,7 +3,9 @@ package models
 import (
 	"ecology/logs"
 	"ecology/utils"
+	"fmt"
 	"github.com/astaxie/beego/orm"
+	"strconv"
 	"time"
 )
 
@@ -407,7 +409,8 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 	for _, v := range blo {
 		zhitui += v.CurrentRevenue
 	}
-	return zhitui, nil
+	zhit, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", zhitui), 64)
+	return zhit, nil
 }
 
 // 直推算力的计算　　　－－　　　任意天

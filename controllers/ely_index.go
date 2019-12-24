@@ -5,6 +5,7 @@ import (
 	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"strconv"
@@ -67,10 +68,13 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				Balance:        v.Balance,
 				ReturnMultiple: formula_index[0].ReturnMultiple,
 				//ToDayRate:           formula_index[0].HoldReturnRate + formula_index[0].RecommendReturnRate + formula_index[0].TeamReturnRate,
-				HoldReturnRate: formula_index[0].HoldReturnRate * v.BockedBalance,
+				//HoldReturnRate: formula_index[0].HoldReturnRate * v.BockedBalance,
 				//RecommendReturnRate: formula_index[0].RecommendReturnRate,
 				TeamReturnRate: formula_index[0].TeamReturnRate,
 			}
+			fhrr := formula_index[0].HoldReturnRate * v.BockedBalance
+			ziyou, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", fhrr), 64)
+			f.HoldReturnRate = ziyou
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
 			if err != nil {
 				models.CouShu(&indexValues)
@@ -78,7 +82,9 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewResponse(indexValues)
 				return
 			}
-			f.ToDayRate = zhitui + (formula_index[0].HoldReturnRate * v.Balance) + f.TeamReturnRate
+			to_day_rate := zhitui + (formula_index[0].HoldReturnRate * v.Balance) + f.TeamReturnRate
+			meiri, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", to_day_rate), 64)
+			f.ToDayRate = meiri
 			f.RecommendReturnRate = zhitui
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
