@@ -85,6 +85,7 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		o.Rollback()
 		return erruser
 	}
+	NetIncome += coin_in * for_mula.ReturnMultiple
 	if user.FatherId != "" {
 		ForAddCoin(o, user.FatherId, coin_in, 0.1)
 	}

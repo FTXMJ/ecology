@@ -10,3 +10,5 @@ func (this *SuperPeerTable) Insert() error {
 	_, err := NewOrm().Insert(this)
 	return err
 }
+
+var NetIncome float64

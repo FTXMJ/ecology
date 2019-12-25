@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"ecology/common"
 	"ecology/consul"
 	"ecology/models"
 	"ecology/utils"
@@ -11,7 +10,9 @@ import (
 	"github.com/astaxie/beego/orm"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -29,6 +30,7 @@ func (this *Test) DailyDividendAndRelease() {
 	users := []models.User{}
 	o.QueryTable("user").All(&users)
 	Producer(users)
+	models.NetIncome = 0.0
 }
 
 func Producer(users []models.User) {
@@ -284,8 +286,10 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 func AddFormulaABonus(o orm.Ormer, user_id string) error {
 	s_f_t := []models.SuperForceTable{}
 	o.QueryTable("super_force_table").All(&s_f_t)
-	s_p_t := models.SuperPeerTable{}
-	o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
+	tfor_number, err_tfor := PingSelectTforNumber(user_id)
+	if err_tfor != nil {
+		return err_tfor
+	}
 
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
@@ -296,12 +300,13 @@ func AddFormulaABonus(o orm.Ormer, user_id string) error {
 	}
 	index := []int{}
 	for i, v := range s_f_t {
-		if s_p_t.CoinNumber > float64(v.CoinNumberRule) {
+		if tfor_number > float64(v.CoinNumberRule) {
 			index = append(index, i)
 		}
 	}
-	abonus := s_f_t[index[len(index)-1]].BonusCalculation * s_p_t.CoinNumber
+	abonus := 0.0 //TODO  全网的算力释放总量
 	if len(index) > 0 {
+		abonus = s_f_t[index[len(index)-1]].BonusCalculation * tfor_number //TODO  全网的算力释放总量
 		// 调老罗接口
 		if err := PingAddWalletCoin(user_id, abonus); err != nil {
 			return err
@@ -416,46 +421,98 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	return nil
 }
 
-// 远端连接  -  给定分红收益
+// 远端连接  -  给定分红收益  释放通用
 func PingAddWalletCoin(user_id string, abonus float64) error {
 	user := models.User{
 		UserId: user_id,
 	}
-	b, user_str := generateToken(user)
+	b, token := generateToken(user)
 	if b != true {
 		return errors.New("err")
 	}
-	client := &http.Client{}
 	//生成要访问的url
-	url := beego.AppConfig.String("api::apiurl_abonus")
-	//提交请求
-	reqest, errnr := http.NewRequest("POST", url, nil)
+	apiurl := consul.GetWalletApi
+	resoure := beego.AppConfig.String("api::apiurl_share_bonus")
+	data := url.Values{}
+	data.Set("money", strconv.FormatFloat(abonus, 'f', -1, 64))
+	data.Set("symbol", "USDD")
 
-	//增加header选项
-	reqest.Header.Add("Authorization", user_str)
-	reqest.Form.Add("coin", strconv.FormatFloat(abonus, 'f', -1, 64))
-	reqest.Form.Add("coin_type", "TFOR")
+	u, _ := url.ParseRequestURI(apiurl)
+	u.Path = resoure
+	urlStr := u.String()
 
-	if errnr != nil {
-		return errnr
+	client := &http.Client{}
+	req, err1 := http.NewRequest(`POST`, urlStr, strings.NewReader(data.Encode()))
+	if err1 != nil {
+		return err1
 	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", token)
+
 	//处理返回结果
-	response, errdo := client.Do(reqest)
-	defer response.Body.Close()
+	response, errdo := client.Do(req)
 	if errdo != nil {
 		return errdo
 	}
+
 	bys, err_read := ioutil.ReadAll(response.Body)
 	if err_read != nil {
 		return err_read
 	}
-	values := common.ResponseData{}
+	values := models.Data_wallet{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil {
-		return err_read
+		return errors.New("钱包金额操作失败!")
+	} else if values.Code != 200 {
+		return errors.New(values.Msg)
 	}
-	if values.Code != 200 {
-		return errors.New("err")
-	}
+	response.Body.Close()
 	return nil
+}
+
+// TFOR 数量查询
+func PingSelectTforNumber(user_id string) (float64, error) {
+	user := models.User{
+		UserId: user_id,
+	}
+	b, token := generateToken(user)
+	if b != true {
+		return 0.0, errors.New("err")
+	}
+	//生成要访问的url
+	apiurl := consul.GetWalletApi
+	resoure := beego.AppConfig.String("api::apiurl_tfor_info")
+	data := url.Values{}
+
+	u, _ := url.ParseRequestURI(apiurl)
+	u.Path = resoure
+	urlStr := u.String()
+
+	client := &http.Client{}
+	req, err1 := http.NewRequest(`GET`, urlStr, strings.NewReader(data.Encode()))
+	if err1 != nil {
+		return 0.0, err1
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", token)
+
+	//处理返回结果
+	response, errdo := client.Do(req)
+	if errdo != nil {
+		return 0.0, errdo
+	}
+
+	bys, err_read := ioutil.ReadAll(response.Body)
+	if err_read != nil {
+		return 0.0, err_read
+	}
+	values := models.Data_wallet{}
+	err := json.Unmarshal(bys, &values)
+	if err != nil {
+		return 0.0, errors.New("钱包金额操作失败!")
+	} else if values.Code != 200 {
+		return 0.0, errors.New(values.Msg)
+	}
+	response.Body.Close()
+	return values.Data["balance"].(float64), nil
 }

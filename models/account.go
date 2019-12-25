@@ -71,6 +71,14 @@ type Data_wallet struct {
 	Data map[string]interface{} `json:"data"`
 }
 
+/*{    TFOR 数据返回体
+  "balance": 0,
+  "currency_id": 0,
+  "decimals": 0,
+  "name": "string",
+  "symbol": "string"
+}*/
+
 // 老罗的钱包数据结构
 type WalletInfo struct {
 	Balance    float64 `json:"balance"`

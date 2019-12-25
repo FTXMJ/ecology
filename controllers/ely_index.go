@@ -73,7 +73,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				//RecommendReturnRate: formula_index[0].RecommendReturnRate,
 				TeamReturnRate: formula_index[0].TeamReturnRate,
 			}
-			fhrr := formula_index[0].HoldReturnRate * v.BockedBalance
+			fhrr := formula_index[0].HoldReturnRate * v.Balance
 			ziyou, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", fhrr), 64)
 			f.HoldReturnRate = ziyou
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
@@ -83,7 +83,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewResponse(indexValues)
 				return
 			}
-			to_day_rate := zhitui + (formula_index[0].HoldReturnRate * v.Balance) + f.TeamReturnRate + ziyou
+			to_day_rate := zhitui + f.TeamReturnRate + ziyou
 			meiri, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", to_day_rate), 64)
 			f.ToDayRate = meiri
 			f.RecommendReturnRate = zhitui
@@ -95,7 +95,12 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
 	}
-	models.SuperLevelSet(user_id, &indexValues)
+	tfors, err_tfor := PingSelectTforNumber(user_id)
+	if err_tfor != nil {
+		data = common.NewErrorResponse(500, "查看钱包　TFOR 数量时错误!")
+		return
+	}
+	models.SuperLevelSet(user_id, &indexValues, tfors)
 	data = common.NewResponse(indexValues)
 	return
 }

@@ -88,12 +88,9 @@ func PingWalletAdd(token string, coin_number float64) error {
 }
 
 // 判断是否达到超级节点的要求 --- 页面显示
-func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
+func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 	s_f_t := []SuperForceTable{}
 	NewOrm().QueryTable("super_force_table").All(&s_f_t)
-	// TODO 老罗的接口－钱包详情
-	s_p_t := SuperPeerTable{}
-	NewOrm().QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
 
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
@@ -104,14 +101,14 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
 	}
 	index := []int{}
 	for i, v := range s_f_t {
-		if s_p_t.CoinNumber > float64(v.CoinNumberRule) {
+		if tfor > float64(v.CoinNumberRule) {
 			index = append(index, i)
 		}
 	}
 	if len(index) > 0 {
 		ec_obj.Super_peer_bool = true
 		ec_obj.Super_peer.Level = s_f_t[index[len(index)-1]].Level
-		ec_obj.Super_peer.Usdd = s_p_t.CoinNumber
+		ec_obj.Super_peer.Usdd = tfor
 	}
 }
 
