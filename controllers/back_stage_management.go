@@ -568,11 +568,11 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
 		return
 	}
-	start := ""
+	var start bool
 	if profit_start == "1" {
-		start = "true"
+		start = true
 	} else if profit_start == "2" {
-		start = "false"
+		start = false
 	}
 	account_type := ""
 	if profit_type == "1" { //静态收益开关

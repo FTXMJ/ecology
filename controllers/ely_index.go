@@ -83,7 +83,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewResponse(indexValues)
 				return
 			}
-			to_day_rate := zhitui + (formula_index[0].HoldReturnRate * v.Balance) + f.TeamReturnRate
+			to_day_rate := zhitui + (formula_index[0].HoldReturnRate * v.Balance) + f.TeamReturnRate + ziyou
 			meiri, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", to_day_rate), 64)
 			f.ToDayRate = meiri
 			f.RecommendReturnRate = zhitui

@@ -175,7 +175,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 	if erraccount != nil {
 		return erraccount
 	}
-	if account.DynamicRevenue == "true" {
+	if account.DynamicRevenue == true {
 		new_coin := account.BockedBalance + (coin * proportion)
 		_, err_up := o.QueryTable("account").Filter("user_id", father_id).Update(orm.Params{"bocked_balance": new_coin})
 		if err_up != nil {

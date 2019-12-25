@@ -91,6 +91,7 @@ func PingWalletAdd(token string, coin_number float64) error {
 func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj) {
 	s_f_t := []SuperForceTable{}
 	NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	// TODO 老罗的接口－钱包详情
 	s_p_t := SuperPeerTable{}
 	NewOrm().QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
 

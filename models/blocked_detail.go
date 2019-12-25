@@ -88,7 +88,7 @@ type U_E_OBJ struct {
 type AccountOFF struct {
 	UserId         string `json:"user_id"`
 	Account        int    `json:"account"`
-	DynamicRevenue string `json:"dynamic_revenue"` //动态收益开关
-	StaticReturn   string `json:"static_return"`   //静态收益开关
+	DynamicRevenue bool   `json:"dynamic_revenue"` //动态收益开关
+	StaticReturn   bool   `json:"static_return"`   //静态收益开关
 	CreateDate     string `json:"create_date"`     //创建时间
 }

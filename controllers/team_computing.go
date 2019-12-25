@@ -54,15 +54,15 @@ func Worker(user models.User) error {
 	coins := []float64{}
 	o.Read(&account, "user_id")
 
-	if account.DynamicRevenue != "true" && account.StaticReturn != "true" {
+	if account.DynamicRevenue != true && account.StaticReturn != true {
 		return nil
-	} else if account.DynamicRevenue == "true" && account.StaticReturn != "true" { // 动态可以，静态禁止
+	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
 		err_team := Team(o, user_current_layer, user, coins)
 		if err_team != nil {
 			o.Rollback()
 			return err_team
 		}
-	} else if account.StaticReturn == "true" && account.DynamicRevenue != "true" { //静态可以，动态禁止
+	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
 		err_jintai := Jintai(o, user)
 		if err_jintai != nil {
 			o.Rollback()
