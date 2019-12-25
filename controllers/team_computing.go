@@ -48,7 +48,44 @@ func Worker(user models.User) error {
 	o := models.NewOrm()
 	o.Begin()
 	user_current_layer := []models.User{}
+	account := models.Account{
+		UserId: user.UserId,
+	}
 	coins := []float64{}
+	o.Read(&account, "user_id")
+
+	if account.DynamicRevenue != "true" && account.StaticReturn != "true" {
+		return nil
+	} else if account.DynamicRevenue == "true" && account.StaticReturn != "true" { // 动态可以，静态禁止
+		err_team := Team(o, user_current_layer, user, coins)
+		if err_team != nil {
+			o.Rollback()
+			return err_team
+		}
+	} else if account.StaticReturn == "true" && account.DynamicRevenue != "true" { //静态可以，动态禁止
+		err_jintai := Jintai(o, user)
+		if err_jintai != nil {
+			o.Rollback()
+			return err_jintai
+		}
+	} else { // 都可以
+		err_team := Team(o, user_current_layer, user, coins)
+		if err_team != nil {
+			o.Rollback()
+			return err_team
+		}
+		err_jintai := Jintai(o, user)
+		if err_jintai != nil {
+			o.Rollback()
+			return err_jintai
+		}
+	}
+	o.Commit()
+	return nil
+}
+
+func Team(o orm.Ormer, user_current_layer []models.User, user models.User, coins []float64) error {
+	// 团队收益　开始
 	o.QueryTable("user").Filter("father_id", user.UserId).All(&user_current_layer)
 	if len(user_current_layer) > 0 {
 		for _, v := range user_current_layer {
@@ -65,13 +102,24 @@ func Worker(user models.User) error {
 			coins = append(coins, coin)
 		}
 	}
-	// 去掉最大的 并更新分红和释放
 	err_sort_a_r := SortABonusRelease(o, coins, user.UserId)
 	if err_sort_a_r != nil {
-		o.Rollback()
 		return err_sort_a_r
 	}
-	o.Commit()
+	// 团队收益　结束
+	return nil
+}
+
+func Jintai(o orm.Ormer, user models.User) error {
+	// 超级节点分红
+	err_super_peer := AddFormulaABonus(o, user.UserId)
+	if err_super_peer != nil {
+		return err_super_peer
+	}
+	err := DailyRelease(o, user.UserId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -140,7 +188,7 @@ func HandlerOperation(users []string) (float64, error) {
 	return coin_abouns, nil
 }
 
-// 去掉最大的 并更新分红和释放
+// 去掉最大的 团队收益
 func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	for i := 0; i < len(coins)-1; i++ {
 		for j := i + 1; j < len(coins); j++ {
@@ -172,6 +220,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	blocked_old := models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
+		Filter("account", account.Id).
 		OrderBy("-create_date").
 		Limit(1).
 		One(&blocked_old)
@@ -186,8 +235,8 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
-		CurrentRevenue: blocked_old.CurrentOutlay,
-		CurrentOutlay:  value * for_mula.TeamReturnRate,
+		CurrentRevenue: value * for_mula.TeamReturnRate,
+		CurrentOutlay:  0,
 		CurrentBalance: blocked_old.CurrentBalance + (value * for_mula.TeamReturnRate) - 0,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
@@ -232,11 +281,11 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 }
 
 // 超级节点的分红
-func AddFormulaABonus(user_id string) error {
+func AddFormulaABonus(o orm.Ormer, user_id string) error {
 	s_f_t := []models.SuperForceTable{}
-	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	o.QueryTable("super_force_table").All(&s_f_t)
 	s_p_t := models.SuperPeerTable{}
-	models.NewOrm().QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
+	o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&s_p_t)
 
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
@@ -251,12 +300,118 @@ func AddFormulaABonus(user_id string) error {
 			index = append(index, i)
 		}
 	}
+	abonus := s_f_t[index[len(index)-1]].BonusCalculation * s_p_t.CoinNumber
 	if len(index) > 0 {
-		abonus := s_f_t[index[len(index)-1]].BonusCalculation * s_p_t.CoinNumber
 		// 调老罗接口
 		if err := PingAddWalletCoin(user_id, abonus); err != nil {
 			return err
 		}
+	}
+	//任务表 USDD  铸币记录
+	tx_id_blo_d := utils.Shengchengstr("超级节点分红", user_id, "USDD")
+	blo_txid_dcmt := models.TxIdList{
+		State: "true",
+		TxId:  tx_id_blo_d,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		return errtxid_blo
+	}
+
+	account := models.Account{}
+	o.QueryTable("account").Filter("user_id", user_id).One(&account)
+	blocked_old := models.BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(1).
+		One(&blocked_old)
+	if blocked_old.Id == 0 {
+		blocked_old.CurrentBalance = 0
+	}
+	blocked_new := models.BlockedDetail{
+		UserId:         user_id,
+		CurrentRevenue: 0,
+		CurrentOutlay:  abonus,
+		CurrentBalance: blocked_old.CurrentBalance - abonus,
+		OpeningBalance: blocked_old.CurrentBalance,
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
+		Comment:        "超级节点分红",
+		TxId:           tx_id_blo_d,
+		Account:        account.Id,
+	}
+
+	if blocked_new.CurrentBalance < 0 {
+		blocked_new.CurrentBalance = 0
+	}
+	_, err := o.Insert(&blocked_new)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 每日释放
+func DailyRelease(o orm.Ormer, user_id string) error {
+	account := models.Account{
+		UserId: user_id,
+	}
+	o.Read(&account, "user_id")
+	formula := models.Formula{
+		EcologyId: account.Id,
+	}
+	o.Read(&formula)
+	blocked_yestoday := models.BlockedDetail{}
+	o.Raw(
+		"select * from blocked_detail where user_id=? and create_date<=? order by create_date desc limit 1",
+		user_id,
+		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
+		QueryRow(blocked_yestoday)
+	if blocked_yestoday.Id == 0 {
+		blocked_yestoday.CurrentBalance = 0
+	}
+	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
+
+	//任务表 USDD  铸币记录
+	tx_id_blo_d := utils.Shengchengstr("每日释放", user_id, "USDD")
+	blo_txid_dcmt := models.TxIdList{
+		State: "true",
+		TxId:  tx_id_blo_d,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		return errtxid_blo
+	}
+
+	blocked_old := models.BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(1).
+		One(&blocked_old)
+	if blocked_old.Id == 0 {
+		blocked_old.CurrentBalance = 0
+	}
+	blocked_new := models.BlockedDetail{
+		UserId:         user_id,
+		CurrentRevenue: 0,
+		CurrentOutlay:  abonus,
+		CurrentBalance: blocked_old.CurrentBalance - abonus,
+		OpeningBalance: blocked_old.CurrentBalance,
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
+		Comment:        "每日释放",
+		TxId:           tx_id_blo_d,
+		Account:        account.Id,
+	}
+
+	if blocked_new.CurrentBalance < 0 {
+		blocked_new.CurrentBalance = 0
+	}
+	_, err := o.Insert(&blocked_new)
+	if err != nil {
+		return err
 	}
 	return nil
 }

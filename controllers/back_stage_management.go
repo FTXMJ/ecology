@@ -175,14 +175,14 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 // @router /admin/operation_super_formula_list [POST]
 func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
-		data           *common.ResponseData
-		o              = models.NewOrm()
-		api_url        = this.Ctx.Request.RequestURI
-		super_force_id = this.GetString("super_force_id")
-		action         = this.GetString("action")
-		levelstr       = this.GetString("levelstr")
-		coin_number, _ = this.GetInt("coin_number")
-		force_str      = this.GetString("force")
+		data            *common.ResponseData
+		o               = models.NewOrm()
+		api_url         = this.Ctx.Request.RequestURI
+		super_force_id  = this.GetString("super_force_id")
+		action          = this.GetString("action")
+		levelstr        = this.GetString("levelstr")
+		coin_number_str = this.GetString("coin_number")
+		force_str       = this.GetString("force")
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -190,6 +190,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 	}()
 
 	force, _ := strconv.ParseFloat(force_str, 64)
+	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
 
 	switch action {
 	case "delete":
@@ -263,8 +264,8 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 	}
 	values, p, err := models.SelectHosteryRoot(page)
 	if err != nil {
-		logs.Log.Error(api_url, err)
-		data = common.NewResponse(models.HostryPageInfo{})
+		logs.Log.Error(api_url+"   更新状态失败,数据库错误", err)
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
 		return
 	}
 	hostory_list := models.HostryPageInfo{
@@ -328,8 +329,8 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 
 	list, page, err := models.SelectPondMachinemsg(find_obj, p, table_name)
 	if err != nil {
-		logs.Log.Error(api_url, err)
-		data = common.NewResponse(models.HostryFindInfo{})
+		logs.Log.Error(api_url+"   更新状态失败,数据库错误", err)
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
 		return
 	}
 	hostory_list := models.HostryFindInfo{
@@ -447,8 +448,8 @@ func (this *BackStageManagement) ComputationalFlow() {
 
 	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
 	if err != nil {
-		logs.Log.Error(api_url, err)
-		data = common.NewErrorResponse(500, "数据库错误")
+		logs.Log.Error(api_url+"    更新状态失败,数据库错误", err)
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
 		return
 	}
 	var flowss []models.Flow
@@ -471,5 +472,122 @@ func (this *BackStageManagement) ComputationalFlow() {
 		Page:  p,
 	}
 	data = common.NewResponse(user_SF_information)
+	return
+}
+
+// @Tags root-用户收益控制＿＿展示
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param user_id query string true "用户id"
+// @Param account_id query string true "生态仓库id"
+// @Param start_time query string true "开始时间"
+// @Param end_time query string true "结束时间"
+// @Success 200____用户收益控制＿＿展示
+// @router /admin/ecological_income_control [GET]
+func (this *BackStageManagement) EcologicalIncomeControl() {
+	var (
+		data              *common.ResponseData
+		current_page, _   = this.GetInt("page")
+		page_size, _      = this.GetInt("pageSize")
+		user_id           = this.GetString("user_id")
+		account_id        = this.GetString("account_id")
+		start_time_int, _ = this.GetInt64("start_time")
+		end_time_int, _   = this.GetInt64("end_time")
+		api_url           = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	start_time := ""
+	end_time := ""
+	if start_time_int == 0 || end_time_int == 0 {
+		start_time = "2006-01-02 15:04:05"
+		end_time = time.Now().Format("2006-01-02 15:04:05")
+	} else {
+		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+	}
+
+	p := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	find_obj := models.FindObj{
+		UserId:    user_id,
+		TxId:      account_id,
+		StartTime: start_time,
+		EndTime:   end_time,
+	}
+	account_off, page, err := models.FindUserAccountOFF(p, find_obj)
+	if err != nil {
+		logs.Log.Error(api_url+"    数据库错误,数据查询失败", err)
+		data = common.NewErrorResponse(500, "数据库错误")
+		return
+	}
+	user_SF_information := models.UserAccountOFF{
+		Items: account_off,
+		Page:  page,
+	}
+	data = common.NewResponse(user_SF_information)
+	return
+}
+
+// @Tags root-用户收益控制＿＿修改
+// @Accept  json
+// @Produce json
+// @Param account_id query string true "生态仓库id"
+// @Param profit_type query string true "静态=1  动态=2"
+// @Param profit_start query string true "启用=1  禁用=2"
+// @Success 200____用户收益控制＿＿修改
+// @router /admin/ecological_income_control_update [POST]
+func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
+	var (
+		data          *common.ResponseData
+		account_id, _ = this.GetInt("account_id")
+		profit_type   = this.GetString("profit_type")
+		profit_start  = this.GetString("profit_start")
+		api_url       = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	account := models.Account{
+		Id: account_id,
+	}
+	o := models.NewOrm()
+	err := o.Read(&account)
+	if err != nil {
+		logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		return
+	}
+	start := ""
+	if profit_start == "1" {
+		start = "true"
+	} else if profit_start == "2" {
+		start = "false"
+	}
+	account_type := ""
+	if profit_type == "1" { //静态收益开关
+		account_type = "static_return"
+		account.StaticReturn = start
+	} else if profit_type == "2" { //动态收益开关
+		account_type = "dynamic_revenue"
+		account.DynamicRevenue = start
+	}
+	_, err = o.Update(&account, account_type)
+	if err != nil {
+		logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		return
+	}
+	data = common.NewResponse(nil)
 	return
 }

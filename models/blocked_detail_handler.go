@@ -164,7 +164,7 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 	return nil
 }
 
-//　把所有算力的值加起来
+//　把所有算力的值加起来  -- 更新静态｀动态的验证
 func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64) error {
 	user := User{}
 	if err_user := o.QueryTable("user").Filter("user_id", father_id).One(&user); err_user != nil {
@@ -175,56 +175,56 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 	if erraccount != nil {
 		return erraccount
 	}
-	new_coin := account.BockedBalance + (coin * proportion)
-	_, err_up := o.QueryTable("account").Filter("user_id", father_id).Update(orm.Params{"bocked_balance": new_coin})
-	if err_up != nil {
-		return err_up
-	}
+	if account.DynamicRevenue == "true" {
+		new_coin := account.BockedBalance + (coin * proportion)
+		_, err_up := o.QueryTable("account").Filter("user_id", father_id).Update(orm.Params{"bocked_balance": new_coin})
+		if err_up != nil {
+			return err_up
+		}
+		//任务表 USDD  铸币记录
+		tx_id_blo_d := utils.Shengchengstr("直推收益", father_id, "USDD")
+		blo_txid_dcmt := TxIdList{
+			TxId:        tx_id_blo_d,
+			State:       "true",
+			UserId:      father_id,
+			CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+			Expenditure: 0,
+			InCome:      (coin * proportion),
+		}
+		_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+		if errtxid_blo != nil {
+			logs.Log.Error("直推算力累加错误", errtxid_blo)
+			return errtxid_blo
+		}
+		blocked_old := BlockedDetail{}
+		o.QueryTable("blocked_detail").
+			Filter("user_id", father_id).
+			Filter("account", account.Id).
+			OrderBy("-create_date").
+			Limit(1).
+			One(&blocked_old)
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 
-	//任务表 USDD  铸币记录
-	tx_id_blo_d := utils.Shengchengstr("直推收益", father_id, "USDD")
-	blo_txid_dcmt := TxIdList{
-		TxId:        tx_id_blo_d,
-		State:       "true",
-		UserId:      father_id,
-		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: 0,
-		InCome:      (coin * proportion),
-	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		logs.Log.Error("直推算力累加错误", errtxid_blo)
-		return errtxid_blo
-	}
-
-	blocked_old := BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", father_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
-	}
-
-	blocked_new := BlockedDetail{
-		UserId:         father_id,
-		CurrentRevenue: (coin * proportion),
-		CurrentOutlay:  0,
-		OpeningBalance: blocked_old.CurrentBalance,
-		CurrentBalance: blocked_old.CurrentBalance + (coin * proportion),
-		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
-		Comment:        "直推收益",
-		TxId:           tx_id_blo_d,
-		Account:        account.Id,
-	}
-	if blocked_new.CurrentBalance < 0 {
-		blocked_new.CurrentBalance = 0
-	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
-		return err
+		blocked_new := BlockedDetail{
+			UserId:         father_id,
+			CurrentRevenue: (coin * proportion),
+			CurrentOutlay:  0,
+			OpeningBalance: blocked_old.CurrentBalance,
+			CurrentBalance: blocked_old.CurrentBalance + (coin * proportion),
+			CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
+			Comment:        "直推收益",
+			TxId:           tx_id_blo_d,
+			Account:        account.Id,
+		}
+		if blocked_new.CurrentBalance < 0 {
+			blocked_new.CurrentBalance = 0
+		}
+		_, err := o.Insert(&blocked_new)
+		if err != nil {
+			return err
+		}
 	}
 
 	if coin*proportion > 1 {
@@ -238,52 +238,10 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 	对象包含的则视为条件
 */
 func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDetail, Page, error) {
-	var list []BlockedDetail
-	level := ""
-	var err error
-	s_ql := "select * from " + table_name + " where "
-	if p.UserId != "" {
-		level += "1"
-	}
-	if p.TxId != "" {
-		level += "2"
-	}
-	if p.StartTime != "" && p.EndTime != "" {
-		level += "3"
-	}
-	if level == "1" {
-		s_ql = s_ql + "user_id=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.UserId).QueryRows(&list)
-		err = er
-	} else if level == "12" {
-		s_ql = s_ql + "user_id=? and tx_id=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.UserId, p.TxId).QueryRows(&list)
-		err = er
-	} else if level == "123" {
-		s_ql = s_ql + "user_id=? and tx_id=? and create_date>? and create_date<? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.UserId, p.TxId, p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	} else if level == "13" {
-		s_ql = s_ql + "user_id=? and create_date>? and create_date<? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	} else if level == "23" {
-		s_ql = s_ql + "tx_id=? and create_date>? and create_date<? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.TxId, p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	} else if level == "3" {
-		s_ql = s_ql + "create_date > ? and create_date < ? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	} else {
-		s_ql = s_ql + "id>0 order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	}
+	list, err := SqlCreateValues1(p, table_name)
 	if err != nil {
 		return []BlockedDetail{}, Page{}, err
 	}
-
 	page.Count = len(list)
 	if page.PageSize < 5 {
 		page.PageSize = 5
@@ -484,4 +442,144 @@ func FindU_E_OBJ(page Page, user_id string) ([]U_E_OBJ, Page) {
 	} else {
 		return user_e_objs[start:end], page
 	}
+}
+
+// Find user ecology information
+func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
+	accounts, err := SqlCreateValues2(obj, "account")
+	if err != nil {
+		return []AccountOFF{}, Page{}, err
+	}
+	user_accounts := []AccountOFF{}
+	for _, v := range accounts {
+		user_account := AccountOFF{
+			UserId:         v.UserId,
+			Account:        v.Id,
+			DynamicRevenue: v.DynamicRevenue,
+			StaticReturn:   v.StaticReturn,
+			CreateDate:     v.CreateDate,
+		}
+		user_accounts = append(user_accounts, user_account)
+	}
+	page.Count = len(user_accounts)
+	if page.PageSize < 5 {
+		page.PageSize = 5
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+	if end > len(user_accounts) {
+		return user_accounts[start:], page, nil
+	} else {
+		return user_accounts[start:end], page, nil
+	}
+}
+
+///*
+//	条件查询
+//	对象包含的则视为条件     sql 生成并　查询
+//*/
+func SqlCreateValues1(p FindObj, table_name string) ([]BlockedDetail, error) {
+	var list []BlockedDetail
+	level := ""
+	var err error
+	s_ql := "select * from " + table_name + " where "
+	if p.UserId != "" {
+		level += "1"
+	}
+	if p.TxId != "" {
+		level += "2"
+	}
+	if p.StartTime != "" && p.EndTime != "" {
+		level += "3"
+	}
+	if level == "1" {
+		s_ql = s_ql + "user_id=? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.UserId).QueryRows(&list)
+		err = er
+	} else if level == "12" {
+		s_ql = s_ql + "user_id=? and tx_id=? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.UserId, p.TxId).QueryRows(&list)
+		err = er
+	} else if level == "123" {
+		s_ql = s_ql + "user_id=? and tx_id=? and create_date>? and create_date<? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.UserId, p.TxId, p.StartTime, p.EndTime).QueryRows(&list)
+		err = er
+	} else if level == "13" {
+		s_ql = s_ql + "user_id=? and create_date>? and create_date<? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
+		err = er
+	} else if level == "23" {
+		s_ql = s_ql + "tx_id=? and create_date>? and create_date<? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.TxId, p.StartTime, p.EndTime).QueryRows(&list)
+		err = er
+	} else if level == "3" {
+		s_ql = s_ql + "create_date > ? and create_date < ? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.StartTime, p.EndTime).QueryRows(&list)
+		err = er
+	} else {
+		s_ql = s_ql + "id>0 order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, p.StartTime, p.EndTime).QueryRows(&list)
+		err = er
+	}
+	if err != nil {
+		return []BlockedDetail{}, err
+	}
+	return list, nil
+}
+
+//   ---   Find user ecology information　　　sql 生成并　查询
+func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
+	var list []Account
+	level := ""
+	var err error
+	s_ql := "select * from " + table_name + " where "
+	if obj.UserId != "" {
+		level += "1"
+	}
+	if obj.TxId != "" {
+		level += "2"
+	}
+	if obj.StartTime != "" && obj.EndTime != "" {
+		level += "3"
+	}
+	if level == "1" {
+		s_ql = s_ql + "user_id=? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.UserId).QueryRows(&list)
+		err = er
+	} else if level == "12" {
+		s_ql = s_ql + "user_id=? and id=? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.UserId, obj.TxId).QueryRows(&list)
+		err = er
+	} else if level == "123" {
+		s_ql = s_ql + "user_id=? and id=? and create_date>? and create_date<? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.UserId, obj.TxId, obj.StartTime, obj.EndTime).QueryRows(&list)
+		err = er
+	} else if level == "13" {
+		s_ql = s_ql + "user_id=? and create_date>? and create_date<? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.UserId, obj.StartTime, obj.EndTime).QueryRows(&list)
+		err = er
+	} else if level == "23" {
+		s_ql = s_ql + "id=? and create_date>? and create_date<? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.TxId, obj.StartTime, obj.EndTime).QueryRows(&list)
+		err = er
+	} else if level == "3" {
+		s_ql = s_ql + "create_date > ? and create_date < ? order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
+		err = er
+	} else {
+		s_ql = s_ql + "id>0 order by create_date desc"
+		_, er := NewOrm().Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
+		err = er
+	}
+	if err != nil {
+		return []Account{}, err
+	}
+	return list, nil
 }

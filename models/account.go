@@ -2,12 +2,15 @@ package models
 
 //生态钱包
 type Account struct {
-	Id            int     `orm:"column(id);pk;auto"`
-	UserId        string  `orm:"column(user_id)"`      //用户 Id
-	Balance       float64 `orm:"column(balance)"`      //充值交易结余
-	Currency      string  `orm:column(currency)`       //货币  USDD
-	BockedBalance float64 `orm:column(bocked_balance)` //铸币交易结余
-	Level         string  `orm:column(level)`          //等级
+	Id             int     `orm:"column(id);pk;auto"`
+	UserId         string  `orm:"column(user_id)"`         //用户 Id
+	Balance        float64 `orm:"column(balance)"`         //充值交易结余
+	Currency       string  `orm:"column(currency)"`        //货币  USDD
+	BockedBalance  float64 `orm:"column(bocked_balance)"`  //铸币交易结余
+	Level          string  `orm:"column(level)"`           //等级
+	CreateDate     string  `orm:"column(create_date)"`     // 创建时间
+	DynamicRevenue string  `orm:"column(dynamic_revenue)"` //动态收益开关
+	StaticReturn   string  `orm:"column(static_return)"`   //静态收益开关
 }
 
 func (this *Account) TableName() string {

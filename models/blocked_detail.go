@@ -47,6 +47,12 @@ type HostryFindInfo struct {
 	Page  Page            `json:"page"`  //分页信息
 }
 
+// user`s account OFF information
+type UserAccountOFF struct {
+	Items []AccountOFF `json:"items"` //数据列表
+	Page  Page         `json:"page"`  //分页信息
+}
+
 // The query object to `user * information`
 type FindObj struct {
 	UserId    string
@@ -76,4 +82,13 @@ type U_E_OBJ struct {
 	HoldReturnRate      float64 `json:"hold_return_rate"`      //本金自由算力
 	RecommendReturnRate float64 `json:"recommend_return_rate"` //直推算力
 	TeamReturnRate      float64 `json:"team_return_rate"`      //动态算力
+}
+
+// user`s account OFF table
+type AccountOFF struct {
+	UserId         string `json:"user_id"`
+	Account        int    `json:"account"`
+	DynamicRevenue string `json:"dynamic_revenue"` //动态收益开关
+	StaticReturn   string `json:"static_return"`   //静态收益开关
+	CreateDate     string `json:"create_date"`     //创建时间
 }

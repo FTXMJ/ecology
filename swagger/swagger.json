@@ -73,6 +73,109 @@
                 }
             }
         },
+        "/ecology/admin/ecological_income_control": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "description": "分页信息　－　当前页数",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageSize",
+                        "description": "分页信息　－　每页数据量",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "user_id",
+                        "description": "用户id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "account_id",
+                        "description": "生态仓库id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "start_time",
+                        "description": "开始时间",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "end_time",
+                        "description": "结束时间",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____用户收益控制＿＿展示": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/admin/ecological_income_control_update": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "account_id",
+                        "description": "生态仓库id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "profit_type",
+                        "description": "静态=1  动态=2",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "profit_start",
+                        "description": "启用=1  禁用=2",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____用户收益控制＿＿修改": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/admin/filter_history_info": {
             "get": {
                 "tags": [

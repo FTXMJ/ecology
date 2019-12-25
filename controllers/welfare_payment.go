@@ -51,7 +51,7 @@ func WelfarePayment() {
 					return
 				}
 			}
-			err := AddFormulaABonus(vuser.UserId)
+			err := AddFormulaABonus(o, vuser.UserId)
 			if err != nil {
 				//TODO logs
 				o.Rollback()

@@ -100,7 +100,8 @@ func CheckLogin(ctx *context.Context) {
 				return
 			}
 			account_def := models.Account{
-				UserId: tockken.UserID,
+				UserId:     tockken.UserID,
+				CreateDate: time.Now().Format("2006-01-02 15:04:05"),
 			}
 			_, account_def_err := o.Insert(&account_def)
 			if account_def_err != nil {

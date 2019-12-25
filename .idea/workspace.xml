@@ -3,15 +3,29 @@
   <component name="ChangeListManager">
     <list default="true" id="d96912bb-d264-44d7-bc61-6dfc51857fea" name="Default Changelist" comment="update code">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conf/app.conf" beforeDir="false" afterPath="$PROJECT_DIR$/conf/app.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controllers/back_stage_management.go" beforeDir="false" afterPath="$PROJECT_DIR$/controllers/back_stage_management.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/controllers/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/controllers/jwt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/page.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/page.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controllers/team_computing.go" beforeDir="false" afterPath="$PROJECT_DIR$/controllers/team_computing.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecology" beforeDir="false" afterPath="$PROJECT_DIR$/ecology" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/SuperForceTable.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/SuperForceTable.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/account.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/account.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/blocked_detail.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/blocked_detail.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/blocked_detail_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/blocked_detail_handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/swagger/swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/swagger/swagger.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/swagger/swagger.yml" beforeDir="false" afterPath="$PROJECT_DIR$/swagger/swagger.yml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" path="/usr/local/go" />
   <component name="Git.Settings">
@@ -29,18 +43,20 @@
   <component name="ProjectId" id="1UsFapp2OPbzlicYEIXrTNUkUpl" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="GO_FMT" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../github.com/haleyrom/wallet" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.path.for.package.tslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="go" />
   </component>
   <component name="RunDashboard">
@@ -102,27 +118,13 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="更新　生态仓库id" />
     <MESSAGE value="解决　历史账单　返回　nil" />
+    <MESSAGE value="更新　每日释放" />
+    <MESSAGE value="数据小数点限制" />
     <MESSAGE value="update code" />
     <option name="LAST_COMMIT_MESSAGE" value="update code" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
     <proxy>direct</proxy>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/controllers/team_computing.go</url>
-          <line>22</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/controllers/back_stage_management.go</url>
-          <line>173</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
