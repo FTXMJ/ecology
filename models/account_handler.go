@@ -129,3 +129,45 @@ func CouShu(a *Ecology_index_obj) {
 	}
 	a.Ecological_poject = append(a.Ecological_poject, b)
 }
+
+// 远端连接  -  给定分红收益  释放通用
+func PingAddWalletCoin_q(user_id, token string, abonus float64) error {
+	//生成要访问的url
+	apiurl := consul.GetWalletApi
+	resoure := beego.AppConfig.String("api::apiurl_share_bonus")
+	data := url.Values{}
+	data.Set("money", strconv.FormatFloat(abonus, 'f', -1, 64))
+	data.Set("symbol", "USDD")
+
+	u, _ := url.ParseRequestURI(apiurl)
+	u.Path = resoure
+	urlStr := u.String()
+
+	client := &http.Client{}
+	req, err1 := http.NewRequest(`POST`, urlStr, strings.NewReader(data.Encode()))
+	if err1 != nil {
+		return err1
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", token)
+
+	//处理返回结果
+	response, errdo := client.Do(req)
+	if errdo != nil {
+		return errdo
+	}
+
+	bys, err_read := ioutil.ReadAll(response.Body)
+	if err_read != nil {
+		return err_read
+	}
+	values := Data_wallet{}
+	err := json.Unmarshal(bys, &values)
+	if err != nil {
+		return errors.New("钱包金额操作失败!")
+	} else if values.Code != 200 {
+		return errors.New(values.Msg)
+	}
+	response.Body.Close()
+	return nil
+}

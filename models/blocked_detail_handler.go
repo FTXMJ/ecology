@@ -10,7 +10,7 @@ import (
 )
 
 // 更新借贷表
-func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
+func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id, token string, coin_out, coin_in float64, account_id int) error {
 	blocked_old := BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
@@ -85,15 +85,14 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		o.Rollback()
 		return erruser
 	}
-	NetIncome += coin_in * for_mula.ReturnMultiple
 	if user.FatherId != "" {
-		ForAddCoin(o, user.FatherId, coin_in, 0.1)
+		ForAddCoin(o, user.FatherId, token, coin_in, 0.1, false)
 	}
 	return nil
 }
 
 // 创建第一条借贷记录
-func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
+func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id, token string, coin_out, coin_in float64, account_id int) error {
 	for_mula := Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
 	if err_for != nil {
@@ -156,7 +155,7 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 		return erruser
 	}
 	if user.FatherId != "" {
-		errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
+		errrr := ForAddCoin(o, user.FatherId, token, coin_in, 0.1, false)
 		if errrr != nil {
 			o.Rollback()
 			return errrr
@@ -165,19 +164,25 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 	return nil
 }
 
-//　把所有算力的值加起来  -- 更新静态｀动态的验证
-func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64) error {
+//　把所有算力的值加起来  -- 更新静态｀动态的验证          bo 是是否调过　钱包的增加接口
+func ForAddCoin(o orm.Ormer, father_id, token string, coin float64, proportion float64, bo bool) error {
+	if bo == false {
+		err_ping := PingAddWalletCoin_q("", token, (coin * proportion))
+		if err_ping != nil {
+			logs.Log.Error("直推算力　－　调用钱包分红接口出错　－　循环调用中　－　不死不休")
+			ForAddCoin(o, father_id, token, coin, proportion, false)
+			return nil
+		}
+	}
+
 	user := User{}
-	if err_user := o.QueryTable("user").Filter("user_id", father_id).One(&user); err_user != nil {
-		return err_user
-	}
+	o.QueryTable("user").Filter("user_id", father_id).One(&user)
+
 	account := Account{}
-	erraccount := o.QueryTable("account").Filter("user_id", father_id).One(&account)
-	if erraccount != nil {
-		return erraccount
-	}
+	o.QueryTable("account").Filter("user_id", father_id).One(&account)
+
 	if account.DynamicRevenue == true {
-		new_coin := account.BockedBalance + (coin * proportion)
+		new_coin := account.BockedBalance - (coin * proportion)
 		_, err_up := o.QueryTable("account").Filter("user_id", father_id).Update(orm.Params{"bocked_balance": new_coin})
 		if err_up != nil {
 			return err_up
@@ -189,8 +194,8 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 			State:       "true",
 			UserId:      father_id,
 			CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-			Expenditure: 0,
-			InCome:      (coin * proportion),
+			Expenditure: (coin * proportion),
+			InCome:      0,
 		}
 		_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 		if errtxid_blo != nil {
@@ -210,10 +215,10 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 
 		blocked_new := BlockedDetail{
 			UserId:         father_id,
-			CurrentRevenue: (coin * proportion),
-			CurrentOutlay:  0,
+			CurrentRevenue: 0,
+			CurrentOutlay:  (coin * proportion),
 			OpeningBalance: blocked_old.CurrentBalance,
-			CurrentBalance: blocked_old.CurrentBalance + (coin * proportion),
+			CurrentBalance: blocked_old.CurrentBalance - (coin * proportion),
 			CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 			Comment:        "直推收益",
 			TxId:           tx_id_blo_d,
@@ -224,12 +229,14 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 		}
 		_, err := o.Insert(&blocked_new)
 		if err != nil {
-			return err
+			logs.Log.Error("直推算力　－　调用钱包分红接口出错　－　循环调用中　－　不死不休")
+			ForAddCoin(o, father_id, token, coin, proportion, true)
+			return nil
 		}
 	}
-
-	if coin*proportion > 1 {
-		ForAddCoin(o, user.FatherId, (coin * proportion), proportion)
+	NetIncome += (coin * proportion)
+	if coin*proportion > 1 && user.FatherId != "" {
+		ForAddCoin(o, user.FatherId, token, (coin * proportion), proportion, false)
 	}
 	return nil
 }

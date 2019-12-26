@@ -5,7 +5,6 @@ import (
 	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"strconv"
@@ -63,19 +62,16 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				return
 			}
 			f := models.Formulaindex{
-				Id:    v.Id,
-				Level: v.Level,
-				//BockedBalance:  v.BockedBalance,
-				//Balance:        v.Balance,
+				Id:             v.Id,
+				Level:          v.Level,
+				BockedBalance:  v.BockedBalance,
+				Balance:        v.Balance,
 				ReturnMultiple: formula_index[0].ReturnMultiple,
 				//ToDayRate:           formula_index[0].HoldReturnRate + formula_index[0].RecommendReturnRate + formula_index[0].TeamReturnRate,
-				//HoldReturnRate: formula_index[0].HoldReturnRate * v.BockedBalance,
+				HoldReturnRate: formula_index[0].HoldReturnRate * v.Balance,
 				//RecommendReturnRate: formula_index[0].RecommendReturnRate,
 				TeamReturnRate: formula_index[0].TeamReturnRate,
 			}
-			fhrr := formula_index[0].HoldReturnRate * v.Balance
-			ziyou, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", fhrr), 64)
-			f.HoldReturnRate = ziyou
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
 			if err != nil {
 				models.CouShu(&indexValues)
@@ -83,15 +79,9 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewResponse(indexValues)
 				return
 			}
-			to_day_rate := zhitui + f.TeamReturnRate + ziyou
-			meiri, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", to_day_rate), 64)
-			f.ToDayRate = meiri
+			to_day_rate := zhitui + f.TeamReturnRate + f.HoldReturnRate
+			f.ToDayRate = to_day_rate
 			f.RecommendReturnRate = zhitui
-			blo_bal, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.BockedBalance), 64)
-			f.BockedBalance = blo_bal
-			bal, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.Balance), 64)
-			f.Balance = bal
-
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
 	}
@@ -229,7 +219,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "转入铸币", tx_id_blo_d, 0, coin_number, account.Id)
+	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "转入铸币", tx_id_blo_d, token, 0, coin_number, account.Id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -339,7 +329,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "转入铸币", tx_id_blo_d, 0, coin_number, ecology_id)
+	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "转入铸币", tx_id_blo_d, token, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		//go models.RecursiveExecutionBlo_d(user_id, tx_id_acc_d, coin_number, ecology_id)
@@ -478,7 +468,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "升级铸币", tx_id_blo_d, 0, coin_number, ecology_id)
+	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "升级铸币", tx_id_blo_d, token, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")

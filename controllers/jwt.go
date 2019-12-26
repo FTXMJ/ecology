@@ -146,9 +146,9 @@ func generateToken(user models.User) (bool, string) {
 		"",
 		"",
 		jwt.StandardClaims{
-			NotBefore: int64(time.Now().Unix() - 1000),       // 签名生效时间
-			ExpiresAt: int64(time.Now().Unix() + 3600*24*15), // 过期时间 一小时
-			Issuer:    "ecology",                             //签名的发行者
+			NotBefore: int64(time.Now().Unix() - 1000), // 签名生效时间
+			ExpiresAt: int64(time.Now().Unix() + 60*3), // 过期时间 三分钟
+			Issuer:    "ecology",                       //签名的发行者
 		},
 	}
 	token, err := j.CreateToken(claims)

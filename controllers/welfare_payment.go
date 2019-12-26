@@ -51,14 +51,7 @@ func WelfarePayment() {
 					return
 				}
 			}
-			err := AddFormulaABonus(o, vuser.UserId)
-			if err != nil {
-				//TODO logs
-				o.Rollback()
-				c.AddFunc("0 0/5 * * * ? *", WelfarePayment)
-				c.Start()
-				return
-			}
+			AddFormulaABonus(vuser.UserId, 0.0)
 		}
 	}
 

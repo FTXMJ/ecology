@@ -29,21 +29,46 @@ func (this *Test) DailyDividendAndRelease() {
 	o := models.NewOrm()
 	users := []models.User{}
 	o.QueryTable("user").All(&users)
-	Producer(users)
+	//每日释放　－－　团队收益
+	ProducerEcology(users)
+
+	// 超级节点的分红
+	ProducerPeer(users)
 	models.NetIncome = 0.0
 }
 
-func Producer(users []models.User) {
+//生态仓库释放　－　团队收益
+func ProducerEcology(users []models.User) {
 	error_users := []models.User{}
 	for _, v := range users {
 		if err := Worker(v); err != nil {
-			error_users = append(error_users, v)
+			error_users = append(error_users, v) //  385ce4bc5a5141a790de7c009cc89e92
 			//TODO  写日志,告知管理者失败的原因
 		}
 	}
 	if len(error_users) > 0 {
-		Producer(error_users)
+		ProducerEcology(error_users)
 	}
+}
+
+//超级节点　的　释放
+func ProducerPeer(users []models.User) {
+	error_users := []models.User{}
+	m := make(map[string][]string)
+	for _, v := range users {
+		level, err := ReturnSuperPeerLevel(v.UserId)
+		if err != nil {
+			error_users = append(error_users, v)
+		} else if level == "" && err == nil {
+			// 没有出错，但是不符合超级节点的规则
+		} else if level != "" && err == nil {
+			m[level] = append(m[level], v.UserId)
+		}
+	}
+	if len(error_users) > 0 {
+		ProducerPeer(error_users)
+	}
+	HandlerMap(m)
 }
 
 func Worker(user models.User) error {
@@ -57,6 +82,7 @@ func Worker(user models.User) error {
 	o.Read(&account, "user_id")
 
 	if account.DynamicRevenue != true && account.StaticReturn != true {
+		o.Commit()
 		return nil
 	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
 		err_team := Team(o, user_current_layer, user, coins)
@@ -113,11 +139,11 @@ func Team(o orm.Ormer, user_current_layer []models.User, user models.User, coins
 }
 
 func Jintai(o orm.Ormer, user models.User) error {
-	// 超级节点分红
+	/*// 超级节点分红
 	err_super_peer := AddFormulaABonus(o, user.UserId)
 	if err_super_peer != nil {
 		return err_super_peer
-	}
+	}*/
 	err := DailyRelease(o, user.UserId)
 	if err != nil {
 		return err
@@ -177,7 +203,11 @@ func HandlerOperation(users []string) (float64, error) {
 		account := models.Account{}
 		err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
 		if err_acc != nil {
-			return 0, err_acc
+			if err_acc.Error() == "<QuerySeter> no row found" {
+				return 0, nil
+			} else {
+				return 0, err_acc
+			}
 		}
 		// 拿到生态项目对应的算力表
 		formula := models.Formula{}
@@ -279,39 +309,15 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		o.Rollback()
 		return err_super_up
 	}
+	models.NetIncome += value
 	return nil
 }
 
 // 超级节点的分红
-func AddFormulaABonus(o orm.Ormer, user_id string) error {
-	s_f_t := []models.SuperForceTable{}
-	o.QueryTable("super_force_table").All(&s_f_t)
-	tfor_number, err_tfor := PingSelectTforNumber(user_id)
-	if err_tfor != nil {
-		return err_tfor
-	}
+func AddFormulaABonus(user_id string, abonus float64) {
+	o := models.NewOrm()
+	o.Begin()
 
-	for i := 0; i < len(s_f_t); i++ {
-		for j := 1; j < len(s_f_t)-1; j++ {
-			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
-				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
-			}
-		}
-	}
-	index := []int{}
-	for i, v := range s_f_t {
-		if tfor_number > float64(v.CoinNumberRule) {
-			index = append(index, i)
-		}
-	}
-	abonus := 0.0 //TODO  全网的算力释放总量
-	if len(index) > 0 {
-		abonus = s_f_t[index[len(index)-1]].BonusCalculation * tfor_number //TODO  全网的算力释放总量
-		// 调老罗接口
-		if err := PingAddWalletCoin(user_id, abonus); err != nil {
-			return err
-		}
-	}
 	//任务表 USDD  铸币记录
 	tx_id_blo_d := utils.Shengchengstr("超级节点分红", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
@@ -320,7 +326,9 @@ func AddFormulaABonus(o orm.Ormer, user_id string) error {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
-		return errtxid_blo
+		o.Rollback()
+		AddFormulaABonus(user_id, abonus)
+		return
 	}
 
 	account := models.Account{}
@@ -352,9 +360,12 @@ func AddFormulaABonus(o orm.Ormer, user_id string) error {
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
-		return err
+		o.Rollback()
+		AddFormulaABonus(user_id, abonus)
+		return
 	}
-	return nil
+	o.Commit()
+	return
 }
 
 // 每日释放
@@ -368,11 +379,18 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	}
 	o.Read(&formula)
 	blocked_yestoday := models.BlockedDetail{}
-	o.Raw(
+	err_raw := o.Raw(
 		"select * from blocked_detail where user_id=? and create_date<=? order by create_date desc limit 1",
 		user_id,
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
-		QueryRow(blocked_yestoday)
+		QueryRow(&blocked_yestoday)
+	if err_raw != nil {
+		if err_raw.Error() == "<QuerySeter> no row found" {
+			return nil
+		} else {
+			return err_raw
+		}
+	}
 	if blocked_yestoday.Id == 0 {
 		blocked_yestoday.CurrentBalance = 0
 	}
@@ -418,6 +436,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	if err != nil {
 		return err
 	}
+	models.NetIncome += abonus
 	return nil
 }
 
@@ -515,4 +534,66 @@ func PingSelectTforNumber(user_id string) (float64, error) {
 	}
 	response.Body.Close()
 	return values.Data["balance"].(float64), nil
+}
+
+// 返回超级节点的等级
+func ReturnSuperPeerLevel(user_id string) (string, error) {
+	s_f_t := []models.SuperForceTable{}
+	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	tfor_number, err_tfor := PingSelectTforNumber(user_id)
+	if err_tfor != nil {
+		return "", err_tfor
+	}
+
+	for i := 0; i < len(s_f_t); i++ {
+		for j := 1; j < len(s_f_t)-1; j++ {
+			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
+				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
+			}
+		}
+	}
+	index := []int{}
+	for i, v := range s_f_t {
+		if tfor_number > float64(v.CoinNumberRule) {
+			index = append(index, i)
+		}
+	}
+	if len(index) > 0 {
+		return s_f_t[index[len(index)-1]].Level, nil
+	}
+	return "", nil
+}
+
+// 创建用于超级节点　等级记录的　map 每个　values 第一个元素都是　等级标示
+func ReturnMap(m map[string][]string) {
+	s_f_t := []models.SuperForceTable{}
+	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	for _, v := range s_f_t {
+		if m[v.Level] == nil {
+			m[v.Level] = append(m[v.Level], v.Level)
+		}
+	}
+}
+
+// 处理map数据并给定收益
+func HandlerMap(m map[string][]string) {
+	err_m := make(map[string][]string)
+	for k_level, vv := range m {
+		s_f_t := models.SuperForceTable{
+			Level: k_level,
+		}
+		models.NewOrm().Read(&s_f_t, "level")
+		tfor_some := models.NetIncome * s_f_t.BonusCalculation
+		for _, v := range vv {
+			err := PingAddWalletCoin(v, tfor_some/float64(len(vv)))
+			if err != nil {
+				err_m[k_level] = append(err_m[k_level], v)
+			} else {
+				AddFormulaABonus(v, tfor_some/float64(len(vv)))
+			}
+		}
+	}
+	if len(err_m) != 0 {
+		HandlerMap(err_m)
+	}
 }
