@@ -69,8 +69,8 @@ func ABonus(o orm.Ormer, user_id string, account models.Account) error {
 	//任务表 USDD  铸币记录
 	tx_id_blo_d := utils.Shengchengstr("释放记录", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
-		State: "false",
-		TxId:  tx_id_blo_d,
+		OrderState: false,
+		TxId:       tx_id_blo_d,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {

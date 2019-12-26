@@ -164,10 +164,11 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 
 	//任务表 TFOR
-	tx_id_acc_d := utils.Shengchengstr("普通转入", user_id, "USDD")
+	order_id := utils.TimeUUID()
 	acc_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_acc_d,
-		State:       "false",
+		TxId:        order_id,
+		OrderState:  false,
+		WalletState: false,
 		UserId:      user_id,
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
@@ -177,24 +178,6 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	if errtxid_acc != nil {
 		o.Rollback()
 		logs.Log.Error(api_url, errtxid_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败!")
-		return
-	}
-
-	//任务表 USDD
-	tx_id_blo_d := utils.Shengchengstr("转入铸币", user_id, "USDD")
-	blo_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_blo_d,
-		State:       "false",
-		UserId:      user_id,
-		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: 0,
-		InCome:      formula.ReturnMultiple * coin_number,
-	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		o.Rollback()
-		logs.Log.Error(api_url, errtxid_blo)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
@@ -211,7 +194,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	oo := models.NewOrm()
 	oo.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.NewCreateAndSaveAcc_d(oo, user_id, "普通转入", tx_id_acc_d, 0, coin_number, account.Id)
+	err_acc_d := models.NewCreateAndSaveAcc_d(oo, user_id, "普通转入", order_id, 0, coin_number, account.Id)
 	if err_acc_d != nil {
 		logs.Log.Error(api_url, err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -219,7 +202,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "转入铸币", tx_id_blo_d, token, 0, coin_number, account.Id)
+	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "转入铸币", order_id, 0, coin_number, account.Id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -235,6 +218,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 // @Produce json
 // @Param user_id query string true "用户id   ---- 放在 header"
 // @Param ecology_id query string int "生态仓库id的id"
+// @Param order_id query string int "交易的id"
 // @Param coin_number query string true "铸(发)币的数量"
 // @Success 200___转USDD到生态仓库
 // @router /to_change_into_USDD [POST]
@@ -246,6 +230,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	)
 
 	coin_number_str := this.GetString("coin_number")
+	order_id := this.GetString("order_id")
 	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
 	ecology_id, _ := this.GetInt("ecology_id")
 	jwtValues := GetJwtValues(this.Ctx)
@@ -263,24 +248,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		this.ServeJSON()
 	}()
 
-	//任务表 USDD   转入记录
-	tx_id_acc_d := utils.Shengchengstr("普通转入", user_id, "USDD")
-	acc_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_acc_d,
-		State:       "false",
-		UserId:      user_id,
-		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: 0,
-		InCome:      coin_number,
-	}
-	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
-	if errtxid_acc != nil {
-		o.Rollback()
-		logs.Log.Error(api_url, errtxid_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败!")
-		return
-	}
-
+	//任务表 USDD  铸币记录
 	formula := models.Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", ecology_id).One(&formula)
 	if err_for != nil {
@@ -289,13 +257,12 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
-
-	//任务表 USDD  铸币记录
-	tx_id_blo_d := utils.Shengchengstr("转入铸币", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_blo_d,
-		State:       "false",
+		TxId:        order_id,
+		OrderState:  false,
+		WalletState: false,
 		UserId:      user_id,
+		Comment:     "转入交易",
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
 		InCome:      formula.ReturnMultiple * coin_number,
@@ -316,23 +283,26 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		data = common.NewErrorResponse(500, err.Error())
 		return
 	}
+	order := models.TxIdList{
+		TxId: order_id,
+	}
+	o.Read(&order, "tx_id")
+	order.WalletState = true
+	o.Update(&order)
 
 	oo := models.NewOrm()
 	oo.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "普通转入", tx_id_acc_d, 0, coin_number, ecology_id)
+	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "普通转入", order_id, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
 		logs.Log.Error(api_url, err_acc_d)
-		//go models.RecursiveExecutionAcc_d(user_id, tx_id_acc_d, coin_number, ecology_id)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
-
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "转入铸币", tx_id_blo_d, token, 0, coin_number, ecology_id)
+	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "转入铸币", order_id, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
-		//go models.RecursiveExecutionBlo_d(user_id, tx_id_acc_d, coin_number, ecology_id)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
@@ -346,6 +316,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 // @Produce json
 // @Param user_id query string true "用户id   ---- 放在 header"
 // @Param ecology_id query string int "生态仓库id的id"
+// @Param order_id query string int "交易的id"
 // @Param cion_number query string true "铸(发)币的数量"
 // @Param levelstr query string true "升级后的等级"
 // @Success 200____升级生态仓库
@@ -358,6 +329,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	)
 
 	coin_number_str := this.GetString("cion_number")
+	order_id := this.GetString("order_id")
 	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
 	ecology_id, _ := this.GetInt("ecology_id")
 	levelstr := this.GetString("levelstr")
@@ -406,31 +378,13 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		data = common.NewErrorResponse(500, "数据库操作失败!")
 		return
 	}
-
-	//任务表 USDD   转入记录
-	tx_id_acc_d := utils.Shengchengstr("升级转入", user_id, "USDD")
-	acc_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_acc_d,
-		State:       "false",
-		UserId:      user_id,
-		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: 0,
-		InCome:      coin_number,
-	}
-	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
-	if errtxid_acc != nil {
-		o.Rollback()
-		logs.Log.Error(api_url, errtxid_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败!")
-		return
-	}
-
 	//任务表 USDD  铸币记录
-	tx_id_blo_d := utils.Shengchengstr("升级铸币", user_id, "USDD")
 	blo_txid_dcmt := models.TxIdList{
-		TxId:        tx_id_blo_d,
-		State:       "false",
+		TxId:        order_id,
+		OrderState:  false,
+		WalletState: false,
 		UserId:      user_id,
+		Comment:     "升级交易",
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: 0,
 		InCome:      formula.ReturnMultiple * coin_number,
@@ -445,10 +399,27 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 
 	o.Commit()
 
+	//钱包操作
 	token := this.Ctx.Request.Header.Get("Authorization")
 	if err := models.PingWalletAdd(token, coin_number); err != nil {
 		logs.Log.Error(api_url, err)
 		data = common.NewErrorResponse(500, err.Error())
+		return
+	}
+	order := models.TxIdList{
+		TxId: order_id,
+	}
+	err_rea := o.Read(&order, "tx_id")
+	if err_rea != nil {
+		logs.Log.Error(api_url, err_rea)
+		data = common.NewErrorResponse(500, err_rea.Error())
+		return
+	}
+	order.WalletState = true
+	_, err_up := o.Update(&order)
+	if err_up != nil {
+		logs.Log.Error(api_url, err_up)
+		data = common.NewErrorResponse(500, err_up.Error())
 		return
 	}
 
@@ -460,7 +431,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		return
 	}
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "升级转入", tx_id_acc_d, 0, coin_number, ecology_id)
+	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "升级转入", order_id, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
 		logs.Log.Error(api_url, err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")
@@ -468,7 +439,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "升级铸币", tx_id_blo_d, token, 0, coin_number, ecology_id)
+	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "升级铸币", order_id, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
 		logs.Log.Error(api_url, err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!")

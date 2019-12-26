@@ -450,6 +450,10 @@ paths:
         description: 生态仓库id的id
         type: string
       - in: query
+        name: order_id
+        description: 交易的id
+        type: string
+      - in: query
         name: coin_number
         description: 铸(发)币的数量
         required: true
@@ -474,6 +478,10 @@ paths:
       - in: query
         name: ecology_id
         description: 生态仓库id的id
+        type: string
+      - in: query
+        name: order_id
+        description: 交易的id
         type: string
       - in: query
         name: cion_number

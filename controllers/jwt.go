@@ -89,16 +89,6 @@ func CheckLogin(ctx *context.Context) {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)2"}`)
 				return
 			}
-			super_peer := models.SuperPeerTable{
-				UserId:     tockken.UserID,
-				CoinNumber: 0,
-			}
-			_, super_peer_err := o.Insert(&super_peer)
-			if super_peer_err != nil {
-				o.Rollback()
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)3"}`)
-				return
-			}
 			account_def := models.Account{
 				UserId:     tockken.UserID,
 				CreateDate: time.Now().Format("2006-01-02 15:04:05"),

@@ -20,6 +20,14 @@ type Test struct {
 	beego.Controller
 }
 
+// 用户每日任务数值列表
+type UserDayTx struct {
+	UserId string
+	BenJin float64
+	Team   float64
+	ZhiTui float64
+}
+
 // @Tags 测试每日释放
 // @Accept  json
 // @Produce json
@@ -27,28 +35,38 @@ type Test struct {
 // @router /test_mrsf [GET]
 func (this *Test) DailyDividendAndRelease() {
 	o := models.NewOrm()
-	users := []models.User{}
-	o.QueryTable("user").All(&users)
-	//每日释放　－－　团队收益
-	ProducerEcology(users)
+	user := []models.User{}
+	o.QueryTable("user").All(&user)
+
+	//    每日释放___and___团队收益___and___直推收益
+	error_users := ProducerEcology(user) // 返回错误的用户名单
+
+	//    给失败的用户　添加失败的任务记录表
+	CreateErrUserTxList(error_users)
 
 	// 超级节点的分红
-	ProducerPeer(users)
-	models.NetIncome = 0.0
+	ProducerPeer(user)
+
+	// 让收益回归今日
+	blo := []models.BlockedDetail{}
+	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
+	shouyi := 0.0
+	for _, v := range blo {
+		shouyi += v.CurrentOutlay
+		shouyi += v.CurrentRevenue
+	}
+	models.NetIncome = shouyi
 }
 
-//生态仓库释放　－　团队收益
-func ProducerEcology(users []models.User) {
+//生态仓库释放　－　团队收益  --  直推收益
+func ProducerEcology(users []models.User) []models.User {
 	error_users := []models.User{}
 	for _, v := range users {
 		if err := Worker(v); err != nil {
-			error_users = append(error_users, v) //  385ce4bc5a5141a790de7c009cc89e92
-			//TODO  写日志,告知管理者失败的原因
+			error_users = append(error_users, v)
 		}
 	}
-	if len(error_users) > 0 {
-		ProducerEcology(error_users)
-	}
+	return error_users
 }
 
 //超级节点　的　释放
@@ -71,24 +89,28 @@ func ProducerPeer(users []models.User) {
 	HandlerMap(m)
 }
 
+// 工作　函数
 func Worker(user models.User) error {
 	o := models.NewOrm()
 	o.Begin()
-	user_current_layer := []models.User{}
 	account := models.Account{
 		UserId: user.UserId,
 	}
-	coins := []float64{}
 	o.Read(&account, "user_id")
 
 	if account.DynamicRevenue != true && account.StaticReturn != true {
 		o.Commit()
 		return nil
 	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
-		err_team := Team(o, user_current_layer, user, coins)
+		err_team := Team(o, user)
 		if err_team != nil {
 			o.Rollback()
 			return err_team
+		}
+		err_zhitui := ZhiTui(o, user.UserId)
+		if err_zhitui != nil {
+			o.Rollback()
+			return err_zhitui
 		}
 	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
 		err_jintai := Jintai(o, user)
@@ -97,10 +119,15 @@ func Worker(user models.User) error {
 			return err_jintai
 		}
 	} else { // 都可以
-		err_team := Team(o, user_current_layer, user, coins)
+		err_team := Team(o, user)
 		if err_team != nil {
 			o.Rollback()
 			return err_team
+		}
+		err_zhitui := ZhiTui(o, user.UserId)
+		if err_zhitui != nil {
+			o.Rollback()
+			return err_zhitui
 		}
 		err_jintai := Jintai(o, user)
 		if err_jintai != nil {
@@ -112,7 +139,9 @@ func Worker(user models.User) error {
 	return nil
 }
 
-func Team(o orm.Ormer, user_current_layer []models.User, user models.User, coins []float64) error {
+func Team(o orm.Ormer, user models.User) error {
+	coins := []float64{}
+	user_current_layer := []models.User{}
 	// 团队收益　开始
 	o.QueryTable("user").Filter("father_id", user.UserId).All(&user_current_layer)
 	if len(user_current_layer) > 0 {
@@ -139,11 +168,6 @@ func Team(o orm.Ormer, user_current_layer []models.User, user models.User, coins
 }
 
 func Jintai(o orm.Ormer, user models.User) error {
-	/*// 超级节点分红
-	err_super_peer := AddFormulaABonus(o, user.UserId)
-	if err_super_peer != nil {
-		return err_super_peer
-	}*/
 	err := DailyRelease(o, user.UserId)
 	if err != nil {
 		return err
@@ -235,14 +259,19 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 
 	//任务表 USDD  铸币记录
-	tx_id_blo_d := utils.Shengchengstr("每日团队收益", user_id, "USDD")
+	order_id := utils.TimeUUID()
 	blo_txid_dcmt := models.TxIdList{
-		State: "true",
-		TxId:  tx_id_blo_d,
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: false,
+		UserId:      user_id,
+		Comment:     "每日团队收益",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: value,
+		InCome:      0,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
-		o.Rollback()
 		return errtxid_blo
 	}
 
@@ -262,18 +291,17 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	for_mula := models.Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&for_mula)
 	if err_for != nil {
-		o.Rollback()
 		return err_for
 	}
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
-		CurrentRevenue: value * for_mula.TeamReturnRate,
-		CurrentOutlay:  0,
-		CurrentBalance: blocked_old.CurrentBalance + (value * for_mula.TeamReturnRate) - 0,
+		CurrentRevenue: 0,
+		CurrentOutlay:  value * for_mula.TeamReturnRate,
+		CurrentBalance: blocked_old.CurrentBalance - (value * for_mula.TeamReturnRate) + 0,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日团队收益",
-		TxId:           tx_id_blo_d,
+		TxId:           order_id,
 		Account:        account.Id,
 	}
 
@@ -282,33 +310,32 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
-		o.Rollback()
 		return err
 	}
 
 	//更新生态仓库属性
 	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
 	if err_up != nil {
-		o.Rollback()
 		return err_up
 	}
 
-	// 超级节点表生成与更新
-	super_peer_table := models.SuperPeerTable{}
-	err_super := o.QueryTable("super_peer_table").Filter("user_id", user_id).One(&super_peer_table)
-	if err_super != nil {
-		o.Rollback()
-		return err_super
+	err_ping_shifang := PingAddWalletCoin(user_id, value)
+	if err_ping_shifang != nil {
+		return err_ping_shifang
 	}
-	coin := super_peer_table.CoinNumber + (value * for_mula.TeamReturnRate) - 0
-	if coin < 0 {
-		coin = 0
+	order := models.TxIdList{
+		TxId: order_id,
 	}
-	_, err_super_up := o.QueryTable("super_peer_table").Filter("user_id", user_id).Update(orm.Params{"coin_number": coin})
-	if err_super_up != nil {
-		o.Rollback()
-		return err_super_up
+	err_rea := o.Read(&order, "tx_id")
+	if err_rea != nil {
+		return err_rea
 	}
+	order.WalletState = true
+	_, err_up_tx := o.Update(&order)
+	if err_up_tx != nil {
+		return err_up_tx
+	}
+
 	models.NetIncome += value
 	return nil
 }
@@ -319,10 +346,16 @@ func AddFormulaABonus(user_id string, abonus float64) {
 	o.Begin()
 
 	//任务表 USDD  铸币记录
-	tx_id_blo_d := utils.Shengchengstr("超级节点分红", user_id, "USDD")
+	order_id := utils.TimeUUID()
 	blo_txid_dcmt := models.TxIdList{
-		State: "true",
-		TxId:  tx_id_blo_d,
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: true,
+		UserId:      user_id,
+		Comment:     "超级节点分红",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: abonus,
+		InCome:      0,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
@@ -351,12 +384,20 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "超级节点分红",
-		TxId:           tx_id_blo_d,
+		TxId:           order_id,
 		Account:        account.Id,
 	}
 
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
+	}
+
+	//更新生态仓库属性
+	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	if err_up != nil {
+		o.Rollback()
+		AddFormulaABonus(user_id, abonus)
+		return
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
@@ -397,10 +438,16 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
 
 	//任务表 USDD  铸币记录
-	tx_id_blo_d := utils.Shengchengstr("每日释放", user_id, "USDD")
+	order_id := utils.TimeUUID()
 	blo_txid_dcmt := models.TxIdList{
-		State: "true",
-		TxId:  tx_id_blo_d,
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: false,
+		UserId:      user_id,
+		Comment:     "每日释放收益",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: abonus,
+		InCome:      0,
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
@@ -424,8 +471,8 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		CurrentBalance: blocked_old.CurrentBalance - abonus,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
-		Comment:        "每日释放",
-		TxId:           tx_id_blo_d,
+		Comment:        "每日释放收益",
+		TxId:           order_id,
 		Account:        account.Id,
 	}
 
@@ -436,7 +483,125 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	if err != nil {
 		return err
 	}
+
+	//更新生态仓库属性
+	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	if err_up != nil {
+		return err_up
+	}
+
+	// 钱包　数据　修改
+	err_ping := PingAddWalletCoin(user_id, abonus)
+	if err_ping != nil {
+		return err_ping
+	}
+	order := models.TxIdList{
+		TxId: order_id,
+	}
+	err_rea := o.Read(&order, "tx_id")
+	if err_rea != nil {
+		return err_rea
+	}
+	order.WalletState = true
+	_, err_up_tx := o.Update(&order)
+	if err_up_tx != nil {
+		return err_up_tx
+	}
+
 	models.NetIncome += abonus
+	return nil
+}
+
+//　直推收益
+func ZhiTui(o orm.Ormer, user_id string) error {
+	account := models.Account{
+		UserId: user_id,
+	}
+	o.Read(&account, "user_id")
+
+	formula := models.Formula{
+		EcologyId: account.Id,
+	}
+	o.Read(&formula)
+
+	blos := []models.BlockedDetail{}
+	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
+	time_end := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
+	_, err := o.Raw("select * form blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
+	if err != nil {
+		return err
+	}
+	shouyi := 0.0
+	for _, v := range blos {
+		shouyi += v.CurrentOutlay
+	}
+
+	//任务表 USDD  铸币记录
+	order_id := utils.TimeUUID()
+	blo_txid_dcmt := models.TxIdList{
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: false,
+		UserId:      user_id,
+		Comment:     "每日直推收益",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: shouyi,
+		InCome:      0,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		return errtxid_blo
+	}
+
+	blocked_old := models.BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(1).
+		One(&blocked_old)
+	if blocked_old.Id == 0 {
+		blocked_old.CurrentBalance = 0
+	}
+	blocked_new := models.BlockedDetail{
+		UserId:         user_id,
+		CurrentRevenue: 0,
+		CurrentOutlay:  shouyi,
+		CurrentBalance: blocked_old.CurrentBalance - shouyi,
+		OpeningBalance: blocked_old.CurrentBalance,
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
+		Comment:        "每日直推收益",
+		TxId:           order_id,
+		Account:        account.Id,
+	}
+
+	if blocked_new.CurrentBalance < 0 {
+		blocked_new.CurrentBalance = 0
+	}
+	_, err_in := o.Insert(&blocked_new)
+	if err_in != nil {
+		return err_in
+	}
+
+	// 钱包　数据　修改
+	err_ping := PingAddWalletCoin(user_id, shouyi)
+	if err_ping != nil {
+		return err_ping
+	}
+	order := models.TxIdList{
+		TxId: order_id,
+	}
+	err_rea := o.Read(&order, "tx_id")
+	if err_rea != nil {
+		return err_rea
+	}
+	order.WalletState = true
+	_, err_up_tx := o.Update(&order)
+	if err_up_tx != nil {
+		return err_up_tx
+	}
+
+	models.NetIncome += shouyi
 	return nil
 }
 
@@ -597,3 +762,95 @@ func HandlerMap(m map[string][]string) {
 		HandlerMap(err_m)
 	}
 }
+
+// 给失败的用户　添加失败的任务记录表
+func CreateErrUserTxList(users []models.User) {
+	o := models.NewOrm()
+	err_users := []models.User{}
+	for _, v := range users {
+		//任务表 USDD  铸币记录
+		order_id := utils.TimeUUID()
+		blo_txid_dcmt := models.TxIdList{
+			TxId:        order_id,
+			OrderState:  false,
+			WalletState: false,
+			UserId:      v.UserId,
+			Comment:     "每日任务失败用户",
+			CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+			Expenditure: 0,
+			InCome:      0,
+		}
+		_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+		if errtxid_blo != nil {
+			err_users = append(err_users, v)
+		}
+	}
+	if len(err_users) != 0 {
+		CreateErrUserTxList(err_users)
+	}
+}
+
+/*
+			每日任务－－－思路
+	users := []UserDayTx{}// 准备好的　obj　用来接受　最终处理数据
+	// 计算　所有　用户　当日　发放　的值
+	for _, v := range u {
+		if err := UsersPermissionsFiltering(v,users); err != nil {
+			error_users = append(error_users, v)
+		}
+	}
+
+	// 错误的用户,生成　未完成　的用户表　　　　等待"客服人员"操作
+	//TODO
+
+	// 集体性的　钱包数据更新　　以及生态数据库的更新
+*/
+/*
+// 执行赋值操作
+func UsersPermissionsFiltering(u models.User,users []UserDayTx) error {
+	o := models.NewOrm()
+	account := models.Account{
+		UserId: u.UserId,
+	}
+	o.Read(&account, "user_id")
+
+	user := UserDayTx{
+		UserId: u.UserId,
+		BenJin: 0,
+		Team:   0,
+		ZhiTui: 0,
+	}
+	var err error
+	if account.DynamicRevenue != true && account.StaticReturn != true {
+
+	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
+		err = TeamValue(user)
+		err = ZhiTuiValue(user)
+	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
+		err = BenJinValue(user)
+	} else { // 都可以
+		err = TeamValue(user)
+		err = ZhiTuiValue(user)
+		err = BenJinValue(user)
+	}
+	return nil
+}
+
+// 给所有人的　每日本金自由算力收益　　　赋值
+func BenJinValue(user UserDayTx) error {
+
+	return nil
+}
+
+// 给所有人的　每日团队收益　　			赋值
+func TeamValue(user UserDayTx) error {
+
+	return nil
+}
+
+// 给所有人的　前一天的直推收益　　　	赋值
+func ZhiTuiValue(user UserDayTx) error {
+
+	return nil
+}
+*/
