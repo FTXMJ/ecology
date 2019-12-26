@@ -376,7 +376,7 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 	}
 	zhitui := 0.0
 	for _, v := range blo {
-		zhitui += v.CurrentRevenue
+		zhitui += v.CurrentOutlay
 	}
 	zhit, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", zhitui), 64)
 	return zhit, nil
