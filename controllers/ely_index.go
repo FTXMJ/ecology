@@ -386,13 +386,6 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		return
 	}
 
-	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
-	if err_up_acc != nil {
-		logs.Log.Error(api_url, err_up_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
-		return
-	}
-
 	formula := models.Formula{EcologyId: ecology_id}
 	err_read := o.Read(&formula, "ecology_id")
 	if err_read != nil {
@@ -407,6 +400,13 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		o.Rollback()
 		logs.Log.Error(api_url, errJu)
 		data = common.NewErrorResponse(500, errJu.Error(), nil)
+		return
+	}
+
+	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
+	if err_up_acc != nil {
+		logs.Log.Error(api_url, err_up_acc)
+		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
 
