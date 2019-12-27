@@ -95,7 +95,7 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
 			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
-				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
+				s_f_t[i], s_f_t[j] = s_f_t[j], s_f_t[i]
 			}
 		}
 	}

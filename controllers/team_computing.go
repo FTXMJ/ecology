@@ -607,6 +607,9 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 
 // 远端连接  -  给定分红收益  释放通用
 func PingAddWalletCoin(user_id string, abonus float64) error {
+	if abonus == 0 {
+		return nil
+	}
 	user := models.User{
 		UserId: user_id,
 	}

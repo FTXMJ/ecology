@@ -236,6 +236,16 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	jwtValues := GetJwtValues(this.Ctx)
 	user_id := jwtValues.UserID
 
+	order_if := models.TxIdList{
+		TxId: order_id,
+	}
+	o.Read(&order_if)
+	if order_if.Id != 0 {
+		logs.Log.Error(api_url, "重复的交易－多次提交")
+		data = common.NewErrorResponse(500, "订单以存在，请勿提交!")
+		return
+	}
+
 	err_orm_begin := o.Begin()
 	if err_orm_begin != nil {
 		logs.Log.Error(api_url, err_orm_begin)
@@ -335,6 +345,16 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	levelstr := this.GetString("levelstr")
 	jwtValues := GetJwtValues(this.Ctx)
 	user_id := jwtValues.UserID
+
+	order_if := models.TxIdList{
+		TxId: order_id,
+	}
+	o.Read(&order_if)
+	if order_if.Id != 0 {
+		logs.Log.Error(api_url, "重复的交易－多次提交")
+		data = common.NewErrorResponse(500, "订单以存在，请勿提交!")
+		return
+	}
 
 	err_orm_begin := o.Begin()
 	if err_orm_begin != nil {
