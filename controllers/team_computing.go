@@ -315,6 +315,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		Comment:        "每日团队收益",
 		TxId:           order_id,
 		Account:        account.Id,
+		CoinType:       "USDD",
 	}
 
 	if blocked_new.CurrentBalance < 0 {
@@ -398,6 +399,7 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		Comment:        "超级节点分红",
 		TxId:           order_id,
 		Account:        account.Id,
+		CoinType:       "USDD",
 	}
 
 	if blocked_new.CurrentBalance < 0 {
@@ -487,6 +489,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		Comment:        "每日释放收益",
 		TxId:           order_id,
 		Account:        account.Id,
+		CoinType:       "USDD",
 	}
 
 	if blocked_new.CurrentBalance < 0 {
@@ -591,6 +594,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 		Comment:        "每日直推收益",
 		TxId:           order_id,
 		Account:        account.Id,
+		CoinType:       "USDD",
 	}
 
 	if blocked_new.CurrentBalance < 0 {

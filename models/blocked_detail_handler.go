@@ -189,6 +189,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 			Comment:        "直推收益",
 			TxId:           order_id,
 			Account:        account.Id,
+			CoinType:       "USDD",
 		}
 		if blocked_new.CurrentBalance < 0 {
 			blocked_new.CurrentBalance = 0

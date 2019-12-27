@@ -116,6 +116,7 @@ func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer, user_id, comment, tx_id string,
 		Comment:        comment,
 		TxId:           tx_id,
 		Account:        account_id,
+		CoinType:       "USDD",
 	}
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
