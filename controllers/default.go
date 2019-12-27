@@ -32,7 +32,9 @@ func SumTeamProfit(user_id string) (float64, error) {
 	user_team := []models.User{}
 	_, err_raw := o.Raw("select * from user where father_id=?", user_id).QueryRows(&user_team)
 	if err_raw != nil {
-		return 0.0, errors.New("查询用户团队直推成员时出错,请重试")
+		if err_raw.Error() != "<QuerySeter> no row found" {
+			return 0.0, err_raw
+		}
 	}
 	coins := []float64{}
 	coin_number := 0.0

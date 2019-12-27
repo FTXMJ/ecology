@@ -235,9 +235,7 @@ func HandlerOperation(users []string) (float64, error) {
 		account := models.Account{}
 		err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
 		if err_acc != nil {
-			if err_acc.Error() == "<QuerySeter> no row found" {
-				return 0, nil
-			} else {
+			if err_acc.Error() != "<QuerySeter> no row found" {
 				return 0, err_acc
 			}
 		}
@@ -245,7 +243,9 @@ func HandlerOperation(users []string) (float64, error) {
 		formula := models.Formula{}
 		err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
 		if err_for != nil {
-			return 0, err_for
+			if err_for.Error() != "<QuerySeter> no row found" {
+				return 0, err_for
+			}
 		}
 		coin_abouns += (formula.HoldReturnRate * account.Balance)
 	}
@@ -264,6 +264,10 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	value := 0.0
 	for i := 0; i < len(coins)-1; i++ {
 		value += coins[i]
+	}
+
+	if value == 0 {
+		return nil
 	}
 
 	//任务表 USDD  铸币记录
@@ -434,9 +438,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
 		QueryRow(&blocked_yestoday)
 	if err_raw != nil {
-		if err_raw.Error() == "<QuerySeter> no row found" {
-			return nil
-		} else {
+		if err_raw.Error() != "<QuerySeter> no row found" {
 			return err_raw
 		}
 	}
@@ -444,6 +446,9 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		blocked_yestoday.CurrentBalance = 0
 	}
 	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
+	if abonus == 0 {
+		return nil
+	}
 
 	//任务表 USDD  铸币记录
 	order_id := utils.TimeUUID()
@@ -535,13 +540,18 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	blos := []models.BlockedDetail{}
 	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
 	time_end := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
-	_, err := o.Raw("select * form blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
+	_, err := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
 	if err != nil {
-		return err
+		if err.Error() != "<QuerySeter> no row found" {
+			return err
+		}
 	}
 	shouyi := 0.0
 	for _, v := range blos {
 		shouyi += v.CurrentOutlay
+	}
+	if shouyi == 0 {
+		return nil
 	}
 
 	//任务表 USDD  铸币记录
