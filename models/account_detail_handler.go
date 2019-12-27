@@ -35,7 +35,12 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 		o.Rollback()
 		return err_acc
 	}
-	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"balance": account_new.CurrentBalance})
+
+	account := Account{
+		UserId: user_id,
+	}
+	o.Read(&account)
+	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"balance": account.Balance + money_in - money_out})
 	if err_up != nil {
 		o.Rollback()
 		return err_acc
