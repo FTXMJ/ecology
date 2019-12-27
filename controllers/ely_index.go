@@ -95,7 +95,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	}
 	tfors, err_tfor := PingSelectTforNumber(user_id)
 	if err_tfor != nil {
-		data = common.NewErrorResponse(500, "查看钱包　TFOR 数量时错误!", models.Ecology_index_obj{})
+		data = common.NewErrorResponse(500, err_tfor.Error(), models.Ecology_index_obj{})
 		return
 	}
 	models.SuperLevelSet(user_id, &indexValues, tfors)
