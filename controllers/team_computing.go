@@ -181,7 +181,7 @@ type data_users struct {
 	Data []string `json:"data"`
 }
 
-// 从晓东那里获取团队 成员
+// 从晓东那里获取团队 成员  直推
 func GetTeams(user models.User) ([]string, error) {
 	client := &http.Client{}
 	//生成要访问的url
@@ -213,9 +213,17 @@ func GetTeams(user models.User) ([]string, error) {
 	values := data_users{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil {
-		return nil, err
+		return values.Data, errors.New("钱包金额操作失败!")
+	} else if values.Code != 200 {
+		return values.Data, errors.New(values.Msg)
 	}
-	return values.Data, nil
+	users := []string{}
+	for _, v := range values.Data {
+		if v != user.UserId {
+			users = append(users, v)
+		}
+	}
+	return users, nil
 }
 
 // 处理器，计算所有用户的收益  并发布任务和 分红记录

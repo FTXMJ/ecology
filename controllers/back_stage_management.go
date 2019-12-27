@@ -36,7 +36,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 	_, err := o.QueryTable("force_table").All(&force_list)
 	if err != nil {
 		logs.Log.Error(api_url, err)
-		data = common.NewErrorResponse(500, "算力数据获取失败!")
+		data = common.NewErrorResponse(500, "算力数据获取失败!", []models.ForceTable{})
 		return
 	}
 	models.QuickSortForce(force_list, 0, len(force_list)-1)
@@ -91,7 +91,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			_, err := o.QueryTable("force_table").Filter("id", id).Delete()
 			if err != nil {
 				logs.Log.Error(api_url, err)
-				data = common.NewErrorResponse(500, "算力表　删除失败!")
+				data = common.NewErrorResponse(500, "算力表　删除失败!", nil)
 				return
 			}
 			data = common.NewResponse(nil)
@@ -105,7 +105,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
 		if err != nil {
 			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "算力表　更新失败!")
+			data = common.NewErrorResponse(500, "算力表　更新失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
@@ -123,14 +123,14 @@ func (this *BackStageManagement) OperationFormulaList() {
 		_, err := o.Insert(&force)
 		if err != nil {
 			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "算力表新增失败!")
+			data = common.NewErrorResponse(500, "算力表新增失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
 		logs.Log.Error(api_url, "未知操作!")
-		data = common.NewErrorResponse(500, "未知操作!")
+		data = common.NewErrorResponse(500, "未知操作!", nil)
 		return
 	}
 }
@@ -154,7 +154,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 	_, err := o.QueryTable("super_force_table").All(&force_list)
 	if err != nil {
 		logs.Log.Error(api_url, err)
-		data = common.NewErrorResponse(500, "超级节点算力数据获取失败!")
+		data = common.NewErrorResponse(500, "超级节点算力数据获取失败!", []models.SuperForceTable{})
 		return
 	}
 	models.QuickSortSuperForce(force_list, 0, len(force_list)-1)
@@ -200,7 +200,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			_, err := o.QueryTable("super_force_table").Filter("id", id).Delete()
 			if err != nil {
 				logs.Log.Error(api_url, err)
-				data = common.NewErrorResponse(500, "超级节点算力表 删除失败!")
+				data = common.NewErrorResponse(500, "超级节点算力表 删除失败!", nil)
 				return
 			}
 			data = common.NewResponse(nil)
@@ -214,7 +214,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
 		if err != nil {
 			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "超级节点算力表 更新失败!")
+			data = common.NewErrorResponse(500, "超级节点算力表 更新失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
@@ -228,14 +228,14 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		_, err := o.Insert(&super_force)
 		if err != nil {
 			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "超级节点算力表 新增失败!")
+			data = common.NewErrorResponse(500, "超级节点算力表 新增失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
 		logs.Log.Error(api_url, "未知操作!")
-		data = common.NewErrorResponse(500, "未知操作!")
+		data = common.NewErrorResponse(500, "未知操作!", nil)
 		return
 	}
 }
@@ -265,7 +265,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 	values, p, err := models.SelectHosteryRoot(page)
 	if err != nil {
 		logs.Log.Error(api_url+"   更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", models.HostryPageInfo{})
 		return
 	}
 	hostory_list := models.HostryPageInfo{
@@ -330,7 +330,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 	list, page, err := models.SelectPondMachinemsg(find_obj, p, table_name)
 	if err != nil {
 		logs.Log.Error(api_url+"   更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", []models.HostryFindInfo{})
 		return
 	}
 	hostory_list := models.HostryFindInfo{
@@ -449,7 +449,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
 	if err != nil {
 		logs.Log.Error(api_url+"    更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", models.FlowList{})
 		return
 	}
 	var flowss []models.Flow
@@ -527,7 +527,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 	account_off, page, err := models.FindUserAccountOFF(p, find_obj)
 	if err != nil {
 		logs.Log.Error(api_url+"    数据库错误,数据查询失败", err)
-		data = common.NewErrorResponse(500, "数据库错误")
+		data = common.NewErrorResponse(500, "数据库错误", models.UserAccountOFF{})
 		return
 	}
 	user_SF_information := models.UserAccountOFF{
@@ -565,7 +565,7 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	err := o.Read(&account)
 	if err != nil {
 		logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", nil)
 		return
 	}
 	var start bool
@@ -585,7 +585,7 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	_, err = o.Update(&account, account_type)
 	if err != nil {
 		logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误")
+		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", nil)
 		return
 	}
 	data = common.NewResponse(nil)

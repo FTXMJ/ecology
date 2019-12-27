@@ -16,9 +16,10 @@ func NewResponse(data interface{}) *ResponseData {
 }
 
 // NewErrorResponse 错误返回
-func NewErrorResponse(code int, msg string) *ResponseData {
+func NewErrorResponse(code int, msg string, data interface{}) *ResponseData {
 	return &ResponseData{
 		Code: code,
 		Msg:  msg,
+		Data: data,
 	}
 }
