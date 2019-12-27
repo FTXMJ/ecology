@@ -37,6 +37,7 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		Comment:        comment,
 		TxId:           tx_id,
 		Account:        account_id,
+		CoinType:       "USDD",
 	}
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
@@ -92,6 +93,7 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 		Comment:        comment,
 		TxId:           tx_id,
 		Account:        account_id,
+		CoinType:       "USDD",
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
