@@ -406,7 +406,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	if errJu != nil {
 		o.Rollback()
 		logs.Log.Error(api_url, errJu)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
+		data = common.NewErrorResponse(500, errJu.Error(), nil)
 		return
 	}
 

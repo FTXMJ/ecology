@@ -7,7 +7,22 @@ import (
 
 // 根据等级 进行算力的更新
 func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
-	if JudgeLevelFor_wh_mx(o, user_id, level) == nil {
+	//if JudgeLevelFor_wh_mx(o, user_id, level) == nil {
+	//	force := ForceTable{}
+	//	err := NewOrm().QueryTable("force_table").Filter("level", level).One(&force)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	formula.Level = force.Level
+	//	formula.LowHold = force.LowHold
+	//	formula.HighHold = force.HighHold
+	//	formula.ReturnMultiple = force.ReturnMultiple
+	//	formula.HoldReturnRate = force.HoldReturnRate
+	//	formula.RecommendReturnRate = force.RecommendReturnRate
+	//	formula.TeamReturnRate = force.TeamReturnRate
+	//	return nil
+	//}
+	if PanDuanLevel(user_id, level) == true {
 		force := ForceTable{}
 		err := NewOrm().QueryTable("force_table").Filter("level", level).One(&force)
 		if err != nil {
@@ -22,7 +37,7 @@ func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
 		formula.TeamReturnRate = force.TeamReturnRate
 		return nil
 	}
-	return errors.New("err")
+	return errors.New("升级条件不满足!")
 }
 
 // 验证当前用户的父亲用户是否达标  可以升级的条件
@@ -119,4 +134,44 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 		return nil
 	}
 	return nil
+}
+
+// 如果升级等级是　？？　就需要判断是否　符合升级条件                 ------          每个人只有一改生态仓库
+func PanDuanLevel(user_id, level string) bool {
+	if level == "侯爵" || level == "公爵" {
+		o := NewOrm()
+		sun_users := []User{}
+		sun_accounts := []Account{}
+		o.Raw("select * from user where father_id=?", user_id).QueryRows(&sun_users)
+		for _, v := range sun_users {
+			sun_account := Account{}
+			o.Raw("select * from account where user_id=?", v.UserId).QueryRow(&sun_account)
+			sun_accounts = append(sun_accounts, sun_account)
+		}
+		switch level {
+		case "侯爵":
+			l := 0
+			for _, v := range sun_accounts {
+				if v.Level == "伯爵" {
+					l++
+				}
+			}
+			if l >= 2 {
+				return true
+			}
+			return false
+		case "公爵":
+			l := 0
+			for _, v := range sun_accounts {
+				if v.Level == "侯爵" {
+					l++
+				}
+			}
+			if l >= 3 {
+				return true
+			}
+			return false
+		}
+	}
+	return true
 }
