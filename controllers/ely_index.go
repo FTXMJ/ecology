@@ -382,7 +382,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	err_r := o.Read(&formula_table, "level")
 	if err_r != nil || float64(formula_table.LowHold) > coin_number {
 		logs.Log.Error(api_url, err_r)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
+		data = common.NewErrorResponse(500, "不满足升级条件,请填入规定的升级金额", nil)
 		return
 	}
 
