@@ -143,6 +143,9 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 
 	if account.DynamicRevenue == true {
 		new_coin := account.BockedBalance - (coin * proportion)
+		if new_coin < 0 {
+			new_coin = 0
+		}
 		_, err_up := o.QueryTable("account").Filter("user_id", father_id).Update(orm.Params{"bocked_balance": new_coin})
 		if err_up != nil {
 			logs.Log.Error("直推算力累加错误", err_up)
