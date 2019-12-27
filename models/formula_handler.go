@@ -24,7 +24,8 @@ func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
 	//}
 	if PanDuanLevel(user_id, level) == true {
 		force := ForceTable{}
-		err := NewOrm().QueryTable("force_table").Filter("level", level).One(&force)
+		o := NewOrm()
+		err := o.QueryTable("force_table").Filter("level", level).One(&force)
 		if err != nil {
 			return err
 		}
