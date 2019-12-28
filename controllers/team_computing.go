@@ -290,16 +290,27 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	//找最近的数据记录表
 	account := models.Account{}
 	o.QueryTable("account").Filter("user_id", user_id).One(&account)
-	blocked_old := models.BlockedDetail{}
+	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
-		OrderBy("id").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 	}
 	for_mula := models.Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&for_mula)
@@ -380,16 +391,27 @@ func AddFormulaABonus(user_id string, abonus float64) {
 
 	account := models.Account{}
 	o.QueryTable("account").Filter("user_id", user_id).One(&account)
-	blocked_old := models.BlockedDetail{}
+	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
-		OrderBy("id").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 	}
 	aabouns := blocked_old.CurrentBalance - abonus
 	if blocked_old.CurrentBalance-abonus < 0 {
@@ -474,16 +496,27 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		return errtxid_blo
 	}
 
-	blocked_old := models.BlockedDetail{}
+	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
-		OrderBy("id").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 	}
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
@@ -580,16 +613,27 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 		return errtxid_blo
 	}
 
-	blocked_old := models.BlockedDetail{}
+	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
-		OrderBy("id").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 	}
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {

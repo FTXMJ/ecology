@@ -11,16 +11,27 @@ import (
 
 // 更新借贷表
 func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	blocked_old := BlockedDetail{}
+	blocked_olds := []BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
 		Filter("account", account_id).
 		OrderBy("-create_date").
-		OrderBy("id").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 	}
 	for_mula := Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
@@ -160,16 +171,27 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 			logs.Log.Error("直推算力累加错误", errtxid_blo)
 			return errtxid_blo
 		}
-		blocked_old := BlockedDetail{}
+		blocked_olds := []BlockedDetail{}
 		o.QueryTable("blocked_detail").
-			Filter("user_id", father_id).
+			Filter("user_id", user.Id).
 			Filter("account", account.Id).
 			OrderBy("-create_date").
-			OrderBy("id").
-			Limit(1).
-			One(&blocked_old)
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
+			Limit(3).
+			All(&blocked_olds)
+		var blocked_old BlockedDetail
+		if len(blocked_olds) != 0 {
+			for i := 0; i < len(blocked_olds)-1; i++ {
+				for j := i + 1; j < len(blocked_olds); j++ {
+					if blocked_olds[i].Id > blocked_olds[j].Id {
+						blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+					}
+				}
+			}
+
+			blocked_old = blocked_olds[len(blocked_olds)-1]
+			if blocked_old.Id == 0 {
+				blocked_old.CurrentBalance = 0
+			}
 		}
 
 		blocked_new := BlockedDetail{

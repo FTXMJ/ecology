@@ -90,15 +90,27 @@ func ABonus(o orm.Ormer, user_id string, account models.Account) error {
 
 // 铸币表释放 以及 超级节点表的 同步数据
 func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer, user_id, comment, tx_id string, account_id int) error {
-	blocked_old := models.BlockedDetail{}
+	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
+		Filter("account", account_id).
 		OrderBy("-create_date").
-		OrderBy("id").
-		Limit(1).
-		One(&blocked_old)
-	if blocked_old.Id == 0 {
-		blocked_old.CurrentBalance = 0
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
 	}
 	for_mula := models.Formula{}
 	err_for := o.QueryTable("formula").Filter("ecology_id", account_id).One(&for_mula)
