@@ -295,6 +295,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
+		OrderBy("id").
 		Limit(1).
 		One(&blocked_old)
 	if blocked_old.Id == 0 {
@@ -384,6 +385,7 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
+		OrderBy("id").
 		Limit(1).
 		One(&blocked_old)
 	if blocked_old.Id == 0 {
@@ -477,16 +479,21 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
+		OrderBy("id").
 		Limit(1).
 		One(&blocked_old)
 	if blocked_old.Id == 0 {
 		blocked_old.CurrentBalance = 0
 	}
+	aabonus := blocked_old.CurrentBalance - abonus
+	if aabonus < 0 {
+		aabonus = 0
+	}
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
 		CurrentOutlay:  abonus,
-		CurrentBalance: blocked_old.CurrentBalance - abonus,
+		CurrentBalance: aabonus,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日释放收益",
@@ -494,17 +501,13 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		Account:        account.Id,
 		CoinType:       "USDD",
 	}
-
-	if blocked_new.CurrentBalance < 0 {
-		blocked_new.CurrentBalance = 0
-	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
 		return err
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	_, err_up := o.Update(&account, "bocked_balance")
 	if err_up != nil {
 		return err_up
 	}
@@ -582,6 +585,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 		Filter("user_id", user_id).
 		Filter("account", account.Id).
 		OrderBy("-create_date").
+		OrderBy("id").
 		Limit(1).
 		One(&blocked_old)
 	if blocked_old.Id == 0 {

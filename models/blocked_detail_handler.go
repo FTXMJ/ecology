@@ -16,6 +16,7 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		Filter("user_id", user_id).
 		Filter("account", account_id).
 		OrderBy("-create_date").
+		OrderBy("id").
 		Limit(1).
 		One(&blocked_old)
 	if blocked_old.Id == 0 {
@@ -164,6 +165,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 			Filter("user_id", father_id).
 			Filter("account", account.Id).
 			OrderBy("-create_date").
+			OrderBy("id").
 			Limit(1).
 			One(&blocked_old)
 		if blocked_old.Id == 0 {

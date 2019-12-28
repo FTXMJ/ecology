@@ -94,6 +94,7 @@ func FindLimitOneAndSaveBlo_dAbonus(o orm.Ormer, user_id, comment, tx_id string,
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
 		OrderBy("-create_date").
+		OrderBy("id").
 		Limit(1).
 		One(&blocked_old)
 	if blocked_old.Id == 0 {
