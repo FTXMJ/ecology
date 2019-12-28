@@ -365,7 +365,7 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		OrderState:  true,
 		WalletState: true,
 		UserId:      user_id,
-		Comment:     "超级节点分红",
+		Comment:     "节点分红",
 		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		Expenditure: abonus,
 		InCome:      0,
@@ -396,7 +396,7 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		CurrentBalance: blocked_old.CurrentBalance - abonus,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
-		Comment:        "超级节点分红",
+		Comment:        "节点分红",
 		TxId:           order_id,
 		Account:        account.Id,
 		CoinType:       "USDD",
@@ -432,7 +432,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	formula := models.Formula{
 		EcologyId: account.Id,
 	}
-	o.Read(&formula)
+	o.Read(&formula, "ecology_id")
 	blocked_yestoday := models.BlockedDetail{}
 	err_raw := o.Raw(
 		"select * from blocked_detail where user_id=? and create_date<=? order by create_date desc limit 1",
@@ -584,11 +584,15 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	if blocked_old.Id == 0 {
 		blocked_old.CurrentBalance = 0
 	}
+	shouyia := blocked_old.CurrentBalance - shouyi
+	if shouyia < 0 {
+		shouyia = 0
+	}
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
 		CurrentOutlay:  shouyi,
-		CurrentBalance: blocked_old.CurrentBalance - shouyi,
+		CurrentBalance: shouyia,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日直推收益",

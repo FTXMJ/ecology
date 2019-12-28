@@ -154,7 +154,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 	_, err := o.QueryTable("super_force_table").All(&force_list)
 	if err != nil {
 		logs.Log.Error(api_url, err)
-		data = common.NewErrorResponse(500, "超级节点算力数据获取失败!", []models.SuperForceTable{})
+		data = common.NewErrorResponse(500, "节点算力数据获取失败!", []models.SuperForceTable{})
 		return
 	}
 	models.QuickSortSuperForce(force_list, 0, len(force_list)-1)
@@ -200,7 +200,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			_, err := o.QueryTable("super_force_table").Filter("id", id).Delete()
 			if err != nil {
 				logs.Log.Error(api_url, err)
-				data = common.NewErrorResponse(500, "超级节点算力表 删除失败!", nil)
+				data = common.NewErrorResponse(500, "节点算力表 删除失败!", nil)
 				return
 			}
 			data = common.NewResponse(nil)
@@ -214,7 +214,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
 		if err != nil {
 			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "超级节点算力表 更新失败!", nil)
+			data = common.NewErrorResponse(500, "节点算力表 更新失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
@@ -228,7 +228,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		_, err := o.Insert(&super_force)
 		if err != nil {
 			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "超级节点算力表 新增失败!", nil)
+			data = common.NewErrorResponse(500, "节点算力表 新增失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
