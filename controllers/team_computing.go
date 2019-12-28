@@ -389,11 +389,15 @@ func AddFormulaABonus(user_id string, abonus float64) {
 	if blocked_old.Id == 0 {
 		blocked_old.CurrentBalance = 0
 	}
+	aabouns := blocked_old.CurrentBalance - abonus
+	if blocked_old.CurrentBalance-abonus < 0 {
+		aabouns = 0
+	}
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
 		CurrentOutlay:  abonus,
-		CurrentBalance: blocked_old.CurrentBalance - abonus,
+		CurrentBalance: aabouns,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "节点分红",
@@ -405,16 +409,15 @@ func AddFormulaABonus(user_id string, abonus float64) {
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
-
-	//更新生态仓库属性
-	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": float64(account.BockedBalance) - abonus})
-	if err_up != nil {
+	_, err := o.Insert(&blocked_new)
+	if err != nil {
 		o.Rollback()
 		AddFormulaABonus(user_id, abonus)
 		return
 	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
+	//更新生态仓库属性
+	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": aabouns})
+	if err_up != nil {
 		o.Rollback()
 		AddFormulaABonus(user_id, abonus)
 		return
@@ -792,7 +795,9 @@ func HandlerMap(m map[string][]string) {
 			if err != nil {
 				err_m[k_level] = append(err_m[k_level], v)
 			} else {
-				AddFormulaABonus(v, tfor_some/float64(len(vv)))
+				if tfor_some/float64(len(vv)) != 0 {
+					AddFormulaABonus(v, tfor_some/float64(len(vv)))
+				}
 			}
 		}
 	}
