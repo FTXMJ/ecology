@@ -609,6 +609,15 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 		return err_in
 	}
 
+	account.BockedBalance = account.BockedBalance - shouyi
+	if account.BockedBalance < 0 {
+		account.BockedBalance = 0
+	}
+	_, err_update := o.Update(&account, "bocked_balance")
+	if err_update != nil {
+		return err_update
+	}
+
 	// 钱包　数据　修改
 	err_ping := PingAddWalletCoin(user_id, shouyi)
 	if err_ping != nil {
