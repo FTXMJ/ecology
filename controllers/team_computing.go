@@ -407,7 +407,7 @@ func AddFormulaABonus(user_id string, abonus float64) {
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": float64(account.BockedBalance) - abonus})
 	if err_up != nil {
 		o.Rollback()
 		AddFormulaABonus(user_id, abonus)
