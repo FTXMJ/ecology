@@ -173,7 +173,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 		}
 		blocked_olds := []BlockedDetail{}
 		o.QueryTable("blocked_detail").
-			Filter("user_id", user.Id).
+			Filter("user_id", user.UserId).
 			Filter("account", account.Id).
 			OrderBy("-create_date").
 			Limit(3).
@@ -199,7 +199,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 			CurrentRevenue: 0,
 			CurrentOutlay:  (coin * proportion),
 			OpeningBalance: blocked_old.CurrentBalance,
-			CurrentBalance: blocked_old.CurrentBalance - (coin * proportion),
+			CurrentBalance: blocked_old.CurrentBalance,
 			CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 			Comment:        "直推收益",
 			TxId:           order_id,
