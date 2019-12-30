@@ -392,64 +392,6 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		AddFormulaABonus(user_id, abonus)
 		return
 	}
-
-	account := models.Account{}
-	o.QueryTable("account").Filter("user_id", user_id).One(&account)
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
-
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
-	}
-	aabouns := blocked_old.CurrentBalance - abonus
-	if blocked_old.CurrentBalance-abonus < 0 {
-		aabouns = 0
-	}
-	blocked_new := models.BlockedDetail{
-		UserId:         user_id,
-		CurrentRevenue: 0,
-		CurrentOutlay:  abonus,
-		CurrentBalance: aabouns,
-		OpeningBalance: blocked_old.CurrentBalance,
-		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
-		Comment:        "节点分红",
-		TxId:           order_id,
-		Account:        account.Id,
-		CoinType:       "USDD",
-	}
-
-	if blocked_new.CurrentBalance < 0 {
-		blocked_new.CurrentBalance = 0
-	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
-		o.Rollback()
-		AddFormulaABonus(user_id, abonus)
-		return
-	}
-	//更新生态仓库属性
-	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": aabouns})
-	if err_up != nil {
-		o.Rollback()
-		AddFormulaABonus(user_id, abonus)
-		return
-	}
 	o.Commit()
 	return
 }
