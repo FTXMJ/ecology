@@ -149,7 +149,9 @@ func Team(o orm.Ormer, user models.User) error {
 			// 获取用户teams
 			team_user, err := GetTeams(v)
 			if err != nil {
-				return err
+				if err.Error() != "用户未激活或被拉入黑名单" {
+					return err
+				}
 			}
 			// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
 			coin, err_handler := HandlerOperation(team_user)
@@ -460,21 +462,33 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		EcologyId: account.Id,
 	}
 	o.Read(&formula, "ecology_id")
-	blocked_yestoday := models.BlockedDetail{}
-	err_raw := o.Raw(
-		"select * from blocked_detail where user_id=? and create_date<=? order by create_date desc limit 1",
+	blocked_yestoday := []models.BlockedDetail{}
+	_, err_raw := o.Raw(
+		"select * from blocked_detail where user_id=? and create_date<=? order by create_date desc limit 3",
 		user_id,
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
-		QueryRow(&blocked_yestoday)
+		QueryRows(&blocked_yestoday)
 	if err_raw != nil {
 		if err_raw.Error() != "<QuerySeter> no row found" {
 			return err_raw
 		}
 	}
-	if blocked_yestoday.Id == 0 {
-		blocked_yestoday.CurrentBalance = 0
+	var blocked_old1 models.BlockedDetail
+	if len(blocked_yestoday) != 0 {
+		for i := 0; i < len(blocked_yestoday)-1; i++ {
+			for j := i + 1; j < len(blocked_yestoday); j++ {
+				if blocked_yestoday[i].Id > blocked_yestoday[j].Id {
+					blocked_yestoday[i], blocked_yestoday[j] = blocked_yestoday[j], blocked_yestoday[i]
+				}
+			}
+		}
+
+		blocked_old1 = blocked_yestoday[len(blocked_yestoday)-1]
+		if blocked_old1.Id == 0 {
+			blocked_old1.CurrentBalance = 0
+		}
 	}
-	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
+	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
 	if abonus == 0 {
 		return nil
 	}
