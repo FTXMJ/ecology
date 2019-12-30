@@ -394,7 +394,6 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
-
 	errJu := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if errJu != nil {
 		o.Rollback()
@@ -403,19 +402,6 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		return
 	}
 
-	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
-	if err_up_acc != nil {
-		logs.Log.Error(api_url, err_up_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
-		return
-	}
-
-	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
-		o.Rollback()
-		logs.Log.Error(api_url, err_up_for)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
-		return
-	}
 	//任务表 USDD  铸币记录
 	blo_txid_dcmt := models.TxIdList{
 		TxId:        order_id,
@@ -463,6 +449,20 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 
 	oo := models.NewOrm()
 	err_oo := oo.Begin()
+
+	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
+	if err_up_acc != nil {
+		logs.Log.Error(api_url, err_up_acc)
+		data = common.NewErrorResponse(500, "数据库操作失败", nil)
+		return
+	}
+	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
+		o.Rollback()
+		logs.Log.Error(api_url, err_up_for)
+		data = common.NewErrorResponse(500, "数据库操作失败", nil)
+		return
+	}
+
 	if err_oo != nil {
 		logs.Log.Error(api_url, err_oo)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
