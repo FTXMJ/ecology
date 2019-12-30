@@ -153,12 +153,14 @@ func Team(o orm.Ormer, user models.User) error {
 					return err
 				}
 			}
-			// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-			coin, err_handler := HandlerOperation(team_user)
-			if err_handler != nil {
-				return err_handler
+			if len(team_user) > 0 {
+				// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
+				coin, err_handler := HandlerOperation(team_user)
+				if err_handler != nil {
+					return err_handler
+				}
+				coins = append(coins, coin)
 			}
-			coins = append(coins, coin)
 		}
 	}
 	err_sort_a_r := SortABonusRelease(o, coins, user.UserId)
@@ -221,9 +223,7 @@ func GetTeams(user models.User) ([]string, error) {
 	}
 	users := []string{}
 	for _, v := range values.Data {
-		if v != user.UserId {
-			users = append(users, v)
-		}
+		users = append(users, v)
 	}
 	return users, nil
 }
@@ -231,7 +231,7 @@ func GetTeams(user models.User) ([]string, error) {
 // 处理器，计算所有用户的收益  并发布任务和 分红记录
 func HandlerOperation(users []string) (float64, error) {
 	o := models.NewOrm()
-	coin_abouns := 0.0
+	var coin_abouns float64
 	for _, v := range users {
 		// 拿到生态项目实例
 		account := models.Account{}
@@ -249,7 +249,7 @@ func HandlerOperation(users []string) (float64, error) {
 				return 0, err_for
 			}
 		}
-		coin_abouns += (formula.HoldReturnRate * account.Balance)
+		coin_abouns += formula.HoldReturnRate * account.Balance
 	}
 	return coin_abouns, nil
 }
@@ -267,6 +267,16 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	for i := 0; i < len(coins)-1; i++ {
 		value += coins[i]
 	}
+
+	var account = models.Account{
+		UserId: user_id,
+	}
+	o.Read(&account, "user_id")
+	var formula = models.Formula{
+		EcologyId: account.Id,
+	}
+	o.Read(&formula, "ecology_id")
+	value = value * formula.TeamReturnRate
 
 	if value == 0 {
 		return nil
@@ -290,8 +300,6 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 
 	//找最近的数据记录表
-	account := models.Account{}
-	o.QueryTable("account").Filter("user_id", user_id).One(&account)
 	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
@@ -308,22 +316,16 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 				}
 			}
 		}
-
 		blocked_old = blocked_olds[len(blocked_olds)-1]
 		if blocked_old.Id == 0 {
 			blocked_old.CurrentBalance = 0
 		}
 	}
-	for_mula := models.Formula{}
-	err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&for_mula)
-	if err_for != nil {
-		return err_for
-	}
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
-		CurrentOutlay:  value * for_mula.TeamReturnRate,
-		CurrentBalance: blocked_old.CurrentBalance - (value * for_mula.TeamReturnRate) + 0,
+		CurrentOutlay:  value,
+		CurrentBalance: blocked_old.CurrentBalance - value + 0,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日团队收益",
@@ -462,9 +464,9 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		EcologyId: account.Id,
 	}
 	o.Read(&formula, "ecology_id")
-	blocked_yestoday := []models.BlockedDetail{}
+	blocked_yestoday := []models.AccountDetail{}
 	_, err_raw := o.Raw(
-		"select * from blocked_detail where user_id=? and create_date<=? order by create_date desc limit 3",
+		"select * from account_detail where user_id=? and create_date<=? order by create_date desc limit 3",
 		user_id,
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
 		QueryRows(&blocked_yestoday)
@@ -473,7 +475,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 			return err_raw
 		}
 	}
-	var blocked_old1 models.BlockedDetail
+	var blocked_old1 models.AccountDetail
 	if len(blocked_yestoday) != 0 {
 		for i := 0; i < len(blocked_yestoday)-1; i++ {
 			for j := i + 1; j < len(blocked_yestoday); j++ {

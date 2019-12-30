@@ -63,5 +63,14 @@ func SumTeamProfit(user_id string) (float64, error) {
 			coin_number += coins[i]
 		}
 	}
+	var account = models.Account{
+		UserId: user_id,
+	}
+	o.Read(&account, "user_id")
+	var formula = models.Formula{
+		EcologyId: account.Id,
+	}
+	o.Read(&formula, "ecology_id")
+	coin_number = coin_number * formula.TeamReturnRate
 	return coin_number, nil
 }

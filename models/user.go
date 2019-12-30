@@ -12,8 +12,8 @@ import (
 //用户表
 type User struct {
 	Id       int    `orm:"column(id);pk;auto"`
-	UserId   string `orm:column(user_id)`   //对应 monggodb 的user_id
-	FatherId string `orm:column(father_id)` //父亲id
+	UserId   string `orm:"column(user_id)"`   //对应 monggodb 的user_id
+	FatherId string `orm:"column(father_id)"` //父亲id
 }
 
 func (this *User) TableName() string {
