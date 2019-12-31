@@ -106,7 +106,7 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 		}
 	}
 	blo := TxIdList{}
-	NewOrm().Raw("select * from tx_id_list where comment=? order by create_time desc limit 1", "节点分红").QueryRow(&blo)
+	NewOrm().Raw("select * from tx_id_list where user_id=? and comment=? order by create_time desc limit 1", user_id, "节点分红").QueryRow(&blo)
 	if len(index) > 0 {
 		ec_obj.Super_peer_bool = true
 		ec_obj.Super_peer.Level = s_f_t[index[len(index)-1]].Level
