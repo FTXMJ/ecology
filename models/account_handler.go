@@ -105,13 +105,13 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 			index = append(index, i)
 		}
 	}
-	blo := BlockedDetail{}
-	NewOrm().Raw("select * from tx_id_list where expenditure=? order by create_time desc limit 1", "节点分红").QueryRow(&blo)
+	blo := TxIdList{}
+	NewOrm().Raw("select * from tx_id_list where comment=? order by create_time desc limit 1", "节点分红").QueryRow(&blo)
 	if len(index) > 0 {
 		ec_obj.Super_peer_bool = true
 		ec_obj.Super_peer.Level = s_f_t[index[len(index)-1]].Level
 		ec_obj.Super_peer.Usdd = tfor
-		ec_obj.Super_peer.TodayABouns = blo.CurrentOutlay
+		ec_obj.Super_peer.TodayABouns = blo.Expenditure
 	}
 }
 
