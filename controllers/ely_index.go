@@ -69,6 +69,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				LowHold:        formula_index[0].LowHold,
 				HighHold:       formula_index[0].HighHold,
 				ReturnMultiple: formula_index[0].ReturnMultiple,
+				HoldReturnRate: formula_index[0].HoldReturnRate * v.Balance,
 			}
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
 			if err != nil {
