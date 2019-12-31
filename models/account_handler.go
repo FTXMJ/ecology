@@ -101,7 +101,7 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 	}
 	index := []int{}
 	for i, v := range s_f_t {
-		if tfor > float64(v.CoinNumberRule) {
+		if tfor >= float64(v.CoinNumberRule) {
 			index = append(index, i)
 		}
 	}
