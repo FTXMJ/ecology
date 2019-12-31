@@ -548,41 +548,20 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 // @router /admin/ecological_income_control_update [POST]
 func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	var (
-		data          *common.ResponseData
-		account_id, _ = this.GetInt("account_id")
-		profit_type   = this.GetString("profit_type")
-		profit_start  = this.GetString("profit_start")
-		api_url       = this.Controller.Ctx.Request.RequestURI
+		data         *common.ResponseData
+		profit_type  = this.GetString("profit_type")
+		profit_start = this.GetString("profit_start")
+		strs         = this.GetStrings("account_id")
+		api_url      = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	account := models.Account{
-		Id: account_id,
-	}
+
 	o := models.NewOrm()
-	err := o.Read(&account)
-	if err != nil {
-		logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", nil)
-		return
-	}
-	var start bool
-	if profit_start == "1" {
-		start = true
-	} else if profit_start == "2" {
-		start = false
-	}
-	account_type := ""
-	if profit_type == "1" { //静态收益开关
-		account_type = "static_return"
-		account.StaticReturn = start
-	} else if profit_type == "2" { //动态收益开关
-		account_type = "dynamic_revenue"
-		account.DynamicRevenue = start
-	}
-	_, err = o.Update(&account, account_type)
+	_, err := o.QueryTable("account").Filter("id__in", strs).Update(orm.Params{profit_type: profit_start})
+
 	if err != nil {
 		logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", nil)

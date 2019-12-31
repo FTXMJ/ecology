@@ -225,10 +225,10 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 	条件查询
 	对象包含的则视为条件
 */
-func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDetail, Page, error) {
+func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDetailIndex, Page, error) {
 	list, err := SqlCreateValues1(p, table_name)
 	if err != nil {
-		return []BlockedDetail{}, Page{}, err
+		return []BlockedDetailIndex{}, Page{}, err
 	}
 	page.Count = len(list)
 	if page.PageSize < 5 {
@@ -253,7 +253,29 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
-	return listle, page, nil
+	o := NewOrm()
+	lists := []BlockedDetailIndex{}
+	for _, v := range listle {
+		var u User
+		u.UserId = v.UserId
+		o.Read(&u, "user_id")
+		blo := BlockedDetailIndex{
+			Id:             v.Id,
+			UserId:         v.UserId,
+			UserName:       u.UserName,
+			CurrentRevenue: v.CurrentRevenue,
+			CurrentOutlay:  v.CurrentOutlay,
+			OpeningBalance: v.OpeningBalance,
+			CurrentBalance: v.CurrentBalance,
+			CreateDate:     v.CreateDate,
+			Comment:        v.Comment,
+			TxId:           v.TxId,
+			Account:        v.Account,
+			CoinType:       v.CoinType,
+		}
+		lists = append(lists, blo)
+	}
+	return lists, page, nil
 }
 
 // 释放流水查询－－处理
@@ -334,7 +356,11 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		for _, v := range blo {
 			coin += v.CurrentOutlay
 		}
+		var u User
+		u.UserId = v.UserId
+		o.Read(&u, "user_id")
 		flow.UserId = v.UserId
+		flow.UserName = u.UserName
 		flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
 		flow.RecommendReturnRate = zhitui
 		flow.TeamReturnRate = formula.TeamReturnRate
@@ -342,7 +368,6 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		flow.UpdateTime = v.CreateDate
 		flows = append(flows, flow)
 	}
-
 	return flows, page, nil
 }
 
@@ -426,8 +451,20 @@ func FindU_E_OBJ(page Page, user_id string) ([]U_E_OBJ, Page) {
 		page.CurrentPage = 1
 	}
 	if end > len(user_e_objs) {
+		for i := start; i < len(user_e_objs); i++ {
+			var u User
+			u.UserId = user_e_objs[i].UserId
+			o.Read(&u, "user_id")
+			user_e_objs[i].UserName = u.UserName
+		}
 		return user_e_objs[start:], page
 	} else {
+		for i := start; i < end; i++ {
+			var u User
+			u.UserId = user_e_objs[i].UserId
+			o.Read(&u, "user_id")
+			user_e_objs[i].UserName = u.UserName
+		}
 		return user_e_objs[start:end], page
 	}
 }
@@ -462,9 +499,22 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
+	o := NewOrm()
 	if end > len(user_accounts) {
+		for i := start; i < len(user_accounts); i++ {
+			var u User
+			u.UserId = user_accounts[i].UserId
+			o.Read(&u, "user_id")
+			user_accounts[i].UserName = u.UserName
+		}
 		return user_accounts[start:], page, nil
 	} else {
+		for i := start; i < len(user_accounts); i++ {
+			var u User
+			u.UserId = user_accounts[i].UserId
+			o.Read(&u, "user_id")
+			user_accounts[i].UserName = u.UserName
+		}
 		return user_accounts[start:end], page, nil
 	}
 }
