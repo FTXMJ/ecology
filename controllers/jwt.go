@@ -79,8 +79,10 @@ func CheckLogin(ctx *context.Context) {
 			if f.(string) != "" {
 				user.UserId = tockken.UserID
 				user.FatherId = f.(string)
+				user.UserName = tockken.Name
 			} else {
 				user.UserId = tockken.UserID
+				user.UserName = tockken.Name
 			}
 
 			_, erruser := o.Insert(&user)

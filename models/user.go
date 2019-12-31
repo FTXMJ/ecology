@@ -14,6 +14,7 @@ type User struct {
 	Id       int    `orm:"column(id);pk;auto"`
 	UserId   string `orm:"column(user_id)"`   //对应 monggodb 的user_id
 	FatherId string `orm:"column(father_id)"` //父亲id
+	UserName string `orm:"column(user_name)"` //父亲id
 }
 
 func (this *User) TableName() string {
