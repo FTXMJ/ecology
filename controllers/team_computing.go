@@ -16,12 +16,46 @@ import (
 	"time"
 )
 
+type Test struct {
+	beego.Controller
+}
+
 // 用户每日任务数值列表
 type UserDayTx struct {
 	UserId string
 	BenJin float64
 	Team   float64
 	ZhiTui float64
+}
+
+// @Tags 测试每日释放
+// @Accept  json
+// @Produce json
+// @Success 200
+// @router /test_mrsf [GET]
+func (this *Test) DailyDividendAndReleaseTest() {
+	o := models.NewOrm()
+	user := []models.User{}
+	o.QueryTable("user").All(&user)
+
+	//    每日释放___and___团队收益___and___直推收益
+	error_users := ProducerEcology(user) // 返回错误的用户名单
+
+	//    给失败的用户　添加失败的任务记录表
+	CreateErrUserTxList(error_users)
+
+	// 超级节点的分红
+	ProducerPeer(user)
+
+	// 让收益回归今日
+	blo := []models.BlockedDetail{}
+	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
+	shouyi := 0.0
+	for _, v := range blo {
+		shouyi += v.CurrentOutlay
+		shouyi += v.CurrentRevenue
+	}
+	models.NetIncome = shouyi
 }
 
 func DailyDividendAndRelease() {
