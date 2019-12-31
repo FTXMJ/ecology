@@ -66,11 +66,9 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				Level:          v.Level,
 				BockedBalance:  v.BockedBalance,
 				Balance:        v.Balance,
+				LowHold:        formula_index[0].LowHold,
+				HighHold:       formula_index[0].HighHold,
 				ReturnMultiple: formula_index[0].ReturnMultiple,
-				//ToDayRate:           formula_index[0].HoldReturnRate + formula_index[0].RecommendReturnRate + formula_index[0].TeamReturnRate,
-				HoldReturnRate: formula_index[0].HoldReturnRate * v.Balance,
-				//RecommendReturnRate: formula_index[0].RecommendReturnRate,
-				//TeamReturnRate: formula_index[0].TeamReturnRate,
 			}
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
 			if err != nil {
