@@ -423,28 +423,6 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 			blocked_old1.CurrentBalance = 0
 		}
 	}
-	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
-	if abonus == 0 {
-		return nil
-	}
-
-	//任务表 USDD  铸币记录
-	order_id := utils.TimeUUID()
-	blo_txid_dcmt := models.TxIdList{
-		TxId:        order_id,
-		OrderState:  true,
-		WalletState: false,
-		UserId:      user_id,
-		Comment:     "每日释放收益",
-		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: abonus,
-		InCome:      0,
-	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		return errtxid_blo
-	}
-
 	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
 		Filter("user_id", user_id).
@@ -467,10 +445,32 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 			blocked_old.CurrentBalance = 0
 		}
 	}
+	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
-		aabonus = 0
+		aabonus = blocked_old.CurrentBalance
+		abonus = blocked_old.CurrentBalance
 	}
+	if abonus == 0 {
+		return nil
+	}
+	//任务表 USDD  铸币记录
+	order_id := utils.TimeUUID()
+	blo_txid_dcmt := models.TxIdList{
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: false,
+		UserId:      user_id,
+		Comment:     "每日释放收益",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: abonus,
+		InCome:      0,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		return errtxid_blo
+	}
+
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
