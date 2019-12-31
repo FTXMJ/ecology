@@ -21,7 +21,6 @@ func init() {
 				&controllers.EcologyIndexController{},
 				&controllers.BackStageManagement{},
 				&controllers.FirstController{},
-				&controllers.Test{},
 			),
 		),
 	)

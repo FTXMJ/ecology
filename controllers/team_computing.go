@@ -16,10 +16,6 @@ import (
 	"time"
 )
 
-type Test struct {
-	beego.Controller
-}
-
 // 用户每日任务数值列表
 type UserDayTx struct {
 	UserId string
@@ -28,12 +24,7 @@ type UserDayTx struct {
 	ZhiTui float64
 }
 
-// @Tags 测试每日释放
-// @Accept  json
-// @Produce json
-// @Success 200
-// @router /test_mrsf [GET]
-func (this *Test) DailyDividendAndRelease() {
+func DailyDividendAndRelease() {
 	o := models.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
