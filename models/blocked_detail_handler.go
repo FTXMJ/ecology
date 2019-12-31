@@ -292,19 +292,19 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	}
 	if level == "1" {
 		s_ql = s_ql + "and user_id=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放", p.UserId).QueryRows(&list)
+		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.UserId).QueryRows(&list)
 		err = er
 	} else if level == "12" {
 		s_ql = s_ql + "and user_id=? and create_date>=? and create_date<=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放", p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
+		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	} else if level == "2" {
 		s_ql = s_ql + "and create_date>=? and create_date<=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放", p.StartTime, p.EndTime).QueryRows(&list)
+		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	} else {
 		s_ql = s_ql + "and id>0 order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放", p.StartTime, p.EndTime).QueryRows(&list)
+		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.StartTime, p.EndTime).QueryRows(&list)
 		err = er
 	}
 	if err != nil {
@@ -348,7 +348,7 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		}
 		// 	已近释放
 		blo := []BlockedDetail{}
-		_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放", time_start).QueryRows(&blo)
+		_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_start).QueryRows(&blo)
 		if err_raw != nil {
 			return []Flow{}, Page{}, err_raw
 		}
