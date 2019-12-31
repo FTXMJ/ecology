@@ -542,26 +542,6 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	for _, v := range blos {
 		shouyi += v.CurrentOutlay
 	}
-	if shouyi == 0 {
-		return nil
-	}
-
-	//任务表 USDD  铸币记录
-	order_id := utils.TimeUUID()
-	blo_txid_dcmt := models.TxIdList{
-		TxId:        order_id,
-		OrderState:  true,
-		WalletState: false,
-		UserId:      user_id,
-		Comment:     "每日直推收益",
-		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-		Expenditure: shouyi,
-		InCome:      0,
-	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		return errtxid_blo
-	}
 
 	blocked_olds := []models.BlockedDetail{}
 	o.QueryTable("blocked_detail").
@@ -587,8 +567,31 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	}
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
-		shouyia = 0
+		shouyia = blocked_old.CurrentBalance
+		shouyi = blocked_old.CurrentBalance
 	}
+
+	if shouyi == 0 {
+		return nil
+	}
+
+	//任务表 USDD  铸币记录
+	order_id := utils.TimeUUID()
+	blo_txid_dcmt := models.TxIdList{
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: false,
+		UserId:      user_id,
+		Comment:     "每日直推收益",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: shouyi,
+		InCome:      0,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		return errtxid_blo
+	}
+
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
