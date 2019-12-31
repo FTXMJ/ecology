@@ -601,7 +601,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	}
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
-		shouyia = blocked_old.CurrentBalance
+		shouyia = 0
 		shouyi = blocked_old.CurrentBalance
 	}
 
