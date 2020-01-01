@@ -6,6 +6,7 @@ import (
 	"ecology/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"io/ioutil"
@@ -137,6 +138,7 @@ func Worker(user models.User) error {
 			o.Rollback()
 			return err_zhitui
 		}
+
 	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
 		err_jintai := Jintai(o, user)
 		if err_jintai != nil {
@@ -385,7 +387,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		return err_rea
 	}
 	order.WalletState = true
-	_, err_up_tx := o.Update(&order)
+	_, err_up_tx := o.Update(&order, "wallet_state")
 	if err_up_tx != nil {
 		return err_up_tx
 	}
@@ -411,12 +413,13 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		Expenditure: abonus,
 		InCome:      0,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	num, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
 		o.Rollback()
 		AddFormulaABonus(user_id, abonus)
 		return
 	}
+	fmt.Println(num, errtxid_blo)
 	o.Commit()
 	return
 }
@@ -647,10 +650,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 		return err_in
 	}
 
-	account.BockedBalance = account.BockedBalance - shouyi
-	if account.BockedBalance < 0 {
-		account.BockedBalance = 0
-	}
+	account.BockedBalance = blocked_new.CurrentBalance
 	_, err_update := o.Update(&account, "bocked_balance")
 	if err_update != nil {
 		return err_update
@@ -774,7 +774,9 @@ func PingSelectTforNumber(user_id string) (float64, error) {
 		return 0.0, errors.New(values.Msg)
 	}
 	response.Body.Close()
-	return values.Data["balance"].(float64), nil
+	aa := values.Data["balance"].(string)
+	bb, err := strconv.ParseFloat(aa, 64)
+	return bb, nil
 }
 
 // 返回超级节点的等级
