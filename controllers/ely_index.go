@@ -78,8 +78,6 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewErrorResponse(500, "计算用户当前直推收益出错!", models.Ecology_index_obj{})
 				return
 			}
-			to_day_rate := zhitui + f.TeamReturnRate + f.HoldReturnRate
-			f.ToDayRate = to_day_rate
 			f.RecommendReturnRate = zhitui
 			team_coins, err_team := SumTeamProfit(user_id)
 			if err_team != nil {
@@ -89,6 +87,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				return
 			}
 			f.TeamReturnRate = team_coins
+			to_day_rate := zhitui + f.TeamReturnRate + f.HoldReturnRate
+			f.ToDayRate = to_day_rate
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
 	}
