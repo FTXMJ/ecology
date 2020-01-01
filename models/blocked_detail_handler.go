@@ -403,11 +403,15 @@ func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64,
 }
 
 // Find user ecology information
-func FindU_E_OBJ(page Page, user_id string) ([]U_E_OBJ, Page) {
+func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 	o := NewOrm()
 	users := []User{}
-	if user_id != "" {
-		o.Raw("select * from user where user_id=? ", user_id).QueryRows(&users)
+	if user_id != "" && user_name == "" {
+		o.Raw("select * from user where user_id=? order by id", user_id).QueryRows(&users)
+	} else if user_id != "" && user_name != "" {
+		o.Raw("select * from user where user_name=? and user_id=? order by id", user_name, user_id).QueryRows(&users)
+	} else if user_id == "" && user_name != "" {
+		o.Raw("select * from user where user_name=? order by id", user_name).QueryRows(&users)
 	} else {
 		o.Raw("select * from user order by id").QueryRows(&users)
 	}

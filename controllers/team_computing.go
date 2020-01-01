@@ -6,7 +6,6 @@ import (
 	"ecology/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"io/ioutil"
@@ -413,13 +412,12 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		Expenditure: abonus,
 		InCome:      0,
 	}
-	num, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
 		o.Rollback()
 		AddFormulaABonus(user_id, abonus)
 		return
 	}
-	fmt.Println(num, errtxid_blo)
 	o.Commit()
 	return
 }

@@ -348,6 +348,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____用户生态列表 {object} models.UEOBJList_test
 // @router /admin/user_ecology_list [GET]
 func (this *BackStageManagement) UserEcologyList() {
@@ -356,6 +357,7 @@ func (this *BackStageManagement) UserEcologyList() {
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 		user_id         = this.GetString("user_id")
+		user_name       = this.GetString("user_name")
 		//api_url         = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
@@ -370,7 +372,7 @@ func (this *BackStageManagement) UserEcologyList() {
 		Count:       0,
 	}
 
-	u_e_obj_list, p := models.FindU_E_OBJ(page, user_id)
+	u_e_obj_list, p := models.FindU_E_OBJ(page, user_id, user_name)
 	u_e_objs := []models.U_E_OBJ{}
 	for _, v := range u_e_obj_list {
 		u_e_obj := models.U_E_OBJ{}
