@@ -390,6 +390,7 @@ func (this *BackStageManagement) UserEcologyList() {
 		u_e_obj.CoinAll = coin
 		u_e_obj.Level = v.Level
 		u_e_obj.UserId = v.UserId
+		u_e_obj.UserName = v.UserName
 		u_e_obj.ReturnMultiple = v.ReturnMultiple
 		u_e_objs = append(u_e_objs, u_e_obj)
 	}

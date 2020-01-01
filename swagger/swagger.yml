@@ -310,6 +310,11 @@ paths:
         description: 用户id  不搜就传空，搜索就传user_id
         required: true
         type: string
+      - in: query
+        name: user_name
+        description: 用户名字  不搜就传空，搜索就传user_name
+        required: true
+        type: string
       responses:
         200____用户生态列表:
           description: ""

@@ -424,6 +424,7 @@ func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 		o.Raw("select * from account where user_id=? ", v.UserId).QueryRow(&account)
 		o.Raw("select * from formula where ecology_id=? ", account.Id).QueryRow(&formula)
 		user_e_obj.UserId = v.UserId
+		user_e_obj.UserName = v.UserName
 		user_e_obj.Level = account.Level
 		user_e_obj.ReturnMultiple = formula.ReturnMultiple
 		user_e_obj.CoinAll = account.Balance
@@ -454,21 +455,10 @@ func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
+
 	if end > len(user_e_objs) {
-		for i := start; i < len(user_e_objs); i++ {
-			var u User
-			u.UserId = user_e_objs[i].UserId
-			o.Read(&u, "user_id")
-			user_e_objs[i].UserName = u.UserName
-		}
 		return user_e_objs[start:], page
 	} else {
-		for i := start; i < end; i++ {
-			var u User
-			u.UserId = user_e_objs[i].UserId
-			o.Read(&u, "user_id")
-			user_e_objs[i].UserName = u.UserName
-		}
 		return user_e_objs[start:end], page
 	}
 }
