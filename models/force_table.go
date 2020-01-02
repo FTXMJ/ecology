@@ -10,6 +10,7 @@ type ForceTable struct {
 	HoldReturnRate      float64 `orm:"column(hold_return_rate)" json:"hold_return_rate"`           //本金自由算力
 	RecommendReturnRate float64 `orm:"column(recommend_return_rate)" json:"recommend_return_rate"` //直推算力
 	TeamReturnRate      float64 `orm:"column(team_return_rate)" json:"team_return_rate"`           //动态算力
+	PictureUrl          string  `orm:"column(picture_url)" json:"picture_url"`
 }
 
 // QuickSort

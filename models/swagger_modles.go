@@ -109,3 +109,16 @@ type U_E_OBJ_test struct {
 	RecommendReturnRate___直推算力 float64 //直推算力
 	TeamReturnRate___动态算力      float64 //动态算力
 }
+
+// Forces Table
+type ForceTable_test_yq struct {
+	Id_id                      int     `orm:"column(id);pk;auto" json:"id"`
+	Level___等级                 string  `orm:"column(level)" json:"level"`
+	LowHold___最低               int     `orm:"column(low_hold)" json:"low_hold"`                           //低位
+	HighHold___最高              int     `orm:"column(high_hold)" json:"high_hold"`                         //高位
+	ReturnMultiple____杠杆       float64 `orm:"column(return_multiple)" json:"return_multiple"`             //杠杆
+	HoldReturnRate____本金自由算力   float64 `orm:"column(hold_return_rate)" json:"hold_return_rate"`           //本金自由算力
+	RecommendReturnRate___直推算力 float64 `orm:"column(recommend_return_rate)" json:"recommend_return_rate"` //直推算力
+	TeamReturnRate___动态算力      float64 `orm:"column(team_return_rate)" json:"team_return_rate"`           //动态算力
+	PictureUrl___图片链接          string  `orm:"column(picture_url)" json:"picture_url"`
+}

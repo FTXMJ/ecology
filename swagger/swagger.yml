@@ -237,6 +237,11 @@ paths:
         description: 动态算力
         required: true
         type: string
+      - in: query
+        name: picture_url
+        description: 图片url
+        required: true
+        type: string
       responses:
         200___算力表信息修改:
           description: ""
@@ -484,6 +489,10 @@ paths:
       produces:
       - application/json
       responses:
+        200____算力等级详情:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ForceTable_test_yq'
         200__算力表显示后台操or用户查_都可:
           description: ""
           schema:
@@ -650,6 +659,35 @@ definitions:
         type: number
         format: double
       team_return_rate____动态算力__团队算力:
+        type: number
+        format: double
+  models.ForceTable_test_yq:
+    title: ForceTable_test_yq
+    type: object
+    properties:
+      high_hold:
+        type: integer
+        format: int64
+      hold_return_rate:
+        type: number
+        format: double
+      id:
+        type: integer
+        format: int64
+      level:
+        type: string
+      low_hold:
+        type: integer
+        format: int64
+      picture_url:
+        type: string
+      recommend_return_rate:
+        type: number
+        format: double
+      return_multiple:
+        type: number
+        format: double
+      team_return_rate:
         type: number
         format: double
   models.Formulaindex_test:

@@ -44,6 +44,34 @@ func (this *BackStageManagement) ShowFormulaList() {
 	return
 }
 
+// @Tags 算力等级详情
+// @Accept  json
+// @Produce json
+// @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
+// @Success 200____算力等级详情 {object} models.ForceTable_test_yq
+// @router /show_formula_list [GET]
+func (this *BackStageManagement) ShowUserFormula() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+		//api_url    = this.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	jwtValues := GetJwtValues(this.Ctx)
+	user_id := jwtValues.UserID
+	account := models.Account{UserId: user_id}
+	o.Read(&account, "user_id")
+	for_mula := models.Formula{EcologyId: account.Id}
+	o.Read(&for_mula, "ecology_id")
+	for_mula_table := models.ForceTable{Level: for_mula.Level}
+	o.Read(&for_mula_table, "level")
+	data = common.NewResponse(for_mula_table)
+	return
+}
+
 // @Tags 算力表信息修改
 // @Accept  json
 // @Produce json
@@ -56,6 +84,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 // @Param hold_return_rate query string true "本金自由算力"
 // @Param recommend_return_rate query string true "直推算力"
 // @Param team_return_rate query string true "动态算力"
+// @Param picture_url query string true "图片url"
 // @Success 200___算力表信息修改
 // @router /admin/operation_formula_list [POST]
 func (this *BackStageManagement) OperationFormulaList() {
@@ -72,6 +101,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 		hold_return_rate_str      = this.GetString("hold_return_rate")
 		recommend_return_rate_str = this.GetString("recommend_return_rate")
 		team_return_rate_str      = this.GetString("team_return_rate")
+		picture_url               = this.GetString("picture_url")
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -102,7 +132,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 		_, err := o.QueryTable("force_table").
 			Filter("id", id).
 			Update(orm.
-				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate})
+				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate, "picture_url": picture_url})
 		if err != nil {
 			logs.Log.Error(api_url, err)
 			data = common.NewErrorResponse(500, "算力表　更新失败!", nil)
@@ -119,6 +149,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			HoldReturnRate:      hold_return_rate,
 			RecommendReturnRate: recommend_return_rate,
 			TeamReturnRate:      team_return_rate,
+			PictureUrl:          picture_url,
 		}
 		_, err := o.Insert(&force)
 		if err != nil {
