@@ -53,6 +53,21 @@ type UserAccountOFF struct {
 	Page  Page         `json:"page"`  //分页信息
 }
 
+// user`s account false table
+type UserFalse struct {
+	Items []FalseUser `json:"items"` //数据列表
+	Page  Page        `json:"page"`  //分页信息
+}
+
+type FalseUser struct {
+	AccountId  int    `json:"account_id"`
+	UserName   string `json:"user_name"`
+	UserId     string `json:"user_id"`
+	Jintai     bool   `json:"jintai"`
+	Dongtai    bool   `json:"dongtai"`
+	UpdateTime string `json:"update_time"`
+}
+
 // The query object to `user * information`
 type FindObj struct {
 	UserId    string

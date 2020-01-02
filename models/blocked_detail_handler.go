@@ -651,6 +651,65 @@ func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 }
 
 // Find user ecology information
+func FindFalseUser(page Page, user_id, user_name string) ([]FalseUser, Page) {
+	o := NewOrm()
+	users := []User{}
+	if user_id != "" && user_name == "" {
+		o.Raw("select * from user where user_id=? order by id", user_id).QueryRows(&users)
+	} else if user_id != "" && user_name != "" {
+		o.Raw("select * from user where user_name=? and user_id=? order by id", user_name, user_id).QueryRows(&users)
+	} else if user_id == "" && user_name != "" {
+		o.Raw("select * from user where user_name=? order by id", user_name).QueryRows(&users)
+	} else {
+		o.Raw("select * from user order by id").QueryRows(&users)
+	}
+	f_u_s := []FalseUser{}
+	for _, v := range users {
+		account := Account{}
+		f_u := FalseUser{}
+		err := o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?)", v.UserId, false, false).QueryRow(&account)
+		fmt.Println(err)
+		if account.Id > 0 {
+			f_u.UserName = v.UserName
+			f_u.UserId = v.UserId
+			f_u.UpdateTime = account.UpdateDate
+			f_u.Dongtai = account.DynamicRevenue
+			f_u.Jintai = account.StaticReturn
+			f_u.AccountId = account.Id
+			f_u_s = append(f_u_s, f_u)
+		}
+	}
+	page.Count = len(f_u_s)
+	if page.PageSize < 5 {
+		page.PageSize = 5
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+
+	if end > len(f_u_s) && start < len(f_u_s) {
+
+		return f_u_s[start:], page
+
+	} else if start > len(f_u_s) {
+
+		return []FalseUser{}, page
+
+	} else if end < len(f_u_s) && start < len(f_u_s) {
+
+		return f_u_s[start:end], page
+
+	}
+	return nil, page
+}
+
+// Find user ecology information
 func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 	accounts, err := SqlCreateValues2(obj, "account")
 	if err != nil {

@@ -11,6 +11,7 @@ type Account struct {
 	CreateDate     string  `orm:"column(create_date)"`     // 创建时间
 	DynamicRevenue bool    `orm:"column(dynamic_revenue)"` //动态收益开关
 	StaticReturn   bool    `orm:"column(static_return)"`   //静态收益开关
+	UpdateDate     string  `orm:"column(update_date)"`     //静态收益开关
 }
 
 func (this *Account) TableName() string {

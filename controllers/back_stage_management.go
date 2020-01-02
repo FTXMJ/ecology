@@ -405,6 +405,45 @@ func (this *BackStageManagement) UserEcologyList() {
 	return
 }
 
+// @Tags root-用户生态禁止列表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
+// @Success 200____用户生态列表 {object} models.UEOBJList_test
+// @router /admin/user_ecology_false_list [GET]
+func (this *BackStageManagement) UserEcologyFalseList() {
+	var (
+		data            *common.ResponseData
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		user_id         = this.GetString("user_id")
+		user_name       = this.GetString("user_name")
+		//api_url         = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	u_e_obj_list, p := models.FindFalseUser(page, user_id, user_name)
+	list := models.UserFalse{
+		Items: u_e_obj_list,
+		Page:  p,
+	}
+	data = common.NewResponse(list)
+	return
+
+}
+
 // @Tags root-算力流水表
 // @Accept  json
 // @Produce json
@@ -588,7 +627,7 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	o.Begin()
 	for _, v := range str {
 		id_int, _ := strconv.Atoi(v)
-		_, err := o.QueryTable("account").Filter("id", id_int).Update(orm.Params{profit_type: profit_start})
+		_, err := o.QueryTable("account").Filter("id", id_int).Update(orm.Params{profit_type: profit_start, "update_date": time.Now().Format("2006-01-02 15:04:05")})
 		if err != nil {
 			o.Rollback()
 			logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
