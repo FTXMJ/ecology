@@ -639,3 +639,59 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	data = common.NewResponse(nil)
 	return
 }
+
+// @Tags 节点用户列表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
+// @Success 200____节点用户列表
+// @router /admin/peer_user_list [GET]
+func (this *BackStageManagement) PeerUserList() {
+	var (
+		data            *common.ResponseData
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		user_name       = this.GetString("user_name")
+		//api_url             = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	p_u_s := []models.PeerUser{}
+	user := []models.User{}
+	switch user_name {
+	case "":
+		models.NewOrm().Raw("select * from user").QueryRows(&user)
+	default:
+		models.NewOrm().Raw("select * from user where user_name=?", user_name).QueryRows(&user)
+	}
+	for _, v := range user {
+		p_u := models.PeerUser{}
+		update_date, level, tfor, _ := ReturnSuperPeerLevel(v.UserId)
+		if level != "" {
+			p_u.UserId = v.UserId
+			p_u.UserName = v.UserName
+			p_u.Level = level
+			p_u.State = true
+			p_u.Number = tfor
+			p_u.UpdateTime = update_date
+			p_u_s = append(p_u_s, p_u)
+		}
+	}
+	peer_users, p := models.PageS(p_u_s, page)
+	peer_user_list := models.PeerUserFalse{
+		Items: peer_users,
+		Page:  p,
+	}
+	data = common.NewResponse(peer_user_list)
+	return
+}

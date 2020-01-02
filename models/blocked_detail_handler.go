@@ -914,33 +914,3 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 
 	return list, nil
 }
-
-/*
-list_last := []BlockedDetail{}
-	if p.UserName!="" && p.UserId!="" && len(list)!=0 {
-		u := User{
-			UserId:   list[0].UserId,
-		}
-		o.Read(&u,"user_id")
-		if u.UserName != p.UserName {
-			return []Flow{}, Page{}, errors.New("没有查到!")
-		}
-		for _,v := range list{
-			list_last = append(list_last, v)
-		}
-	}else if p.UserName!="" && p.UserId=="" && len(list)!=0{
-		for _,v := range list{
-			u := User{
-				UserId: v.UserId,
-			}
-			o.Read(&u,"user_id")
-			if u.UserName == p.UserName{
-				list_last = append(list_last, v)
-			}
-		}
-	}else{
-		for _,v := range list{
-			list_last = append(list_last, v)
-		}
-	}
-*/

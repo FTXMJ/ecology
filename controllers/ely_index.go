@@ -92,7 +92,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
 		}
 	}
-	tfors, err_tfor := PingSelectTforNumber(user_id)
+	_, tfors, err_tfor := PingSelectTforNumber(user_id)
 	if err_tfor != nil {
 		data = common.NewErrorResponse(500, err_tfor.Error(), models.Ecology_index_obj{})
 		return

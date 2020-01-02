@@ -277,6 +277,33 @@ paths:
       responses:
         200___超级节点算力表信息修改:
           description: ""
+  /ecology/admin/peer_user_list:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: page
+        description: 分页信息　－　当前页数
+        required: true
+        type: string
+      - in: query
+        name: pageSize
+        description: 分页信息　－　每页数据量
+        required: true
+        type: string
+      - in: query
+        name: user_name
+        description: 用户名字  不搜就传空，搜索就传user_name
+        required: true
+        type: string
+      responses:
+        200____节点用户列表:
+          description: ""
   /ecology/admin/return_page_hostry_root:
     get:
       tags:

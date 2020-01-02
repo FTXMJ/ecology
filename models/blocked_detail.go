@@ -59,6 +59,22 @@ type UserFalse struct {
 	Page  Page        `json:"page"`  //分页信息
 }
 
+// user`s peer table
+type PeerUserFalse struct {
+	Items []PeerUser `json:"items"` //数据列表
+	Page  Page       `json:"page"`  //分页信息
+}
+
+type PeerUser struct {
+	AccountId  int     `json:"account_id"`
+	UserName   string  `json:"user_name"`
+	UserId     string  `json:"user_id"`
+	Level      string  `json:"level"`
+	State      bool    `json:"state"`
+	Number     float64 `json:"number"`
+	UpdateTime string  `json:"update_time"`
+}
+
 type FalseUser struct {
 	AccountId  int    `json:"account_id"`
 	UserName   string `json:"user_name"`

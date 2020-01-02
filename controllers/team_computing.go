@@ -99,7 +99,7 @@ func ProducerPeer(users []models.User) {
 	error_users := []models.User{}
 	m := make(map[string][]string)
 	for _, v := range users {
-		level, err := ReturnSuperPeerLevel(v.UserId)
+		_, level, _, err := ReturnSuperPeerLevel(v.UserId)
 		if err != nil {
 			error_users = append(error_users, v)
 		} else if level == "" && err == nil {
@@ -729,13 +729,13 @@ func PingAddWalletCoin(user_id string, abonus float64) error {
 }
 
 // TFOR 数量查询
-func PingSelectTforNumber(user_id string) (float64, error) {
+func PingSelectTforNumber(user_id string) (string, float64, error) {
 	user := models.User{
 		UserId: user_id,
 	}
 	b, token := generateToken(user)
 	if b != true {
-		return 0.0, errors.New("err")
+		return "", 0.0, errors.New("err")
 	}
 	//生成要访问的url
 	apiurl := consul.GetWalletApi
@@ -749,7 +749,7 @@ func PingSelectTforNumber(user_id string) (float64, error) {
 	client := &http.Client{}
 	req, err1 := http.NewRequest(`GET`, urlStr, strings.NewReader(data.Encode()))
 	if err1 != nil {
-		return 0.0, err1
+		return "", 0.0, err1
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Authorization", token)
@@ -757,33 +757,34 @@ func PingSelectTforNumber(user_id string) (float64, error) {
 	//处理返回结果
 	response, errdo := client.Do(req)
 	if errdo != nil {
-		return 0.0, errdo
+		return "", 0.0, errdo
 	}
 
 	bys, err_read := ioutil.ReadAll(response.Body)
 	if err_read != nil {
-		return 0.0, err_read
+		return "", 0.0, err_read
 	}
 	values := models.Data_wallet{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil {
-		return 0.0, errors.New("钱包金额操作失败!")
+		return "", 0.0, errors.New("钱包金额操作失败!")
 	} else if values.Code != 200 {
-		return 0.0, errors.New(values.Msg)
+		return "", 0.0, errors.New(values.Msg)
 	}
 	response.Body.Close()
 	aa := values.Data["balance"].(string)
+	time := values.Data["updated_at"].(string)
 	bb, err := strconv.ParseFloat(aa, 64)
-	return bb, nil
+	return time, bb, nil
 }
 
 // 返回超级节点的等级
-func ReturnSuperPeerLevel(user_id string) (string, error) {
+func ReturnSuperPeerLevel(user_id string) (time, level string, tfor float64, err error) {
 	s_f_t := []models.SuperForceTable{}
 	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
-	tfor_number, err_tfor := PingSelectTforNumber(user_id)
+	up_time, tfor_number, err_tfor := PingSelectTforNumber(user_id)
 	if err_tfor != nil {
-		return "", err_tfor
+		return "", "", 0.0, err_tfor
 	}
 
 	for i := 0; i < len(s_f_t); i++ {
@@ -800,9 +801,9 @@ func ReturnSuperPeerLevel(user_id string) (string, error) {
 		}
 	}
 	if len(index) > 0 {
-		return s_f_t[index[len(index)-1]].Level, nil
+		return up_time, s_f_t[index[len(index)-1]].Level, tfor_number, nil
 	}
-	return "", nil
+	return "", "", 0.0, err_tfor
 }
 
 // 创建用于超级节点　等级记录的　map 每个　values 第一个元素都是　等级标示

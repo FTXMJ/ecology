@@ -231,3 +231,35 @@ func QuickSortBlockedDetail(arr []BlockedDetail, start, end int) {
 		QuickSortBlockedDetail(arr, index+1, end)
 	}
 }
+
+//page
+func PageS(peer_user_list []PeerUser, page Page) ([]PeerUser, Page) {
+	page.Count = len(peer_user_list)
+	if page.PageSize < 5 {
+		page.PageSize = 5
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+
+	if end > len(peer_user_list) && start < len(peer_user_list) {
+
+		return peer_user_list[start:], page
+
+	} else if start > len(peer_user_list) {
+
+		return []PeerUser{}, page
+
+	} else if end < len(peer_user_list) && start < len(peer_user_list) {
+
+		return peer_user_list[start:end], page
+
+	}
+	return nil, page
+}
