@@ -286,6 +286,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Param tx_id query string true "订单id"
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
 // @router /admin/filter_history_info [GET]
 func (this *BackStageManagement) FilterHistoryInfo() {
@@ -295,6 +296,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		page_size, _      = this.GetInt("pageSize")
 		table_name        = this.GetString("type")
 		user_id           = this.GetString("user_id")
+		user_name         = this.GetString("user_name")
 		tx_id             = this.GetString("tx_id")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
@@ -317,6 +319,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 	find_obj := models.FindObj{
 		UserId:    user_id,
 		TxId:      tx_id,
+		UserName:  user_name,
 		StartTime: start_time,
 		EndTime:   end_time,
 	}
