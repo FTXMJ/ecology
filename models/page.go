@@ -58,15 +58,16 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 	if page.CurrentPage == 0 {
 		page.CurrentPage = 1
 	}
-	//listle, _ := o.Limit(page.PageSize, (page.PageNo-1)*page.PageSize).OrderBy("-createtime").All(&list)
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
 	listle := []HostryValues{}
-	if end > len(last_values) {
+	if end > len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:] {
 			listle = append(listle, v)
 		}
-	} else {
+	} else if start > len(last_values) {
+
+	} else if end < len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:end] {
 			listle = append(listle, v)
 		}
@@ -110,11 +111,13 @@ func SelectHosteryRoot(page Page) ([]HostryValues, Page, error) {
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
 	listle := []HostryValues{}
-	if end > len(last_values) {
+	if end > len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:] {
 			listle = append(listle, v)
 		}
-	} else {
+	} else if start > len(last_values) {
+
+	} else if end < len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:end] {
 			listle = append(listle, v)
 		}

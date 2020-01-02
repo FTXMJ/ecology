@@ -241,11 +241,13 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
 	listle := []BlockedDetail{}
-	if end > len(list) {
+	if end > len(list) && start < len(list) {
 		for _, v := range list[start:] {
 			listle = append(listle, v)
 		}
-	} else {
+	} else if start > len(list) {
+
+	} else if end < len(list) && start < len(list) {
 		for _, v := range list[start:end] {
 			listle = append(listle, v)
 		}
@@ -326,9 +328,21 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		if page.Count <= 5 {
 			page.CurrentPage = 1
 		}
+		listle := []BlockedDetail{}
+		if end > len(blos) && start < len(blos) {
+			for _, v := range blos[start:] {
+				listle = append(listle, v)
+			}
+		} else if start > len(blos) {
+
+		} else if end < len(blos) && start < len(blos) {
+			for _, v := range blos[start:end] {
+				listle = append(listle, v)
+			}
+		}
 		//                                                                                  拼接数据
 		flows := []Flow{}
-		for _, v := range list[start:end] {
+		for _, v := range listle {
 			flow := Flow{}
 			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
 			time_start := t.AddDate(-99, 0, 0).Format("2006-01-02") + " 00:00:00"
@@ -392,9 +406,21 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		if page.Count <= 5 {
 			page.CurrentPage = 1
 		}
+		listle := []BlockedDetail{}
+		if end > len(blos) && start < len(blos) {
+			for _, v := range blos[start:] {
+				listle = append(listle, v)
+			}
+		} else if start > len(blos) {
+
+		} else if end < len(blos) && start < len(blos) {
+			for _, v := range blos[start:end] {
+				listle = append(listle, v)
+			}
+		}
 		//                                                                                  拼接数据
 		flows := []Flow{}
-		for _, v := range list[start:end] {
+		for _, v := range listle {
 			flow := Flow{}
 			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
 			time_start := t.AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
@@ -473,8 +499,20 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		page.CurrentPage = 1
 	}
 	//                                                                                  拼接数据
+	listle := []BlockedDetail{}
+	if end > len(blos) && start < len(blos) {
+		for _, v := range blos[start:] {
+			listle = append(listle, v)
+		}
+	} else if start > len(blos) {
+
+	} else if end < len(blos) && start < len(blos) {
+		for _, v := range blos[start:end] {
+			listle = append(listle, v)
+		}
+	}
 	flows := []Flow{}
-	for _, v := range blos[start:end] {
+	for _, v := range listle {
 		flow := Flow{}
 		t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
 		time_start := t.AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
@@ -605,11 +643,20 @@ func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 		page.CurrentPage = 1
 	}
 
-	if end > len(user_e_objs) {
+	if end > len(user_e_objs) && start < len(user_e_objs) {
+
 		return user_e_objs[start:], page
-	} else {
+
+	} else if start > len(user_e_objs) {
+
+		return []U_E_OBJ{}, page
+
+	} else if end < len(user_e_objs) && start < len(user_e_objs) {
+
 		return user_e_objs[start:end], page
+
 	}
+	return nil, page
 }
 
 // Find user ecology information
@@ -660,6 +707,26 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 		}
 		return user_accounts[start:end], page, nil
 	}
+	if end > len(user_accounts) && start < len(user_accounts) {
+		for i := start; i < len(user_accounts); i++ {
+			var u User
+			u.UserId = user_accounts[i].UserId
+			o.Read(&u, "user_id")
+			user_accounts[i].UserName = u.UserName
+		}
+		return user_accounts[start:], page, nil
+	} else if start > len(user_accounts) {
+		return []AccountOFF{}, page, nil
+	} else if end < len(user_accounts) && start < len(user_accounts) {
+		for i := start; i < len(user_accounts); i++ {
+			var u User
+			u.UserId = user_accounts[i].UserId
+			o.Read(&u, "user_id")
+			user_accounts[i].UserName = u.UserName
+		}
+		return user_accounts[start:end], page, nil
+	}
+	return []AccountOFF{}, page, nil
 }
 
 ///*

@@ -45,6 +45,11 @@ paths:
         description: 结束时间
         required: true
         type: string
+      - in: query
+        name: user_name
+        description: 用户名字  不搜就传空，搜索就传user_name
+        required: true
+        type: string
       responses:
         200____算力流水表:
           description: ""
@@ -87,6 +92,11 @@ paths:
       - in: query
         name: end_time
         description: 结束时间
+        required: true
+        type: string
+      - in: query
+        name: user_name
+        description: 用户名字  不搜就传空，搜索就传user_name
         required: true
         type: string
       responses:
@@ -161,6 +171,11 @@ paths:
       - in: query
         name: end_time
         description: 结束时间
+        required: true
+        type: string
+      - in: query
+        name: user_name
+        description: 用户名字  不搜就传空，搜索就传user_name
         required: true
         type: string
       responses:
