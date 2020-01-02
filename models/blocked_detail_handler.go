@@ -3,6 +3,7 @@ package models
 import (
 	"ecology/logs"
 	"ecology/utils"
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego/orm"
 	"strconv"
@@ -280,37 +281,182 @@ func SelectPondMachinemsg(p FindObj, page Page, table_name string) ([]BlockedDet
 
 // 释放流水查询－－处理
 func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) {
-	var list []BlockedDetail
-	level := ""
-	var err error
-	s_ql := "select * from " + table_name + " where comment=? "
-	if p.UserId != "" {
-		level += "1"
+	o := NewOrm()
+	us := []User{}
+	blos := []BlockedDetail{}
+	if p.UserName != "" && p.UserId == "" {
+		o.Raw("select * from user where user_name=?", p.UserName).QueryRows(&us)
+		if len(us) == 0 {
+			return []Flow{}, Page{}, errors.New("没有符合条件的用户!")
+		}
 	}
-	if p.StartTime != "" && p.EndTime != "" {
-		level += "2"
+
+	if p.UserName != "" && p.UserId != "" {
+		o.Raw("select * from user where user_name=? and user_id=?", p.UserName, p.UserId).QueryRows(&us)
+		if len(us) == 0 {
+			return []Flow{}, Page{}, errors.New("没有符合条件的用户!")
+		}
 	}
-	if level == "1" {
-		s_ql = s_ql + "and user_id=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.UserId).QueryRows(&list)
-		err = er
-	} else if level == "12" {
-		s_ql = s_ql + "and user_id=? and create_date>=? and create_date<=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.UserId, p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	} else if level == "2" {
-		s_ql = s_ql + "and create_date>=? and create_date<=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
-	} else {
-		s_ql = s_ql + "and id>0 order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, "每日释放收益", p.StartTime, p.EndTime).QueryRows(&list)
-		err = er
+
+	if p.UserName == "" && p.UserId != "" {
+		o.Raw("select * from user where user_id=?", p.UserId).QueryRows(&us)
+		if len(us) == 0 {
+			return []Flow{}, Page{}, errors.New("没有符合条件的用户!")
+		}
 	}
-	if err != nil {
-		return []Flow{}, Page{}, err
+
+	if p.StartTime != "" && p.EndTime != "" && p.UserName == "" && p.UserId == "" {
+		list := []BlockedDetail{}
+		s_ql := "select * from " + table_name + " where comment=? and create_date>=? and create_date<=? order by create_date desc"
+		o.Raw(s_ql, "每日释放收益", p.StartTime, p.EndTime).QueryRows(&list)
+		//                                                                                  处理分页
+		page.Count = len(list)
+		if page.PageSize < 5 {
+			page.PageSize = 5
+		}
+		if page.CurrentPage == 0 {
+			page.CurrentPage = 1
+		}
+		start := (page.CurrentPage - 1) * page.PageSize
+		end := start + page.PageSize
+		if end > len(list) {
+			end = len(list)
+		}
+		page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+		if page.Count <= 5 {
+			page.CurrentPage = 1
+		}
+		//                                                                                  拼接数据
+		flows := []Flow{}
+		for _, v := range list[start:end] {
+			flow := Flow{}
+			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
+			time_start := t.AddDate(-99, 0, 0).Format("2006-01-02") + " 00:00:00"
+			time_end := t.AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
+			//　直推算力
+			zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
+			if err_zt != nil {
+				return []Flow{}, Page{}, err_zt
+			}
+			//　算力
+			formula := Formula{
+				EcologyId: v.Account,
+			}
+			err_read := o.Read(&formula, "ecology_id")
+			if err_read != nil {
+				return []Flow{}, Page{}, err_read
+			}
+			// 	已近释放
+			blo := []BlockedDetail{}
+			_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_end).QueryRows(&blo)
+			if err_raw != nil {
+				return []Flow{}, Page{}, err_raw
+			}
+			coin := 0.0
+			for _, v := range blo {
+				coin += v.CurrentOutlay
+			}
+			var u User
+			u.UserId = v.UserId
+			o.Read(&u, "user_id")
+			flow.UserId = v.UserId
+			flow.UserName = u.UserName
+			flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
+			flow.RecommendReturnRate = zhitui
+			flow.TeamReturnRate = formula.TeamReturnRate
+			flow.Released = coin
+			flow.UpdateTime = v.CreateDate
+			flows = append(flows, flow)
+		}
+		return flows, page, nil
 	}
-	page.Count = len(list)
+
+	if p.StartTime == "" && p.EndTime == "" && p.UserName == "" && p.UserId == "" {
+		list := []BlockedDetail{}
+		s_ql := "select * from " + table_name + " where comment=? order by create_date desc"
+		o.Raw(s_ql, "每日释放收益").QueryRows(&list)
+		//                                                                                  处理分页
+		page.Count = len(list)
+		if page.PageSize < 5 {
+			page.PageSize = 5
+		}
+		if page.CurrentPage == 0 {
+			page.CurrentPage = 1
+		}
+		start := (page.CurrentPage - 1) * page.PageSize
+		end := start + page.PageSize
+		if end > len(list) {
+			end = len(list)
+		}
+		page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+		if page.Count <= 5 {
+			page.CurrentPage = 1
+		}
+		//                                                                                  拼接数据
+		flows := []Flow{}
+		for _, v := range list[start:end] {
+			flow := Flow{}
+			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
+			time_start := t.AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
+			time_end := t.AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
+			//　直推算力
+			zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
+			if err_zt != nil {
+				return []Flow{}, Page{}, err_zt
+			}
+			//　算力
+			formula := Formula{
+				EcologyId: v.Account,
+			}
+			err_read := o.Read(&formula, "ecology_id")
+			if err_read != nil {
+				return []Flow{}, Page{}, err_read
+			}
+			// 	已近释放
+			blo := []BlockedDetail{}
+			_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_end).QueryRows(&blo)
+			if err_raw != nil {
+				return []Flow{}, Page{}, err_raw
+			}
+			coin := 0.0
+			for _, v := range blo {
+				coin += v.CurrentOutlay
+			}
+			var u User
+			u.UserId = v.UserId
+			o.Read(&u, "user_id")
+			flow.UserId = v.UserId
+			flow.UserName = u.UserName
+			flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
+			flow.RecommendReturnRate = zhitui
+			flow.TeamReturnRate = formula.TeamReturnRate
+			flow.Released = coin
+			flow.UpdateTime = v.CreateDate
+			flows = append(flows, flow)
+		}
+		return flows, page, nil
+	}
+
+	for _, v := range us {
+		if p.StartTime != "" && p.EndTime != "" {
+			list := []BlockedDetail{}
+			o.Raw("select * from "+table_name+" where user_id=? and comment=? and create_date>=? and create_date<=? order by create_date desc", v.UserId, "每日释放收益", p.StartTime, p.EndTime).QueryRows(&list)
+			for _, v := range list {
+				blos = append(blos, v)
+			}
+		} else {
+			list := []BlockedDetail{}
+			o.Raw("select * from "+table_name+" where user_id=? and comment=? order by create_date desc", v.UserId, "每日释放收益").QueryRows(&list)
+			for _, v := range list {
+				blos = append(blos, v)
+			}
+		}
+	}
+	if len(blos) > 1 {
+		QuickSortBlockedDetail(blos, 0, len(blos)-1)
+	}
+	//                                                                                  处理分页
+	page.Count = len(blos)
 	if page.PageSize < 5 {
 		page.PageSize = 5
 	}
@@ -319,15 +465,16 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	}
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
-	if end > len(list) {
-		end = len(list)
+	if end > len(blos) {
+		end = len(blos)
 	}
 	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
+	//                                                                                  拼接数据
 	flows := []Flow{}
-	for _, v := range list[start:end] {
+	for _, v := range blos[start:end] {
 		flow := Flow{}
 		t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
 		time_start := t.AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
@@ -341,14 +488,13 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		formula := Formula{
 			EcologyId: v.Account,
 		}
-		o := NewOrm()
 		err_read := o.Read(&formula, "ecology_id")
 		if err_read != nil {
 			return []Flow{}, Page{}, err_read
 		}
 		// 	已近释放
 		blo := []BlockedDetail{}
-		_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_start).QueryRows(&blo)
+		_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_end).QueryRows(&blo)
 		if err_raw != nil {
 			return []Flow{}, Page{}, err_raw
 		}
@@ -356,11 +502,14 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		for _, v := range blo {
 			coin += v.CurrentOutlay
 		}
-		var u User
-		u.UserId = v.UserId
-		o.Read(&u, "user_id")
 		flow.UserId = v.UserId
-		flow.UserName = u.UserName
+		user_name := ""
+		for _, vv := range us {
+			if vv.UserId == v.UserId {
+				user_name = vv.UserName
+			}
+		}
+		flow.UserName = user_name
 		flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
 		flow.RecommendReturnRate = zhitui
 		flow.TeamReturnRate = formula.TeamReturnRate
@@ -615,3 +764,33 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 	}
 	return list, nil
 }
+
+/*
+list_last := []BlockedDetail{}
+	if p.UserName!="" && p.UserId!="" && len(list)!=0 {
+		u := User{
+			UserId:   list[0].UserId,
+		}
+		o.Read(&u,"user_id")
+		if u.UserName != p.UserName {
+			return []Flow{}, Page{}, errors.New("没有查到!")
+		}
+		for _,v := range list{
+			list_last = append(list_last, v)
+		}
+	}else if p.UserName!="" && p.UserId=="" && len(list)!=0{
+		for _,v := range list{
+			u := User{
+				UserId: v.UserId,
+			}
+			o.Read(&u,"user_id")
+			if u.UserName == p.UserName{
+				list_last = append(list_last, v)
+			}
+		}
+	}else{
+		for _,v := range list{
+			list_last = append(list_last, v)
+		}
+	}
+*/

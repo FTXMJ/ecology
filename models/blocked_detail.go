@@ -56,6 +56,7 @@ type UserAccountOFF struct {
 // The query object to `user * information`
 type FindObj struct {
 	UserId    string
+	UserName  string
 	TxId      string
 	StartTime string
 	EndTime   string

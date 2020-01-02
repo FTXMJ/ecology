@@ -410,6 +410,7 @@ func (this *BackStageManagement) UserEcologyList() {
 // @Param user_id query string true "用户id"
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____算力流水表 {object} models.FlowList_test
 // @router /admin/computational_flow [GET]
 func (this *BackStageManagement) ComputationalFlow() {
@@ -418,6 +419,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
 		user_id           = this.GetString("user_id")
+		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
 		api_url           = this.Controller.Ctx.Request.RequestURI
@@ -429,8 +431,8 @@ func (this *BackStageManagement) ComputationalFlow() {
 	start_time := ""
 	end_time := ""
 	if start_time_int == 0 || end_time_int == 0 {
-		start_time = "2006-01-02 15:04:05"
-		end_time = time.Now().Format("2006-01-02 15:04:05")
+		start_time = ""
+		end_time = ""
 	} else {
 		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
 		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
@@ -438,6 +440,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 
 	find_obj := models.FindObj{
 		UserId:    user_id,
+		UserName:  user_name,
 		TxId:      "",
 		StartTime: start_time,
 		EndTime:   end_time,
@@ -452,7 +455,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
 	if err != nil {
 		logs.Log.Error(api_url+"    更新状态失败,数据库错误", err)
-		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", models.FlowList{})
+		data = common.NewErrorResponse(500, err.Error(), models.FlowList{})
 		return
 	}
 	var flowss []models.Flow
@@ -467,6 +470,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 		team, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.TeamReturnRate), 64)
 		flow.TeamReturnRate = team
 		flow.UserId = v.UserId
+		flow.UserName = v.UserName
 		flow.UpdateTime = v.UpdateTime
 		flowss = append(flowss, flow)
 	}

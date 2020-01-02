@@ -196,3 +196,35 @@ func QuickSortAgreement(arr []HostryValues, start, end int) {
 		QuickSortAgreement(arr, index+1, end)
 	}
 }
+
+// 快速排序
+func QuickSortBlockedDetail(arr []BlockedDetail, start, end int) {
+	temp := arr[start]
+	index := start
+	i := start
+	j := end
+
+	for i <= j {
+		for j >= index && arr[j].CreateDate <= temp.CreateDate {
+			j--
+		}
+		if j > index {
+			arr[index] = arr[j]
+			index = j
+		}
+		for i <= index && arr[i].CreateDate >= temp.CreateDate {
+			i++
+		}
+		if i <= index {
+			arr[index] = arr[i]
+			index = i
+		}
+	}
+	arr[index] = temp
+	if index-start > 1 {
+		QuickSortBlockedDetail(arr, start, index-1)
+	}
+	if end-index > 1 {
+		QuickSortBlockedDetail(arr, index+1, end)
+	}
+}
