@@ -761,7 +761,7 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 		err = er
 	} else {
 		s_ql = s_ql + "id>0 order by create_date desc"
-		_, er := o.Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
+		_, er := o.Raw(s_ql).QueryRows(&list)
 		err = er
 	}
 	if err != nil {
