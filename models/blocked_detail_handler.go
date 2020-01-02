@@ -776,9 +776,10 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 				list_last = append(list_last, v)
 			}
 		}
+		return list_last, nil
 	}
 
-	return list_last, nil
+	return list, nil
 }
 
 /*
