@@ -718,7 +718,9 @@ func SqlCreateValues1(p FindObj, table_name string) ([]BlockedDetail, error) {
 //   ---   Find user ecology information　　　sql 生成并　查询
 func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 	var list []Account
+	o := NewOrm()
 	level := ""
+	name := ""
 	var err error
 	s_ql := "select * from " + table_name + " where "
 	if obj.UserId != "" {
@@ -730,39 +732,53 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 	if obj.StartTime != "" && obj.EndTime != "" {
 		level += "3"
 	}
+	if obj.UserName != "" {
+		name = "4"
+	}
 	if level == "1" {
 		s_ql = s_ql + "user_id=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.UserId).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.UserId).QueryRows(&list)
 		err = er
 	} else if level == "12" {
 		s_ql = s_ql + "user_id=? and id=? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.UserId, obj.TxId).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.UserId, obj.TxId).QueryRows(&list)
 		err = er
 	} else if level == "123" {
 		s_ql = s_ql + "user_id=? and id=? and create_date>? and create_date<? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.UserId, obj.TxId, obj.StartTime, obj.EndTime).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.UserId, obj.TxId, obj.StartTime, obj.EndTime).QueryRows(&list)
 		err = er
 	} else if level == "13" {
 		s_ql = s_ql + "user_id=? and create_date>? and create_date<? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.UserId, obj.StartTime, obj.EndTime).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.UserId, obj.StartTime, obj.EndTime).QueryRows(&list)
 		err = er
 	} else if level == "23" {
 		s_ql = s_ql + "id=? and create_date>? and create_date<? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.TxId, obj.StartTime, obj.EndTime).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.TxId, obj.StartTime, obj.EndTime).QueryRows(&list)
 		err = er
 	} else if level == "3" {
 		s_ql = s_ql + "create_date > ? and create_date < ? order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
 		err = er
 	} else {
 		s_ql = s_ql + "id>0 order by create_date desc"
-		_, er := NewOrm().Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
+		_, er := o.Raw(s_ql, obj.StartTime, obj.EndTime).QueryRows(&list)
 		err = er
 	}
 	if err != nil {
 		return []Account{}, err
 	}
-	return list, nil
+	list_last := []Account{}
+	if name != "" {
+		for _, v := range list {
+			u := User{}
+			o.Raw("select * from user where user_id=?", v.UserId).QueryRow(&u)
+			if u.UserName == obj.UserName {
+				list_last = append(list_last, v)
+			}
+		}
+	}
+
+	return list_last, nil
 }
 
 /*

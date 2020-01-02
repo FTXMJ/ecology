@@ -491,6 +491,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 // @Param account_id query string true "生态仓库id"
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____用户收益控制＿＿展示
 // @router /admin/ecological_income_control [GET]
 func (this *BackStageManagement) EcologicalIncomeControl() {
@@ -500,6 +501,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 		page_size, _      = this.GetInt("pageSize")
 		user_id           = this.GetString("user_id")
 		account_id        = this.GetString("account_id")
+		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
 		api_url           = this.Controller.Ctx.Request.RequestURI
@@ -512,8 +514,8 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 	start_time := ""
 	end_time := ""
 	if start_time_int == 0 || end_time_int == 0 {
-		start_time = "2006-01-02 15:04:05"
-		end_time = time.Now().Format("2006-01-02 15:04:05")
+		start_time = ""
+		end_time = ""
 	} else {
 		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
 		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
@@ -528,6 +530,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 	find_obj := models.FindObj{
 		UserId:    user_id,
 		TxId:      account_id,
+		UserName:  user_name,
 		StartTime: start_time,
 		EndTime:   end_time,
 	}
