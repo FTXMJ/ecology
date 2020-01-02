@@ -321,9 +321,6 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		}
 		start := (page.CurrentPage - 1) * page.PageSize
 		end := start + page.PageSize
-		if end > len(list) {
-			end = len(list)
-		}
 		page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 		if page.Count <= 5 {
 			page.CurrentPage = 1
@@ -399,9 +396,6 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		}
 		start := (page.CurrentPage - 1) * page.PageSize
 		end := start + page.PageSize
-		if end > len(list) {
-			end = len(list)
-		}
 		page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 		if page.Count <= 5 {
 			page.CurrentPage = 1
@@ -491,9 +485,6 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	}
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
-	if end > len(blos) {
-		end = len(blos)
-	}
 	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
 	if page.Count <= 5 {
 		page.CurrentPage = 1
