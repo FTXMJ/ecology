@@ -517,7 +517,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
-		aabonus = blocked_old.CurrentBalance
+		aabonus = 0
 		abonus = blocked_old.CurrentBalance
 	}
 	if abonus == 0 {
@@ -544,7 +544,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		UserId:         user_id,
 		CurrentRevenue: 0,
 		CurrentOutlay:  abonus,
-		CurrentBalance: blocked_old.CurrentBalance - aabonus,
+		CurrentBalance: aabonus,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日释放收益",
