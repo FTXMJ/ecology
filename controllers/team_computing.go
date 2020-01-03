@@ -310,16 +310,6 @@ func HandlerOperation(users []string, user_id string) (float64, error) {
 		}
 		coin_abouns += formula.HoldReturnRate * account.Balance
 	}
-	acc := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&acc, "user_id")
-	for_m := models.Formula{
-		EcologyId: acc.Id,
-	}
-	o.Read(&for_m, "ecology_id")
-
-	coin_abouns = coin_abouns * for_m.TeamReturnRate
 	return coin_abouns, nil
 }
 
