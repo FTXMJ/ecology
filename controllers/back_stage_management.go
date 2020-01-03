@@ -642,7 +642,7 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 		this.ServeJSON()
 	}()
 	profit_type := ""
-	profit_start := false
+	profit_start := true
 	if profit_type_int == 2 {
 		profit_type = "dynamic_revenue"
 	} else if profit_type_int == 1 {
@@ -650,8 +650,8 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	} else if profit_type_int == 3 {
 		profit_type = "peer_state"
 	}
-	if profit_start_int == 1 {
-		profit_start = true
+	if profit_start_int == 2 {
+		profit_start = false
 	}
 
 	str := strings.Split(strs, ",")
