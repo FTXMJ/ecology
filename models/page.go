@@ -67,7 +67,7 @@ func SelectHostery(ecology_id int, page Page) ([]HostryValues, Page, error) {
 		}
 	} else if start > len(last_values) {
 
-	} else if end < len(last_values) && start < len(last_values) {
+	} else if end <= len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:end] {
 			listle = append(listle, v)
 		}
