@@ -46,7 +46,7 @@ func SumTeamProfit(user_id string) (float64, error) {
 				return 0.0, errors.New("查询用户团队直推成员时出错,请重试")
 			}
 			// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-			coin, err_handler := HandlerOperation(team_user)
+			coin, err_handler := HandlerOperation(team_user, user_id)
 			if err_handler != nil {
 				return 0.0, errors.New("查询用户团队成员时出错,请重试")
 			}

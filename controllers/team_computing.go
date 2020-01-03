@@ -213,7 +213,7 @@ func Team(o orm.Ormer, user models.User) error {
 				}
 				if len(team_user) > 0 {
 					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-					coin, err_handler := HandlerOperation(team_user)
+					coin, err_handler := HandlerOperation(team_user, user.UserId)
 					if err_handler != nil {
 						return err_handler
 					}
@@ -288,27 +288,29 @@ func GetTeams(user models.User) ([]string, error) {
 }
 
 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-func HandlerOperation(users []string) (float64, error) {
+func HandlerOperation(users []string, user_id string) (float64, error) {
 	o := models.NewOrm()
 	var coin_abouns float64
 	for _, v := range users {
-		// 拿到生态项目实例
-		account := models.Account{}
-		err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
-		if err_acc != nil {
-			if err_acc.Error() != "<QuerySeter> no row found" {
-				return 0, err_acc
+		if user_id != v {
+			// 拿到生态项目实例
+			account := models.Account{}
+			err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
+			if err_acc != nil {
+				if err_acc.Error() != "<QuerySeter> no row found" {
+					return 0, err_acc
+				}
 			}
-		}
-		// 拿到生态项目对应的算力表
-		formula := models.Formula{}
-		err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
-		if err_for != nil {
-			if err_for.Error() != "<QuerySeter> no row found" {
-				return 0, err_for
+			// 拿到生态项目对应的算力表
+			formula := models.Formula{}
+			err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
+			if err_for != nil {
+				if err_for.Error() != "<QuerySeter> no row found" {
+					return 0, err_for
+				}
 			}
+			coin_abouns += formula.HoldReturnRate * account.Balance
 		}
-		coin_abouns += formula.HoldReturnRate * account.Balance
 	}
 	return coin_abouns, nil
 }

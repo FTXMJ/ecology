@@ -79,7 +79,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				return
 			}
 			f.RecommendReturnRate = zhitui
-			team_coins, err_team := SumTeamProfit(user_id)
+			team_coins, err_team := IndexTeamABouns(o, user_id)
 			if err_team != nil {
 				models.CouShu(&indexValues)
 				logs.Log.Error(api_url, err_team.Error())
