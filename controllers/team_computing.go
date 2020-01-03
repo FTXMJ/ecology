@@ -335,11 +335,12 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	o.Read(&formula, "ecology_id")
 	value = value * formula.TeamReturnRate
 
-	if value == 0 {
-		return nil
-	}
 	if value > account.BockedBalance {
 		value = account.BockedBalance
+	}
+
+	if value == 0 {
+		return nil
 	}
 
 	//任务表 USDD  铸币记录
