@@ -54,8 +54,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	indexValues.Ecological_poject_bool = true
 	if len(account_index) > 0 {
 		for _, v := range account_index {
-			var formula_index []models.Formula
-			_, errfor := o.QueryTable("formula").Filter("ecology_id", v.Id).All(&formula_index)
+			formula_index := models.Formula{EcologyId: v.Id}
+			errfor := o.Read(&formula_index, "ecology_id")
 			if errfor != nil {
 				data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
 				logs.Log.Error(api_url, errfor)
@@ -66,10 +66,10 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				Level:          v.Level,
 				BockedBalance:  v.BockedBalance,
 				Balance:        v.Balance,
-				LowHold:        formula_index[0].LowHold,
-				HighHold:       formula_index[0].HighHold,
-				ReturnMultiple: formula_index[0].ReturnMultiple,
-				HoldReturnRate: formula_index[0].HoldReturnRate * v.Balance,
+				LowHold:        formula_index.LowHold,
+				HighHold:       formula_index.HighHold,
+				ReturnMultiple: formula_index.ReturnMultiple,
+				HoldReturnRate: formula_index.HoldReturnRate * v.Balance,
 			}
 			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
 			if err != nil {
@@ -86,7 +86,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewErrorResponse(500, err_team.Error(), models.Ecology_index_obj{})
 				return
 			}
-			f.TeamReturnRate = team_coins * f.TeamReturnRate
+			f.TeamReturnRate = team_coins * formula_index.TeamReturnRate
 			to_day_rate := zhitui + f.TeamReturnRate + f.HoldReturnRate
 			f.ToDayRate = to_day_rate
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
