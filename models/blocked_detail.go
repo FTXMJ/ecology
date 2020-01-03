@@ -126,6 +126,7 @@ type U_E_OBJ struct {
 
 // user`s account OFF table
 type AccountOFF struct {
+	Id             int    `json:"id"`
 	UserId         string `json:"user_id"`
 	UserName       string `json:"user_name"`
 	Account        int    `json:"account"`
