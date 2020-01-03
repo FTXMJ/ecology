@@ -203,20 +203,22 @@ func Team(o orm.Ormer, user models.User) error {
 	o.QueryTable("user").Filter("father_id", user.UserId).All(&user_current_layer)
 	if len(user_current_layer) > 0 {
 		for _, v := range user_current_layer {
-			// 获取用户teams
-			team_user, err := GetTeams(v)
-			if err != nil {
-				if err.Error() != "用户未激活或被拉入黑名单" {
-					return err
+			if user.UserId != v.UserId {
+				// 获取用户teams
+				team_user, err := GetTeams(v)
+				if err != nil {
+					if err.Error() != "用户未激活或被拉入黑名单" {
+						return err
+					}
 				}
-			}
-			if len(team_user) > 0 {
-				// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-				coin, err_handler := HandlerOperation(team_user)
-				if err_handler != nil {
-					return err_handler
+				if len(team_user) > 0 {
+					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
+					coin, err_handler := HandlerOperation(team_user)
+					if err_handler != nil {
+						return err_handler
+					}
+					coins = append(coins, coin)
 				}
-				coins = append(coins, coin)
 			}
 		}
 	}
@@ -324,6 +326,17 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	for i := 0; i < len(coins)-1; i++ {
 		value += coins[i]
 	}
+
+	acc := models.Account{
+		UserId: user_id,
+	}
+	o.Read(&acc, "user_id")
+	for_m := models.Formula{
+		EcologyId: acc.Id,
+	}
+	o.Read(&for_m, "ecology_id")
+
+	value += acc.BockedBalance * for_m.HoldReturnRate
 
 	var account = models.Account{
 		UserId: user_id,

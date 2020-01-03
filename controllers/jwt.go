@@ -70,7 +70,7 @@ func CheckLogin(ctx *context.Context) {
 			UserId: tockken.UserID,
 		}
 		err_read := o.Read(&u, "user_id")
-		if err != nil && err_read.Error() == "<QuerySeter> no row found" {
+		if err_read != nil && err_read.Error() == "<QuerySeter> no row found" {
 			f, err_get_user := models.PingUser(token)
 			if err_get_user != nil {
 				o.Rollback()
@@ -98,6 +98,7 @@ func CheckLogin(ctx *context.Context) {
 				CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 				DynamicRevenue: true,
 				StaticReturn:   true,
+				PeerState:      true,
 			}
 			_, account_def_err := o.Insert(&account_def)
 			if account_def_err != nil {
@@ -119,7 +120,7 @@ func CheckLogin(ctx *context.Context) {
 		} else if err_read == nil && u.UserName != tockken.Name {
 			u.UserName = tockken.Name
 			o.Update(&u, "user_name")
-		} else if err != nil && err_read.Error() != "<QuerySeter> no row found" {
+		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
 			o.Rollback()
 			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)5"}`)
 			return
