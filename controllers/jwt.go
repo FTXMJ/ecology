@@ -64,11 +64,13 @@ func CheckLogin(ctx *context.Context) {
 			ctx.WriteString(`{"code": "400","msg": "数据格式不正确"}`)
 			return
 		}
-		user := []models.User{}
 		o := models.NewOrm()
 		o.Begin()
-		o.QueryTable("user").Filter("user_id", tockken.UserID).All(&user)
-		if len(user) == 0 {
+		u := models.User{
+			UserId: tockken.UserID,
+		}
+		err_read := o.Read(&u, "user_id")
+		if err_read.Error() == "<QuerySeter> no row found" {
 			f, err_get_user := models.PingUser(token)
 			if err_get_user != nil {
 				o.Rollback()
@@ -114,6 +116,9 @@ func CheckLogin(ctx *context.Context) {
 				return
 			}
 
+		} else if err_read == nil && u.UserName != tockken.Name {
+			u.UserName = tockken.Name
+			o.Update(&u, "user_name")
 		}
 		o.Commit()
 	}

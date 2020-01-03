@@ -49,7 +49,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 // @Produce json
 // @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
 // @Success 200____算力等级详情 {object} models.ForceTable_test_yq
-// @router /show_formula_list [GET]
+// @router /show_user_formula [GET]
 func (this *BackStageManagement) ShowUserFormula() {
 	var (
 		data *common.ResponseData
@@ -786,4 +786,36 @@ func (this *BackStageManagement) PeerABounsList() {
 	}
 	data = common.NewResponse(peer_user_list)
 	return
+}
+
+// @Tags 节点收益记录流水
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
+// @Success 200____节点收益记录流水
+// @router /admin/peer_a_bouns_history_list [GET]
+func (this *BackStageManagement) PeerABounsHistoryList() {
+	//var (
+	//	data            *common.ResponseData
+	//	current_page, _ = this.GetInt("page")
+	//	page_size, _    = this.GetInt("pageSize")
+	//	user_name       = this.GetString("user_name")
+	//	//api_url             = this.Controller.Ctx.Request.RequestURI
+	//)
+	//defer func() {
+	//	this.Data["json"] = data
+	//	this.ServeJSON()
+	//}()
+	//page := models.Page{
+	//	TotalPage:   0,
+	//	CurrentPage: current_page,
+	//	PageSize:    page_size,
+	//	Count:       0,
+	//}
+	//
+	//
+	//data = common.NewResponse(nil)
+	//return
 }

@@ -26,3 +26,24 @@ func (this *TxIdList) Update() (err error) {
 	_, err = NewOrm().Update(this)
 	return err
 }
+
+// peer a_bouns list
+type PeerListABouns struct {
+	Items []BlockedDetailIndex `json:"items"` //数据列表
+	Page  Page                 `json:"page"`  //分页信息
+}
+
+type PeerAbouns struct {
+	Items []BlockedDetailIndex `json:"items"` //数据列表
+	Page  Page                 `json:"page"`  //分页信息
+}
+
+func SelectPeerABounsList(page Page, user_name string) {
+
+	switch user_name {
+	case "":
+		NewOrm().Raw("select * from tx_id_list limit ?,?", page.Count, page.PageSize).QueryRows()
+	default:
+
+	}
+}

@@ -282,6 +282,33 @@ paths:
       responses:
         200___超级节点算力表信息修改:
           description: ""
+  /ecology/admin/peer_a_bouns_history_list:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: page
+        description: 分页信息　－　当前页数
+        required: true
+        type: string
+      - in: query
+        name: pageSize
+        description: 分页信息　－　每页数据量
+        required: true
+        type: string
+      - in: query
+        name: user_name
+        description: 用户名字  不搜就传空，搜索就传user_name
+        required: true
+        type: string
+      responses:
+        200____节点收益记录流水:
+          description: ""
   /ecology/admin/peer_a_bouns_list:
     get:
       tags:
@@ -521,10 +548,6 @@ paths:
       produces:
       - application/json
       responses:
-        200____算力等级详情:
-          description: ""
-          schema:
-            $ref: '#/definitions/models.ForceTable_test_yq'
         200__算力表显示后台操or用户查_都可:
           description: ""
           schema:
@@ -542,6 +565,23 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/models.SuperForceTable_test'
+  /ecology/show_user_formula:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        200____算力等级详情:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ForceTable_test_yq'
+        200__算力表显示后台操or用户查_都可:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ForceTable_test'
   /ecology/test_mrsf:
     get:
       tags:
