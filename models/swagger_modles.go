@@ -138,3 +138,17 @@ type PeerHistory_test struct {
 	SuperPeer____超级节点数        int     `json:"super_peer"`
 	CreationPeer____创世节点数     int     `json:"creation_peer"`
 }
+
+// peer a_bouns list
+type PeerListABouns_test struct {
+	Items__数据 []PeerAbouns_test `json:"items"` //数据列表
+	Page__分页  Page              `json:"page"`  //分页信息
+}
+
+type PeerAbouns_test struct {
+	Id__id         int     `json:"id"`
+	UserName__用户名字 string  `json:"user_name"`
+	Level___等级     string  `json:"level"`
+	Tfors__tfor数量  float64 `json:"tfors"`
+	Time__时间       string  `json:"time"`
+}
