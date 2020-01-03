@@ -541,7 +541,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		UserId:         user_id,
 		CurrentRevenue: 0,
 		CurrentOutlay:  abonus,
-		CurrentBalance: aabonus,
+		CurrentBalance: blocked_old.CurrentBalance - aabonus,
 		OpeningBalance: blocked_old.CurrentBalance,
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日释放收益",
