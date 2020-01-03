@@ -152,3 +152,19 @@ type PeerAbouns_test struct {
 	Tfors__tfor数量  float64 `json:"tfors"`
 	Time__时间       string  `json:"time"`
 }
+
+// user`s peer table
+type PeerUserFalse_test struct {
+	Items []PeerUser_test `json:"items"` //数据列表
+	Page  Page            `json:"page"`  //分页信息
+}
+
+type PeerUser_test struct {
+	AccountId__生态仓库id int     `json:"account_id"`
+	UserName___用户名字   string  `json:"user_name"`
+	UserId__用户id      string  `json:"user_id"`
+	Level__等级         string  `json:"level"`
+	State___状态        bool    `json:"state"`
+	Number___数量       float64 `json:"number"`
+	UpdateTime___更新时间 string  `json:"update_time"`
+}
