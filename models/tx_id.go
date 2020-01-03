@@ -34,11 +34,11 @@ type PeerListABouns struct {
 }
 
 type PeerAbouns struct {
-	Id       int
-	UserName string
-	Level    string
-	Tfors    float64
-	Time     string
+	Id       int     `json:"id"`
+	UserName string  `json:"user_name"`
+	Level    string  `json:"level"`
+	Tfors    float64 `json:"tfors"`
+	Time     string  `json:"time"`
 }
 
 // 快速排序
