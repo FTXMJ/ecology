@@ -310,16 +310,6 @@ func HandlerOperation(users []string, user_id string) (float64, error) {
 		}
 		coin_abouns += formula.HoldReturnRate * account.Balance
 	}
-	acc := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&acc, "user_id")
-	for_m := models.Formula{
-		EcologyId: acc.Id,
-	}
-	o.Read(&for_m, "ecology_id")
-
-	coin_abouns = coin_abouns * for_m.TeamReturnRate
 	return coin_abouns, nil
 }
 
@@ -340,6 +330,17 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	if value == 0 {
 		return nil
 	}
+
+	acc := models.Account{
+		UserId: user_id,
+	}
+	o.Read(&acc, "user_id")
+	for_m := models.Formula{
+		EcologyId: acc.Id,
+	}
+	o.Read(&for_m, "ecology_id")
+
+	value = value * for_m.TeamReturnRate
 
 	var account = models.Account{
 		UserId: user_id,
