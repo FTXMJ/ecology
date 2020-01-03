@@ -86,7 +86,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				data = common.NewErrorResponse(500, err_team.Error(), models.Ecology_index_obj{})
 				return
 			}
-			f.TeamReturnRate = team_coins
+			f.TeamReturnRate = team_coins * f.TeamReturnRate
 			to_day_rate := zhitui + f.TeamReturnRate + f.HoldReturnRate
 			f.ToDayRate = to_day_rate
 			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)

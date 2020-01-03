@@ -292,25 +292,23 @@ func HandlerOperation(users []string, user_id string) (float64, error) {
 	o := models.NewOrm()
 	var coin_abouns float64
 	for _, v := range users {
-		if user_id != v {
-			// 拿到生态项目实例
-			account := models.Account{}
-			err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
-			if err_acc != nil {
-				if err_acc.Error() != "<QuerySeter> no row found" {
-					return 0, err_acc
-				}
+		// 拿到生态项目实例
+		account := models.Account{}
+		err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
+		if err_acc != nil {
+			if err_acc.Error() != "<QuerySeter> no row found" {
+				return 0, err_acc
 			}
-			// 拿到生态项目对应的算力表
-			formula := models.Formula{}
-			err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
-			if err_for != nil {
-				if err_for.Error() != "<QuerySeter> no row found" {
-					return 0, err_for
-				}
-			}
-			coin_abouns += formula.HoldReturnRate * account.Balance
 		}
+		// 拿到生态项目对应的算力表
+		formula := models.Formula{}
+		err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
+		if err_for != nil {
+			if err_for.Error() != "<QuerySeter> no row found" {
+				return 0, err_for
+			}
+		}
+		coin_abouns += formula.HoldReturnRate * account.Balance
 	}
 	acc := models.Account{
 		UserId: user_id,
@@ -321,7 +319,7 @@ func HandlerOperation(users []string, user_id string) (float64, error) {
 	}
 	o.Read(&for_m, "ecology_id")
 
-	coin_abouns += acc.BockedBalance * for_m.HoldReturnRate
+	coin_abouns = coin_abouns * for_m.TeamReturnRate
 	return coin_abouns, nil
 }
 
