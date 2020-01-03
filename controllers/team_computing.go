@@ -555,7 +555,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	}
 
 	//更新生态仓库属性
-	account.BockedBalance = aabonus
+	account.BockedBalance = blocked_old.CurrentBalance - aabonus
 	_, err_up := o.Update(&account, "bocked_balance")
 	if err_up != nil {
 		return err_up
