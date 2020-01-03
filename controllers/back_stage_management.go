@@ -807,7 +807,7 @@ func (this *BackStageManagement) PeerABounsList() {
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
-// @Success 200____节点收益记录流水 {object} models.PeerHistoryList_test
+// @Success 200____节点收益记录流水 {object} models.PeerListABouns_test
 // @router /admin/peer_a_bouns_history_list [GET]
 func (this *BackStageManagement) PeerABounsHistoryList() {
 	var (

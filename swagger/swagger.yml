@@ -309,6 +309,8 @@ paths:
       responses:
         200____节点收益记录流水:
           description: ""
+          schema:
+            $ref: '#/definitions/models.PeerListABouns_test'
   /ecology/admin/peer_a_bouns_list:
     get:
       tags:
@@ -341,6 +343,8 @@ paths:
       responses:
         200____节点历史记录:
           description: ""
+          schema:
+            $ref: '#/definitions/models.PeerHistoryList_test'
   /ecology/admin/peer_user_list:
     get:
       tags:
@@ -870,6 +874,66 @@ definitions:
       total_page__总页数:
         type: integer
         format: int64
+  models.PeerAbouns_test:
+    title: PeerAbouns_test
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      level:
+        type: string
+      tfors:
+        type: number
+        format: double
+      time:
+        type: string
+      user_name:
+        type: string
+  models.PeerHistory_test:
+    title: PeerHistory_test
+    type: object
+    properties:
+      creation_peer:
+        type: integer
+        format: int64
+      diamonds_peer:
+        type: integer
+        format: int64
+      id:
+        type: integer
+        format: int64
+      peer_a_bouns:
+        type: number
+        format: double
+      super_peer:
+        type: integer
+        format: int64
+      time:
+        type: string
+      whole_network_tfor:
+        type: number
+        format: double
+  models.PeerHistoryList_test:
+    title: PeerHistoryList_test
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/models.PeerHistory_test'
+      page:
+        $ref: '#/definitions/models.Page'
+  models.PeerListABouns_test:
+    title: PeerListABouns_test
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/models.PeerAbouns_test'
+      page:
+        $ref: '#/definitions/models.Page'
   models.SuperForceTable_test:
     title: SuperForceTable_test
     type: object
