@@ -263,3 +263,35 @@ func PageS(peer_user_list []PeerUser, page Page) ([]PeerUser, Page) {
 	}
 	return nil, page
 }
+
+//page peer_history
+func PageHistory(peer_user_list []PeerHistory, page Page) ([]PeerHistory, Page) {
+	page.Count = len(peer_user_list)
+	if page.PageSize < 5 {
+		page.PageSize = 5
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+
+	if end > len(peer_user_list) && start < len(peer_user_list) {
+
+		return peer_user_list[start:], page
+
+	} else if start > len(peer_user_list) {
+
+		return []PeerHistory{}, page
+
+	} else if end < len(peer_user_list) && start < len(peer_user_list) {
+
+		return peer_user_list[start:end], page
+
+	}
+	return nil, page
+}

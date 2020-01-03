@@ -59,6 +59,12 @@ type UserFalse struct {
 	Page  Page        `json:"page"`  //分页信息
 }
 
+// user`s peer history table
+type PeerHistoryList struct {
+	Items []PeerHistory `json:"items"` //数据列表
+	Page  Page          `json:"page"`  //分页信息
+}
+
 // user`s peer table
 type PeerUserFalse struct {
 	Items []PeerUser `json:"items"` //数据列表

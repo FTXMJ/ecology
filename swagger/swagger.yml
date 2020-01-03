@@ -282,6 +282,38 @@ paths:
       responses:
         200___超级节点算力表信息修改:
           description: ""
+  /ecology/admin/peer_a_bouns_list:
+    get:
+      tags:
+      - ecology
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: page
+        description: 分页信息　－　当前页数
+        required: true
+        type: string
+      - in: query
+        name: pageSize
+        description: 分页信息　－　每页数据量
+        required: true
+        type: string
+      - in: query
+        name: start_time
+        description: 开始时间
+        required: true
+        type: string
+      - in: query
+        name: end_time
+        description: 结束时间
+        required: true
+        type: string
+      responses:
+        200____节点历史记录:
+          description: ""
   /ecology/admin/peer_user_list:
     get:
       tags:

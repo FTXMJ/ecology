@@ -726,3 +726,64 @@ func (this *BackStageManagement) PeerUserList() {
 	data = common.NewResponse(peer_user_list)
 	return
 }
+
+// @Tags 节点历史记录
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param start_time query string true "开始时间"
+// @Param end_time query string true "结束时间"
+// @Success 200____节点历史记录
+// @router /admin/peer_a_bouns_list [GET]
+func (this *BackStageManagement) PeerABounsList() {
+	var (
+		data              *common.ResponseData
+		current_page, _   = this.GetInt("page")
+		page_size, _      = this.GetInt("pageSize")
+		start_time_int, _ = this.GetInt64("start_time")
+		end_time_int, _   = this.GetInt64("end_time")
+		//api_url             = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	start_time := ""
+	end_time := ""
+	if start_time_int == 0 || end_time_int == 0 {
+		start_time = ""
+		end_time = ""
+	} else {
+		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+	}
+	peer_history := []models.PeerHistory{}
+	switch start_time {
+	case "":
+		_, err := models.NewOrm().Raw("select * from peer_history where time>=? and time<=?", start_time, end_time).QueryRows(&peer_history)
+		if err != nil {
+			data = common.NewResponse(models.PeerHistoryList{})
+			return
+		}
+	default:
+		_, err := models.NewOrm().Raw("select * from peer_history").QueryRows(&peer_history)
+		if err != nil {
+			data = common.NewResponse(models.PeerHistoryList{})
+			return
+		}
+	}
+	peer_users, p := models.PageHistory(peer_history, page)
+	peer_user_list := models.PeerHistoryList{
+		Items: peer_users,
+		Page:  p,
+	}
+	data = common.NewResponse(peer_user_list)
+	return
+}

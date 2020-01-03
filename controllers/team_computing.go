@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ecology/consul"
+	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
 	"encoding/json"
@@ -34,6 +35,7 @@ type UserDayTx struct {
 // @Success 200
 // @router /test_mrsf [GET]
 func (this *Test) DailyDividendAndReleaseTest() {
+	logs.Log.Info("开始")
 	o := models.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
@@ -45,7 +47,20 @@ func (this *Test) DailyDividendAndReleaseTest() {
 	CreateErrUserTxList(error_users)
 
 	// 超级节点的分红
-	ProducerPeer(user)
+	peer_a_bouns := 0.0
+	one := 0
+	two := 0
+	three := 0
+	ProducerPeer(user, peer_a_bouns, one, two, three)
+	perr_h := models.PeerHistory{
+		Time:             time.Now().Format("2006-01-02 15:04:05"),
+		WholeNetworkTfor: models.NetIncome,
+		PeerABouns:       peer_a_bouns,
+		DiamondsPeer:     one,
+		SuperPeer:        two,
+		CreationPeer:     three,
+	}
+	o.Insert(&perr_h)
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
@@ -56,9 +71,11 @@ func (this *Test) DailyDividendAndReleaseTest() {
 		shouyi += v.CurrentRevenue
 	}
 	models.NetIncome = shouyi
+	logs.Log.Info("结束")
 }
 
 func DailyDividendAndRelease() {
+	logs.Log.Info("开始")
 	o := models.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
@@ -70,7 +87,20 @@ func DailyDividendAndRelease() {
 	CreateErrUserTxList(error_users)
 
 	// 超级节点的分红
-	ProducerPeer(user)
+	peer_a_bouns := 0.0
+	one := 0
+	two := 0
+	three := 0
+	ProducerPeer(user, peer_a_bouns, one, two, three)
+	perr_h := models.PeerHistory{
+		Time:             time.Now().Format("2006-01-02 15:04:05"),
+		WholeNetworkTfor: models.NetIncome,
+		PeerABouns:       peer_a_bouns,
+		DiamondsPeer:     one,
+		SuperPeer:        two,
+		CreationPeer:     three,
+	}
+	o.Insert(&perr_h)
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
@@ -81,6 +111,7 @@ func DailyDividendAndRelease() {
 		shouyi += v.CurrentRevenue
 	}
 	models.NetIncome = shouyi
+	logs.Log.Info("结束")
 }
 
 //生态仓库释放　－　团队收益  --  直推收益
@@ -95,7 +126,7 @@ func ProducerEcology(users []models.User) []models.User {
 }
 
 //超级节点　的　释放
-func ProducerPeer(users []models.User) {
+func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) {
 	error_users := []models.User{}
 	m := make(map[string][]string)
 	for _, v := range users {
@@ -109,9 +140,9 @@ func ProducerPeer(users []models.User) {
 		}
 	}
 	if len(error_users) > 0 {
-		ProducerPeer(error_users)
+		ProducerPeer(error_users, peer_a_bouns, one, two, three)
 	}
-	HandlerMap(m)
+	HandlerMap(m, peer_a_bouns, one, two, three)
 }
 
 // 工作　函数
@@ -818,7 +849,7 @@ func ReturnMap(m map[string][]string) {
 }
 
 // 处理map数据并给定收益
-func HandlerMap(m map[string][]string) {
+func HandlerMap(m map[string][]string, peer_a_bouns float64, one, two, three int) {
 	err_m := make(map[string][]string)
 	for k_level, vv := range m {
 		s_f_t := models.SuperForceTable{
@@ -833,12 +864,20 @@ func HandlerMap(m map[string][]string) {
 			} else {
 				if tfor_some/float64(len(vv)) != 0 {
 					AddFormulaABonus(v, tfor_some/float64(len(vv)))
+					peer_a_bouns += tfor_some / float64(len(vv))
+				}
+				if k_level == "钻石节点" {
+					one++
+				} else if k_level == "超级节点" {
+					two++
+				} else if k_level == "创世节点" {
+					three++
 				}
 			}
 		}
 	}
 	if len(err_m) != 0 {
-		HandlerMap(err_m)
+		HandlerMap(err_m, peer_a_bouns, one, two, three)
 	}
 }
 
