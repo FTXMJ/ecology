@@ -747,7 +747,7 @@ func (this *BackStageManagement) PeerUserList() {
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
-// @Success 200____节点历史记录
+// @Success 200____节点历史记录  {object} models.PeerHistoryList_test
 // @router /admin/peer_a_bouns_list [GET]
 func (this *BackStageManagement) PeerABounsList() {
 	var (

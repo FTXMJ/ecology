@@ -122,3 +122,19 @@ type ForceTable_test_yq struct {
 	TeamReturnRate___动态算力      float64 `orm:"column(team_return_rate)" json:"team_return_rate"`           //动态算力
 	PictureUrl___图片链接          string  `orm:"column(picture_url)" json:"picture_url"`
 }
+
+// user`s peer history table
+type PeerHistoryList_test struct {
+	Items___ []PeerHistory_test `json:"items"` //数据列表
+	Page___  Page               `json:"page"`  //分页信息
+}
+
+type PeerHistory_test struct {
+	Id___id                   int     `json:"id"`
+	Time___时间                 string  `json:"time"`
+	WholeNetworkTfor____全网总算力 float64 `json:"whole_network_tfor"`
+	PeerABouns____节点总收益       float64 `json:"peer_a_bouns"`
+	DiamondsPeer___钻石节点数      int     `json:"diamonds_peer"`
+	SuperPeer____超级节点数        int     `json:"super_peer"`
+	CreationPeer____创世节点数     int     `json:"creation_peer"`
+}
