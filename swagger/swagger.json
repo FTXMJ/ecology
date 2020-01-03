@@ -1299,21 +1299,21 @@
             "title": "PeerAbouns_test",
             "type": "object",
             "properties": {
-                "id": {
+                "id_id": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "level": {
+                "level_等级": {
                     "type": "string"
                 },
-                "tfors": {
+                "tforstfor_数量": {
                     "type": "number",
                     "format": "double"
                 },
-                "time": {
+                "time_时间": {
                     "type": "string"
                 },
-                "user_name": {
+                "user_name_用户名字": {
                     "type": "string"
                 }
             }
@@ -1337,30 +1337,30 @@
             "title": "PeerHistory_test",
             "type": "object",
             "properties": {
-                "creation_peer": {
+                "creation_peer_创世节点数": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "diamonds_peer": {
+                "diamonds_peer_钻石节点数": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "id": {
+                "id_id": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "peer_a_bouns": {
+                "peer_a_bouns_节点总收益": {
                     "type": "number",
                     "format": "double"
                 },
-                "super_peer": {
+                "super_peer_超级节点数": {
                     "type": "integer",
                     "format": "int64"
                 },
-                "time": {
+                "time_时间": {
                     "type": "string"
                 },
-                "whole_network_tfor": {
+                "whole_network_tfor_全网总算力": {
                     "type": "number",
                     "format": "double"
                 }
@@ -1370,13 +1370,13 @@
             "title": "PeerListABouns_test",
             "type": "object",
             "properties": {
-                "items": {
+                "items_数据": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.PeerAbouns_test"
                     }
                 },
-                "page": {
+                "page_分页": {
                     "$ref": "#/definitions/models.Page"
                 }
             }

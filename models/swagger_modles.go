@@ -125,32 +125,32 @@ type ForceTable_test_yq struct {
 
 // user`s peer history table
 type PeerHistoryList_test struct {
-	Items___ []PeerHistory_test `json:"items"` //数据列表
-	Page___  Page               `json:"page"`  //分页信息
+	Items []PeerHistory_test `json:"items"` //数据列表
+	Page  Page               `json:"page"`  //分页信息
 }
 
 type PeerHistory_test struct {
-	Id___id                   int     `json:"id"`
-	Time___时间                 string  `json:"time"`
-	WholeNetworkTfor____全网总算力 float64 `json:"whole_network_tfor"`
-	PeerABouns____节点总收益       float64 `json:"peer_a_bouns"`
-	DiamondsPeer___钻石节点数      int     `json:"diamonds_peer"`
-	SuperPeer____超级节点数        int     `json:"super_peer"`
-	CreationPeer____创世节点数     int     `json:"creation_peer"`
+	Id___id               int     `json:"id_id"`
+	Time时间                string  `json:"time_时间"`
+	WholeNetworkTfor全网总算力 float64 `json:"whole_network_tfor_全网总算力"`
+	PeerABouns节点总收益       float64 `json:"peer_a_bouns_节点总收益"`
+	DiamondsPeer钻石节点数     int     `json:"diamonds_peer_钻石节点数"`
+	SuperPeer超级节点数        int     `json:"super_peer_超级节点数"`
+	CreationPeer创世节点数     int     `json:"creation_peer_创世节点数"`
 }
 
 // peer a_bouns list
 type PeerListABouns_test struct {
-	Items__数据 []PeerAbouns_test `json:"items"` //数据列表
-	Page__分页  Page              `json:"page"`  //分页信息
+	Items数据 []PeerAbouns_test `json:"items_数据"` //数据列表
+	Page分页  Page              `json:"page_分页"`  //分页信息
 }
 
 type PeerAbouns_test struct {
-	Id__id         int     `json:"id"`
-	UserName__用户名字 string  `json:"user_name"`
-	Level___等级     string  `json:"level"`
-	Tfors__tfor数量  float64 `json:"tfors"`
-	Time__时间       string  `json:"time"`
+	Id__id       int     `json:"id_id"`
+	UserName用户名字 string  `json:"user_name_用户名字"`
+	Level等级      string  `json:"level_等级"`
+	Tforstfor数量  float64 `json:"tforstfor_数量"`
+	Time时间       string  `json:"time_时间"`
 }
 
 // user`s peer table
@@ -160,11 +160,11 @@ type PeerUserFalse_test struct {
 }
 
 type PeerUser_test struct {
-	AccountId__生态仓库id int     `json:"account_id"`
-	UserName___用户名字   string  `json:"user_name"`
-	UserId__用户id      string  `json:"user_id"`
-	Level__等级         string  `json:"level"`
-	State___状态        bool    `json:"state"`
-	Number___数量       float64 `json:"number"`
-	UpdateTime___更新时间 string  `json:"update_time"`
+	AccountId生态仓库id int     `json:"account_id_生态仓库_id"`
+	UserName用户名字    string  `json:"user_name_用户名字"`
+	UserId用户id      string  `json:"user_id_用户_id"`
+	Level等级         string  `json:"level_等级"`
+	State状态         bool    `json:"state_状态"`
+	Number数量        float64 `json:"number_数量"`
+	UpdateTime更新时间  string  `json:"update_time_更新时间"`
 }
