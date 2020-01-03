@@ -293,5 +293,5 @@ func PageHistory(peer_user_list []PeerHistory, page Page) ([]PeerHistory, Page) 
 		return peer_user_list[start:end], page
 
 	}
-	return nil, page
+	return []PeerHistory{}, page
 }
