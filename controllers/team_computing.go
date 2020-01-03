@@ -338,6 +338,9 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	if value == 0 {
 		return nil
 	}
+	if value > account.BockedBalance {
+		value = account.BockedBalance
+	}
 
 	//任务表 USDD  铸币记录
 	order_id := utils.TimeUUID()
