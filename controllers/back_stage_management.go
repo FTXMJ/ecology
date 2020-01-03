@@ -711,6 +711,9 @@ func (this *BackStageManagement) PeerUserList() {
 		p_u := models.PeerUser{}
 		update_date, level, tfor, _ := ReturnSuperPeerLevel(v.UserId)
 		if level != "" {
+			acc := models.Account{UserId: v.UserId}
+			models.NewOrm().Read(&acc, "user_id")
+			p_u.AccountId = acc.Id
 			p_u.UserId = v.UserId
 			p_u.UserName = v.UserName
 			p_u.Level = level

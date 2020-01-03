@@ -718,7 +718,6 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 	user_accounts := []AccountOFF{}
 	for _, v := range accounts {
 		user_account := AccountOFF{
-			Id:             v.Id,
 			UserId:         v.UserId,
 			Account:        v.Id,
 			DynamicRevenue: v.DynamicRevenue,
