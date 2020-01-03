@@ -725,7 +725,7 @@ func (this *BackStageManagement) PeerUserList() {
 			p_u.UserId = v.UserId
 			p_u.UserName = v.UserName
 			p_u.Level = level
-			p_u.State = true
+			p_u.State = acc.PeerState
 			p_u.Number = tfor
 			p_u.UpdateTime = update_date
 			p_u_s = append(p_u_s, p_u)
