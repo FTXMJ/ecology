@@ -723,6 +723,7 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 			DynamicRevenue: v.DynamicRevenue,
 			StaticReturn:   v.StaticReturn,
 			CreateDate:     v.CreateDate,
+			PeerState:      v.PeerState,
 		}
 		user_accounts = append(user_accounts, user_account)
 	}

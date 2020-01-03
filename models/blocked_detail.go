@@ -131,7 +131,8 @@ type AccountOFF struct {
 	Account        int    `json:"account"`
 	DynamicRevenue bool   `json:"dynamic_revenue"` //动态收益开关
 	StaticReturn   bool   `json:"static_return"`   //静态收益开关
-	CreateDate     string `json:"create_date"`     //创建时间
+	PeerState      bool   `json:"peer_state"`
+	CreateDate     string `json:"create_date"` //创建时间
 }
 
 type BlockedDetailIndex struct {

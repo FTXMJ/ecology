@@ -171,7 +171,7 @@
                     {
                         "in": "query",
                         "name": "profit_type",
-                        "description": "静态=1  动态=2",
+                        "description": "静态=1  动态=2 节点=3",
                         "required": true,
                         "type": "string"
                     },

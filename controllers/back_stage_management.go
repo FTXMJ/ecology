@@ -625,7 +625,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 // @Accept  json
 // @Produce json
 // @Param account_id query string true "生态仓库id"
-// @Param profit_type query string true "静态=1  动态=2"
+// @Param profit_type query string true "静态=1  动态=2 节点=3"
 // @Param profit_start query string true "启用=1  禁用=2"
 // @Success 200____用户收益控制＿＿修改
 // @router /admin/ecological_income_control_update [POST]
@@ -645,8 +645,10 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	profit_start := false
 	if profit_type_int == 2 {
 		profit_type = "dynamic_revenue"
-	} else {
+	} else if profit_type_int == 1 {
 		profit_type = "static_return"
+	} else if profit_type_int == 3 {
+		profit_type = "peer_state"
 	}
 	if profit_start_int == 1 {
 		profit_start = true
@@ -797,25 +799,32 @@ func (this *BackStageManagement) PeerABounsList() {
 // @Success 200____节点收益记录流水
 // @router /admin/peer_a_bouns_history_list [GET]
 func (this *BackStageManagement) PeerABounsHistoryList() {
-	//var (
-	//	data            *common.ResponseData
-	//	current_page, _ = this.GetInt("page")
-	//	page_size, _    = this.GetInt("pageSize")
-	//	user_name       = this.GetString("user_name")
-	//	//api_url             = this.Controller.Ctx.Request.RequestURI
-	//)
-	//defer func() {
-	//	this.Data["json"] = data
-	//	this.ServeJSON()
-	//}()
-	//page := models.Page{
-	//	TotalPage:   0,
-	//	CurrentPage: current_page,
-	//	PageSize:    page_size,
-	//	Count:       0,
-	//}
-	//
-	//
-	//data = common.NewResponse(nil)
-	//return
+	var (
+		data            *common.ResponseData
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		user_name       = this.GetString("user_name")
+		//api_url             = this.Controller.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	list, p, err := SelectPeerABounsList(page, user_name)
+	if err != nil {
+		data = common.NewErrorResponse(500, "数据库操作失败", models.PeerListABouns{})
+		return
+	}
+	one := models.PeerListABouns{
+		Items: list,
+		Page:  p,
+	}
+	data = common.NewResponse(one)
+	return
 }

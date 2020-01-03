@@ -29,21 +29,46 @@ func (this *TxIdList) Update() (err error) {
 
 // peer a_bouns list
 type PeerListABouns struct {
-	Items []BlockedDetailIndex `json:"items"` //数据列表
-	Page  Page                 `json:"page"`  //分页信息
+	Items []PeerAbouns `json:"items"` //数据列表
+	Page  Page         `json:"page"`  //分页信息
 }
 
 type PeerAbouns struct {
-	Items []BlockedDetailIndex `json:"items"` //数据列表
-	Page  Page                 `json:"page"`  //分页信息
+	Id       int
+	UserName string
+	Level    string
+	Tfors    float64
+	Time     string
 }
 
-func SelectPeerABounsList(page Page, user_name string) {
+// 快速排序
+func QuickSortPeerABouns(arr []TxIdList, start, end int) {
+	temp := arr[start]
+	index := start
+	i := start
+	j := end
 
-	switch user_name {
-	case "":
-		NewOrm().Raw("select * from tx_id_list limit ?,?", page.Count, page.PageSize).QueryRows()
-	default:
-
+	for i <= j {
+		for j >= index && arr[j].CreateTime <= temp.CreateTime {
+			j--
+		}
+		if j > index {
+			arr[index] = arr[j]
+			index = j
+		}
+		for i <= index && arr[i].CreateTime >= temp.CreateTime {
+			i++
+		}
+		if i <= index {
+			arr[index] = arr[i]
+			index = i
+		}
+	}
+	arr[index] = temp
+	if index-start > 1 {
+		QuickSortPeerABouns(arr, start, index-1)
+	}
+	if end-index > 1 {
+		QuickSortPeerABouns(arr, index+1, end)
 	}
 }
