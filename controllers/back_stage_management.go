@@ -635,21 +635,13 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 		profit_type_int, _  = this.GetInt("profit_type")
 		profit_start_int, _ = this.GetInt("profit_start")
 		strs                = this.GetString("account_id")
-		api_url             = this.Controller.Ctx.Request.RequestURI
+		//api_url             = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	profit_type := ""
 	profit_start := false
-	if profit_type_int == 2 {
-		profit_type = "dynamic_revenue"
-	} else if profit_type_int == 1 {
-		profit_type = "static_return"
-	} else if profit_type_int == 3 {
-		profit_type = "peer_state"
-	}
 	if profit_start_int == 1 {
 		profit_start = true
 	}
@@ -657,18 +649,34 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	str := strings.Split(strs, ",")
 
 	o := models.NewOrm()
-	o.Begin()
+	err_user := ""
 	for _, v := range str {
 		id_int, _ := strconv.Atoi(v)
-		_, err := o.QueryTable("account").Filter("id", id_int).Update(orm.Params{profit_type: profit_start, "update_date": time.Now().Format("2006-01-02 15:04:05")})
+		acc := models.Account{
+			Id: id_int,
+		}
+		o.Read(&acc)
+		switch profit_type_int {
+		case 2:
+			acc.DynamicRevenue = profit_start
+		case 1:
+			acc.StaticReturn = profit_start
+		case 3:
+			acc.PeerState = profit_start
+		}
+		acc.UpdateDate = time.Now().Format("2006-01-02 15:04:05")
+		_, err := o.Update(&acc)
 		if err != nil {
-			o.Rollback()
-			logs.Log.Error(api_url+"     更新状态失败,数据库错误", err)
-			data = common.NewErrorResponse(500, "更新状态失败,数据库错误", nil)
-			return
+			if len(err_user) == 0 {
+				err_user += v
+			}
+			err_user += "," + v
 		}
 	}
-	o.Commit()
+	if len(err_user) != 0 {
+		data = common.NewErrorResponse(500, "这些用户更新失败:"+err_user, nil)
+		return
+	}
 	data = common.NewResponse(nil)
 	return
 }
