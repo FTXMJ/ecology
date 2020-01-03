@@ -213,7 +213,7 @@ func Team(o orm.Ormer, user models.User) error {
 				}
 				if len(team_user) > 0 {
 					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-					coin, err_handler := HandlerOperation(team_user, user.UserId)
+					coin, err_handler := HandlerOperation(team_user, v.UserId)
 					if err_handler != nil {
 						return err_handler
 					}
