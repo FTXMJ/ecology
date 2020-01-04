@@ -341,41 +341,20 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		flows := []Flow{}
 		for _, v := range listle {
 			flow := Flow{}
-			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
-			time_start := t.AddDate(-99, 0, 0).Format("2006-01-02") + " 00:00:00"
-			time_end := v.CreateDate
-			//　直推算力
-			zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
-			if err_zt != nil {
-				return []Flow{}, Page{}, err_zt
-			}
-			//　算力
-			formula := Formula{
-				EcologyId: v.Account,
-			}
-			err_read := o.Read(&formula, "ecology_id")
-			if err_read != nil {
-				return []Flow{}, Page{}, err_read
-			}
-			// 	已近释放
-			blo := []BlockedDetail{}
-			_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_end).QueryRows(&blo)
-			if err_raw != nil {
-				return []Flow{}, Page{}, err_raw
-			}
-			coin := 0.0
-			for _, v := range blo {
-				coin += v.CurrentOutlay
-			}
+			zhitui := BlockedDetail{}
+			o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日直推收益").QueryRow(&zhitui)
+			tuandui := BlockedDetail{}
+			o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日团队收益").QueryRow(&tuandui)
+
 			var u User
 			u.UserId = v.UserId
 			o.Read(&u, "user_id")
 			flow.UserId = v.UserId
 			flow.UserName = u.UserName
-			flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
-			flow.RecommendReturnRate = zhitui
-			flow.TeamReturnRate = formula.TeamReturnRate
-			flow.Released = coin
+			flow.HoldReturnRate = v.CurrentBalance // 本金自由算力
+			flow.RecommendReturnRate = zhitui.CurrentOutlay
+			flow.TeamReturnRate = tuandui.CurrentOutlay
+			flow.Released = zhitui.CurrentOutlay + tuandui.CurrentOutlay + v.CurrentOutlay
 			flow.UpdateTime = v.CreateDate
 			flows = append(flows, flow)
 		}
@@ -416,41 +395,20 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		flows := []Flow{}
 		for _, v := range listle {
 			flow := Flow{}
-			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
-			time_start := t.AddDate(99, 0, 0).Format("2006-01-02") + " 00:00:00"
-			time_end := v.CreateDate
-			//　直推算力
-			zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
-			if err_zt != nil {
-				return []Flow{}, Page{}, err_zt
-			}
-			//　算力
-			formula := Formula{
-				EcologyId: v.Account,
-			}
-			err_read := o.Read(&formula, "ecology_id")
-			if err_read != nil {
-				return []Flow{}, Page{}, err_read
-			}
-			// 	已近释放
-			blo := []BlockedDetail{}
-			_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_end).QueryRows(&blo)
-			if err_raw != nil {
-				return []Flow{}, Page{}, err_raw
-			}
-			coin := 0.0
-			for _, v := range blo {
-				coin += v.CurrentOutlay
-			}
+			zhitui := BlockedDetail{}
+			o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日直推收益").QueryRow(&zhitui)
+			tuandui := BlockedDetail{}
+			o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日团队收益").QueryRow(&tuandui)
+
 			var u User
 			u.UserId = v.UserId
 			o.Read(&u, "user_id")
 			flow.UserId = v.UserId
 			flow.UserName = u.UserName
-			flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
-			flow.RecommendReturnRate = zhitui
-			flow.TeamReturnRate = formula.TeamReturnRate
-			flow.Released = coin
+			flow.HoldReturnRate = v.CurrentBalance // 本金自由算力
+			flow.RecommendReturnRate = zhitui.CurrentOutlay
+			flow.TeamReturnRate = tuandui.CurrentOutlay
+			flow.Released = zhitui.CurrentOutlay + tuandui.CurrentOutlay + v.CurrentOutlay
 			flow.UpdateTime = v.CreateDate
 			flows = append(flows, flow)
 		}
@@ -505,44 +463,20 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 	flows := []Flow{}
 	for _, v := range listle {
 		flow := Flow{}
-		t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
-		time_start := t.AddDate(-99, 0, 0).Format("2006-01-02") + " 00:00:00"
-		time_end := v.CreateDate
-		//　直推算力
-		zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
-		if err_zt != nil {
-			return []Flow{}, Page{}, err_zt
-		}
-		//　算力
-		formula := Formula{
-			EcologyId: v.Account,
-		}
-		err_read := o.Read(&formula, "ecology_id")
-		if err_read != nil {
-			return []Flow{}, Page{}, err_read
-		}
-		// 	已近释放
-		blo := []BlockedDetail{}
-		_, err_raw := o.Raw("select * from blocked_detail where user_id=? and comment=? and create_date<=? ", v.UserId, "每日释放收益", time_end).QueryRows(&blo)
-		if err_raw != nil {
-			return []Flow{}, Page{}, err_raw
-		}
-		coin := 0.0
-		for _, v := range blo {
-			coin += v.CurrentOutlay
-		}
+		zhitui := BlockedDetail{}
+		o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日直推收益").QueryRow(&zhitui)
+		tuandui := BlockedDetail{}
+		o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日团队收益").QueryRow(&tuandui)
+
+		var u User
+		u.UserId = v.UserId
+		o.Read(&u, "user_id")
 		flow.UserId = v.UserId
-		user_name := ""
-		for _, vv := range us {
-			if vv.UserId == v.UserId {
-				user_name = vv.UserName
-			}
-		}
-		flow.UserName = user_name
-		flow.HoldReturnRate = formula.HoldReturnRate * v.CurrentBalance // 本金自由算力
-		flow.RecommendReturnRate = zhitui
-		flow.TeamReturnRate = formula.TeamReturnRate
-		flow.Released = coin
+		flow.UserName = u.UserName
+		flow.HoldReturnRate = v.CurrentBalance // 本金自由算力
+		flow.RecommendReturnRate = zhitui.CurrentOutlay
+		flow.TeamReturnRate = tuandui.CurrentOutlay
+		flow.Released = zhitui.CurrentOutlay + tuandui.CurrentOutlay + v.CurrentOutlay
 		flow.UpdateTime = v.CreateDate
 		flows = append(flows, flow)
 	}
