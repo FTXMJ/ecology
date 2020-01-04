@@ -888,7 +888,7 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	ids := strings.Split(operation_id, ",")
+	ids := strings.Split(operation_id, ";")
 	for _, v := range ids {
 		id := strings.Split(v, "-")
 		switch id[1] {
