@@ -405,7 +405,7 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 			o.Read(&u, "user_id")
 			flow.UserId = v.UserId
 			flow.UserName = u.UserName
-			flow.HoldReturnRate = v.CurrentBalance // 本金自由算力
+			flow.HoldReturnRate = v.CurrentOutlay // 本金自由算力
 			flow.RecommendReturnRate = zhitui.CurrentOutlay
 			flow.TeamReturnRate = tuandui.CurrentOutlay
 			flow.Released = zhitui.CurrentOutlay + tuandui.CurrentOutlay + v.CurrentOutlay
