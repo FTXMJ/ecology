@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func SendHttpPost(urls string, api string, data map[string]string, token string) (error, *common.ResponseData) {
@@ -106,7 +107,10 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 		}
 	}
 	blo := TxIdList{}
-	NewOrm().Raw("select * from tx_id_list where user_id=? and comment=? order by create_time desc limit 1", user_id, "节点分红").QueryRow(&blo)
+	NewOrm().Raw("select * from tx_id_list where user_id=? and comment=? and create_time>=? and create_time<=?limit 1", user_id, "节点分红", time.Now().Format("2006-01-02 ")+"00:00:00", time.Now().Format("2006-01-02 ")+"59:59:59").QueryRow(&blo)
+	if blo.Id < 1 {
+		blo.Expenditure = 0
+	}
 	if len(index) > 0 {
 		ec_obj.Super_peer_bool = true
 		ec_obj.Super_peer.Level = s_f_t[index[len(index)-1]].Level
