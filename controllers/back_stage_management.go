@@ -819,6 +819,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 		user_name       = this.GetString("user_name")
+		a               = models.PeerListABouns{}
 		//api_url             = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
@@ -833,7 +834,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 	}
 	list, p, err := SelectPeerABounsList(page, user_name)
 	if err != nil {
-		data = common.NewErrorResponse(500, err.Error(), models.PeerListABouns{})
+		data = common.NewErrorResponse(500, err.Error(), a)
 		return
 	}
 	one := models.PeerListABouns{

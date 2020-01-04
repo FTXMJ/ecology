@@ -15,11 +15,14 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 		o.Raw("select * from tx_id_list order by create_time limit ?,?", page.Count, page.PageSize).QueryRows(&peer_a_bouns)
 	default:
 		users := []models.User{}
-		o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
+		_, err_1 := o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
+		if err_1 != nil || len(users) < 1 {
+			return []models.PeerAbouns{}, page, err_1
+		}
 		for _, v := range users {
 			peers := []models.TxIdList{}
 			_, err := o.Raw("select * from tx_id_list where user_id=?", v.UserId).QueryRows(&peers)
-			if err != nil {
+			if err != nil || len(peers) < 1 {
 				return []models.PeerAbouns{}, page, err
 			}
 			for _, vv := range peers {
