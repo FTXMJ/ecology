@@ -172,14 +172,19 @@ func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int
 	}
 	error_users := []models.User{}
 	m := make(map[string][]string)
+	o := models.NewOrm()
 	for _, v := range users {
-		_, level, _, err := ReturnSuperPeerLevel(v.UserId)
-		if err != nil {
-			error_users = append(error_users, v)
-		} else if level == "" && err == nil {
-			// 没有出错，但是不符合超级节点的规则
-		} else if level != "" && err == nil {
-			m[level] = append(m[level], v.UserId)
+		acc := models.Account{UserId: v.UserId}
+		o.Read(&acc, "user_id")
+		if acc.PeerState == true {
+			_, level, _, err := ReturnSuperPeerLevel(v.UserId)
+			if err != nil {
+				error_users = append(error_users, v)
+			} else if level == "" && err == nil {
+				// 没有出错，但是不符合超级节点的规则
+			} else if level != "" && err == nil {
+				m[level] = append(m[level], v.UserId)
+			}
 		}
 	}
 	if len(error_users) > 0 {
