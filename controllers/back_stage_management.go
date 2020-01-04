@@ -405,8 +405,12 @@ func (this *BackStageManagement) UserEcologyList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-
-	u_e_obj_list, p := models.FindU_E_OBJ(page, user_id, user_name)
+	o := models.NewOrm()
+	u_e_obj_list, p := models.FindU_E_OBJ(o, page, user_id, user_name)
+	for _, v := range u_e_obj_list {
+		team, _ := IndexTeamABouns(o, v.UserId)
+		v.TeamReturnRate = team
+	}
 	u_e_objs := []models.U_E_OBJ{}
 	for _, v := range u_e_obj_list {
 		u_e_obj := models.U_E_OBJ{}

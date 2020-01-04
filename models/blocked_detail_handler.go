@@ -515,8 +515,7 @@ func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64,
 }
 
 // Find user ecology information
-func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
-	o := NewOrm()
+func FindU_E_OBJ(o orm.Ormer, page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 	users := []User{}
 	if user_id != "" && user_name == "" {
 		o.Raw("select * from user where user_id=? order by id", user_id).QueryRows(&users)
@@ -550,7 +549,6 @@ func FindU_E_OBJ(page Page, user_id, user_name string) ([]U_E_OBJ, Page) {
 		user_e_obj.HoldReturnRate = formula.HoldReturnRate * account.Balance
 		zhitui, _ := RecommendReturnRate(v.UserId, time.Now().Format("2006-01-02")+" 00:00:00")
 		user_e_obj.RecommendReturnRate = zhitui
-		user_e_obj.TeamReturnRate = formula.TeamReturnRate
 
 		user_e_objs = append(user_e_objs, user_e_obj)
 	}
