@@ -623,16 +623,12 @@
                         "description": "操作_id",
                         "required": true,
                         "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "state",
-                        "description": "状态 1=true 2=false",
-                        "required": true,
-                        "type": "string"
                     }
                 ],
                 "responses": {
+                    "200__全局状态修改": {
+                        "description": ""
+                    },
                     "200__全局状态显示": {
                         "description": ""
                     }

@@ -71,7 +71,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 				ReturnMultiple: formula_index.ReturnMultiple,
 				HoldReturnRate: formula_index.HoldReturnRate * v.Balance,
 			}
-			zhitui, err := models.RecommendReturnRate(user_id, time.Now().Format("2006-01-02")+" 00:00:00")
+			t := time.Now().Format("2006-01-02") + " 00:00:00"
+			zhitui, err := models.RecommendReturnRate(user_id, t)
 			if err != nil {
 				models.CouShu(&indexValues)
 				logs.Log.Error(api_url, "计算用户当前直推收益出错!")

@@ -113,6 +113,10 @@ func AddAllSum(o orm.Ormer, user_id string) float64 {
 	var blos orm.ParamsList
 	//o.Raw("select * from blocked_detail where user_id=? and comment!=?",user_id,"直推收益").QueryRows(&blos)
 	o.Raw("select sum(current_outlay) from blocked_detail where user_id=? and comment!=?", user_id, "直推收益").ValuesFlat(&blos)
-	recommend_return_rate, _ := strconv.ParseFloat(blos[0].(string), 64)
-	return recommend_return_rate
+	var zhitui float64
+	if len(blos) > 0 && blos[0] != nil {
+		z, _ := strconv.ParseFloat(blos[0].(string), 64)
+		zhitui = z
+	}
+	return zhitui
 }

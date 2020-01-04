@@ -491,7 +491,11 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	zhitui, _ := strconv.ParseFloat(blo[0].(string), 64)
+	var zhitui float64
+	if len(blo) > 0 && blo[0] != nil {
+		z, _ := strconv.ParseFloat(blo[0].(string), 64)
+		zhitui = z
+	}
 	zhit, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", zhitui), 64)
 	return zhit, nil
 }
@@ -504,7 +508,11 @@ func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64,
 	if err != nil {
 		return 0, err
 	}
-	zhitui, _ := strconv.ParseFloat(blo[0].(string), 64)
+	var zhitui float64
+	if len(blo) > 0 && blo[0] != nil {
+		z, _ := strconv.ParseFloat(blo[0].(string), 64)
+		zhitui = z
+	}
 	return zhitui, nil
 }
 
@@ -535,7 +543,11 @@ func FindU_E_OBJ(o orm.Ormer, page Page, user_id, user_name string) ([]U_E_OBJ, 
 		user_e_obj.CoinAll = account.Balance
 		user_e_obj.ToBeReleased = account.BockedBalance
 		o.Raw("select sum(current_outlay) from blocked_detail where user_id=? and comment=?", v.UserId, "每日释放").ValuesFlat(&blos)
-		zhichu, _ := strconv.ParseFloat(blos[0].(string), 64)
+		var zhichu float64
+		if len(blos) > 0 && blos[0] != nil {
+			z, _ := strconv.ParseFloat(blos[0].(string), 64)
+			zhichu = z
+		}
 		user_e_obj.Released = zhichu
 		user_e_obj.HoldReturnRate = formula.HoldReturnRate * account.Balance
 		zhitui, _ := RecommendReturnRate(v.UserId, time.Now().Format("2006-01-02")+" 00:00:00")
