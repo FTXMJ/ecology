@@ -136,15 +136,15 @@ func OperationSet(o orm.Ormer, account *models.Account) {
 	o.Raw("select * from global_operations").QueryRows(&g_o)
 	for _, v := range g_o {
 		switch v.Operation {
-		case "全网静态收益控制":
+		case "全局静态收益控制":
 			if account.StaticReturn == true {
 				account.StaticReturn = v.State
 			}
-		case "全网动态收益控制":
+		case "全局动态收益控制":
 			if account.DynamicRevenue == true {
 				account.DynamicRevenue = v.State
 			}
-		case "全网节点收益控制":
+		case "全局节点收益控制":
 			if account.PeerState == true {
 				account.PeerState = v.State
 			}
@@ -165,7 +165,7 @@ func ProducerEcology(users []models.User) []models.User {
 
 //超级节点　的　释放
 func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) error {
-	g_o := models.GlobalOperations{Operation: "全网节点收益控制"}
+	g_o := models.GlobalOperations{Operation: "全局节点收益控制"}
 	models.NewOrm().Read(&g_o, "operation")
 	if g_o.State == false {
 		return errors.New("err")
