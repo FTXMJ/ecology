@@ -408,7 +408,7 @@ paths:
         200__全局状态显示:
           description: ""
   /ecology/admin/update_global_operations:
-    get:
+    post:
       tags:
       - ecology
       consumes:

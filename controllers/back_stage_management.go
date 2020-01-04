@@ -872,7 +872,7 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 // @Success 200__全局状态显示
 // @Param operation_id query string true "操作_id"
 // @Param state query string true "状态 1=true 2=false"
-// @router /admin/update_global_operations [GET]
+// @router /admin/update_global_operations [POST]
 func (this *BackStageManagement) UpdateGlobalOperations() {
 	var (
 		data         *common.ResponseData

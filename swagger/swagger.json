@@ -606,7 +606,7 @@
             }
         },
         "/ecology/admin/update_global_operations": {
-            "get": {
+            "post": {
                 "tags": [
                     "ecology"
                 ],
