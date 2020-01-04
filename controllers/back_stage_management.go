@@ -866,19 +866,18 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 	return
 }
 
-// @Tags 全局状态显示
+// @Tags 全局状态修改
 // @Accept  json
 // @Produce json
 // @Success 200__全局状态显示
 // @Param operation_id query string true "操作_id"
-// @Param state query string true "状态 1=true 2=false"
+// @Success 200__全局状态修改
 // @router /admin/update_global_operations [POST]
 func (this *BackStageManagement) UpdateGlobalOperations() {
 	var (
 		data         *common.ResponseData
 		o            = models.NewOrm()
 		operation_id = this.GetString("operation_id")
-		state, _     = this.GetInt("state")
 		api_url      = this.Ctx.Request.RequestURI
 	)
 	defer func() {
@@ -887,16 +886,17 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 	}()
 	ids := strings.Split(operation_id, ",")
 	for _, v := range ids {
-		switch state {
-		case 1: //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
-			_, err := o.Raw("update global_operations set state=? where id=?", true, v).Exec()
+		id := strings.Split(v, "-")
+		switch id[1] {
+		case "1": //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
+			_, err := o.Raw("update global_operations set state=? where id=?", true, id[0]).Exec()
 			if err != nil {
 				logs.Log.Error(api_url, err)
 				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
 				return
 			}
-		case 2:
-			_, err := o.Raw("update global_operations set state=? where id=?", false, v).Exec()
+		case "2":
+			_, err := o.Raw("update global_operations set state=? where id=?", false, id[0]).Exec()
 			if err != nil {
 				logs.Log.Error(api_url, err)
 				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
