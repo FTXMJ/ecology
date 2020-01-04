@@ -18,7 +18,10 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 		o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
 		for _, v := range users {
 			peers := []models.TxIdList{}
-			o.Raw("select * from tx_id_list where user_id=?", v.UserId).QueryRows(&peers)
+			_, err := o.Raw("select * from tx_id_list where user_id=?", v.UserId).QueryRows(&peers)
+			if err != nil {
+				return []models.PeerAbouns{}, page, err
+			}
 			for _, vv := range peers {
 				peer_a_bouns = append(peer_a_bouns, vv)
 			}
