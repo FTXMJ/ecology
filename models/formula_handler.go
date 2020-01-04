@@ -7,21 +7,6 @@ import (
 
 // 根据等级 进行算力的更新
 func JudgeLevel(o orm.Ormer, user_id, level string, formula *Formula) error {
-	//if JudgeLevelFor_wh_mx(o, user_id, level) == nil {
-	//	force := ForceTable{}
-	//	err := NewOrm().QueryTable("force_table").Filter("level", level).One(&force)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	formula.Level = force.Level
-	//	formula.LowHold = force.LowHold
-	//	formula.HighHold = force.HighHold
-	//	formula.ReturnMultiple = force.ReturnMultiple
-	//	formula.HoldReturnRate = force.HoldReturnRate
-	//	formula.RecommendReturnRate = force.RecommendReturnRate
-	//	formula.TeamReturnRate = force.TeamReturnRate
-	//	return nil
-	//}
 	if PanDuanLevel(user_id, level) == true {
 		force := ForceTable{}
 		o := NewOrm()
@@ -156,6 +141,12 @@ func PanDuanLevel(user_id, level string) bool {
 				if v.Level == "伯爵" {
 					l++
 				}
+				if v.Level == "公爵" {
+					l++
+				}
+				if v.Level == "侯爵" {
+					l++
+				}
 			}
 			if l >= 2 {
 				return true
@@ -165,6 +156,9 @@ func PanDuanLevel(user_id, level string) bool {
 			l := 0
 			for _, v := range sun_accounts {
 				if v.Level == "侯爵" {
+					l++
+				}
+				if v.Level == "公爵" {
 					l++
 				}
 			}
