@@ -833,7 +833,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 	}
 	list, p, err := SelectPeerABounsList(page, user_name)
 	if err != nil {
-		data = common.NewErrorResponse(500, "数据库操作失败", models.PeerListABouns{})
+		data = common.NewErrorResponse(500, err.Error(), models.PeerListABouns{})
 		return
 	}
 	one := models.PeerListABouns{

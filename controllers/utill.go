@@ -44,7 +44,9 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 	} else if end > len(peer_a_bouns) {
 		end = len(peer_a_bouns)
 	}
-
+	if start == 0 && end == 0 {
+		return []models.PeerAbouns{}, page, nil
+	}
 	for _, v := range peer_a_bouns[start:end] {
 		u := models.User{
 			UserId: v.UserId,
