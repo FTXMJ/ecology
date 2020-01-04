@@ -885,20 +885,23 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	switch state {
-	case 1: //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
-		_, err := o.Raw("update global_operations set state=? where id=?", true, operation_id).Exec()
-		if err != nil {
-			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
-			return
-		}
-	case 2:
-		_, err := o.Raw("update global_operations set state=? where id=?", false, operation_id).Exec()
-		if err != nil {
-			logs.Log.Error(api_url, err)
-			data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
-			return
+	ids := strings.Split(operation_id, ",")
+	for _, v := range ids {
+		switch state {
+		case 1: //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
+			_, err := o.Raw("update global_operations set state=? where id=?", true, v).Exec()
+			if err != nil {
+				logs.Log.Error(api_url, err)
+				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
+				return
+			}
+		case 2:
+			_, err := o.Raw("update global_operations set state=? where id=?", false, v).Exec()
+			if err != nil {
+				logs.Log.Error(api_url, err)
+				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
+				return
+			}
 		}
 	}
 	data = common.NewResponse(nil)
