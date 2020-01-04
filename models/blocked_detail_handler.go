@@ -82,7 +82,7 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 		o.Rollback()
 		return erruser
 	}
-	if user.FatherId != "" && coin_in >= 10 {
+	if user.FatherId != "" && coin_in*0.1 >= 1 {
 		ForAddCoin(o, user.FatherId, coin_in, 0.1)
 	}
 	return nil
