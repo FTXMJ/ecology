@@ -343,7 +343,7 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 			flow := Flow{}
 			t, _ := time.Parse("2006-01-02 15:04:05", v.CreateDate)
 			time_start := t.AddDate(-99, 0, 0).Format("2006-01-02") + " 00:00:00"
-			time_end := t.AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
+			time_end := t.AddDate(0, 0, 0).Format("2006-01-02") + " 23:59:59"
 			//　直推算力
 			zhitui, err_zt := RecommendReturnRateEveryDay(v.UserId, time_start, time_end)
 			if err_zt != nil {
