@@ -165,9 +165,9 @@ func ProducerEcology(users []models.User) []models.User {
 
 //超级节点　的　释放
 func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) error {
-	g_o := models.GlobalOperations{Operation: "全局节点收益控制"}
+	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
 	models.NewOrm().Read(&g_o, "operation")
-	if g_o.State == false {
+	if g_o.State == false && g_o.Id > 0 {
 		return errors.New("err")
 	}
 	error_users := []models.User{}
