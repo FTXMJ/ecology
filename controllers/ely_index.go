@@ -98,6 +98,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 		data = common.NewErrorResponse(500, err_tfor.Error(), models.Ecology_index_obj{})
 		return
 	}
+	indexValues.Usdd = AddAllSum(o, user_id)
 	models.SuperLevelSet(user_id, &indexValues, tfors)
 	data = common.NewResponse(indexValues)
 	return

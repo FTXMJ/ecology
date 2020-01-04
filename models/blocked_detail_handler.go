@@ -485,32 +485,26 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 
 // 直推算力的计算　　　－－　　　当天
 func RecommendReturnRate(user_id, time string) (float64, error) {
-	blo := []BlockedDetail{}
-	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and comment=? "
-	_, err := NewOrm().Raw(sql_str, user_id, time, "直推收益").QueryRows(&blo)
+	blo := orm.ParamsList{}
+	sql_str := "SELECT sum(current_outlay) from blocked_detail where user_id=? and create_date>=? and comment=? "
+	_, err := NewOrm().Raw(sql_str, user_id, time, "直推收益").ValuesFlat(&blo)
 	if err != nil {
 		return 0, err
 	}
-	zhitui := 0.0
-	for _, v := range blo {
-		zhitui += v.CurrentOutlay
-	}
+	zhitui, _ := strconv.ParseFloat(blo[0].(string), 64)
 	zhit, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", zhitui), 64)
 	return zhit, nil
 }
 
 // 直推算力的计算　　　－－　　　任意天
 func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64, error) {
-	blo := []BlockedDetail{}
-	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=? "
-	_, err := NewOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").QueryRows(&blo)
+	blo := orm.ParamsList{}
+	sql_str := "SELECT sum(current_outlay) from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=? "
+	_, err := NewOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").ValuesFlat(&blo)
 	if err != nil {
 		return 0, err
 	}
-	zhitui := 0.0
-	for _, v := range blo {
-		zhitui += v.CurrentRevenue
-	}
+	zhitui, _ := strconv.ParseFloat(blo[0].(string), 64)
 	return zhitui, nil
 }
 
@@ -531,7 +525,7 @@ func FindU_E_OBJ(o orm.Ormer, page Page, user_id, user_name string) ([]U_E_OBJ, 
 		user_e_obj := U_E_OBJ{}
 		account := Account{}
 		formula := Formula{}
-		blos := []BlockedDetail{}
+		blos := orm.ParamsList{}
 		o.Raw("select * from account where user_id=? ", v.UserId).QueryRow(&account)
 		o.Raw("select * from formula where ecology_id=? ", account.Id).QueryRow(&formula)
 		user_e_obj.UserId = v.UserId
@@ -540,16 +534,12 @@ func FindU_E_OBJ(o orm.Ormer, page Page, user_id, user_name string) ([]U_E_OBJ, 
 		user_e_obj.ReturnMultiple = formula.ReturnMultiple
 		user_e_obj.CoinAll = account.Balance
 		user_e_obj.ToBeReleased = account.BockedBalance
-		o.Raw("select * from blocked_detail where user_id=? and comment=?", v.UserId, "每日释放").QueryRows(&blos)
-		zhichu := 0.0
-		for _, v := range blos {
-			zhichu += v.CurrentOutlay
-		}
+		o.Raw("select sum(current_outlay) from blocked_detail where user_id=? and comment=?", v.UserId, "每日释放").ValuesFlat(&blos)
+		zhichu, _ := strconv.ParseFloat(blos[0].(string), 64)
 		user_e_obj.Released = zhichu
 		user_e_obj.HoldReturnRate = formula.HoldReturnRate * account.Balance
 		zhitui, _ := RecommendReturnRate(v.UserId, time.Now().Format("2006-01-02")+" 00:00:00")
 		user_e_obj.RecommendReturnRate = zhitui
-
 		user_e_objs = append(user_e_objs, user_e_obj)
 	}
 	page.Count = len(user_e_objs)
@@ -599,8 +589,7 @@ func FindFalseUser(page Page, user_id, user_name string) ([]FalseUser, Page) {
 	for _, v := range users {
 		account := Account{}
 		f_u := FalseUser{}
-		err := o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?)", v.UserId, false, false).QueryRow(&account)
-		fmt.Println(err)
+		o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?)", v.UserId, false, false).QueryRow(&account)
 		if account.Id > 0 {
 			f_u.UserName = v.UserName
 			f_u.UserId = v.UserId
@@ -700,7 +689,7 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 		return user_accounts[start:], page, nil
 	} else if start > len(user_accounts) {
 		return []AccountOFF{}, page, nil
-	} else if end < len(user_accounts) && start < len(user_accounts) {
+	} else {
 		for i := start; i < len(user_accounts); i++ {
 			var u User
 			u.UserId = user_accounts[i].UserId
@@ -709,7 +698,6 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 		}
 		return user_accounts[start:end], page, nil
 	}
-	return []AccountOFF{}, page, nil
 }
 
 ///*

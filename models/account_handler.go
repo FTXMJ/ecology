@@ -5,7 +5,6 @@ import (
 	"ecology/consul"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
@@ -108,8 +107,7 @@ func SuperLevelSet(user_id string, ec_obj *Ecology_index_obj, tfor float64) {
 		}
 	}
 	blo := TxIdList{}
-	err := NewOrm().Raw("select * from tx_id_list where user_id=? and comment=? and create_time>=? and create_time<=? limit 1", user_id, "节点分红", time.Now().Format("2006-01-02")+" 00:00:00", time.Now().Format("2006-01-02")+" 59:59:59").QueryRow(&blo)
-	fmt.Println(err)
+	NewOrm().Raw("select * from tx_id_list where user_id=? and comment=? and create_time>=? and create_time<=? limit 1", user_id, "节点分红", time.Now().Format("2006-01-02")+" 00:00:00", time.Now().Format("2006-01-02")+" 59:59:59").QueryRow(&blo)
 	if blo.Id < 1 {
 		blo.Expenditure = 0
 	}
