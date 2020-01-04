@@ -30,6 +30,7 @@ func init() {
 		new(DailyDividendTasks),
 		new(SuperPeerTable),
 		new(PeerHistory),
+		new(GlobalOperations),
 		new(User))
 	orm.Debug = true // 是否开启调试模式 调试模式下会打印出sql语句
 	orm.RegisterDataBase("default", "mysql", dsn, 100, 200)

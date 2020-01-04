@@ -839,3 +839,68 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 	data = common.NewResponse(one)
 	return
 }
+
+// @Tags 全局状态显示
+// @Accept  json
+// @Produce json
+// @Success 200__全局状态显示
+// @router /admin/show_global_operations [GET]
+func (this *BackStageManagement) ShowGlobalOperations() {
+	var (
+		data           *common.ResponseData
+		o              = models.NewOrm()
+		operation_list []models.GlobalOperations
+		api_url        = this.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	_, err := o.Raw("select * from global_operations").QueryRows(operation_list)
+	if err != nil {
+		logs.Log.Error(api_url, err)
+		data = common.NewErrorResponse(500, "全局控制信息获取失败!", []models.GlobalOperations{})
+		return
+	}
+	data = common.NewResponse(operation_list)
+	return
+}
+
+// @Tags 全局状态显示
+// @Accept  json
+// @Produce json
+// @Success 200__全局状态显示
+// @Param operation_id query string true "操作_id"
+// @Param state query string true "状态 1=true 2=false"
+// @router /admin/update_global_operations [GET]
+func (this *BackStageManagement) UpdateGlobalOperations() {
+	var (
+		data         *common.ResponseData
+		o            = models.NewOrm()
+		operation_id = this.GetString("operation_id")
+		state, _     = this.GetInt("state")
+		api_url      = this.Ctx.Request.RequestURI
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	switch state {
+	case 1: //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
+		_, err := o.Raw("update global_operations set state=? where id=?", true, operation_id).Exec()
+		if err != nil {
+			logs.Log.Error(api_url, err)
+			data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
+			return
+		}
+	case 2:
+		_, err := o.Raw("update global_operations set state=? where id=?", false, operation_id).Exec()
+		if err != nil {
+			logs.Log.Error(api_url, err)
+			data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
+			return
+		}
+	}
+	data = common.NewResponse(nil)
+	return
+}

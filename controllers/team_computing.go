@@ -29,6 +29,18 @@ type UserDayTx struct {
 	ZhiTui float64
 }
 
+type data_users struct {
+	Code int      `json:"code"`
+	Msg  string   `json:"msg"`
+	Data []string `json:"data"`
+}
+
+type operatio_n struct {
+	Jintai  bool
+	Dongtai bool
+	Peer    bool
+}
+
 // @Tags 测试每日释放
 // @Accept  json
 // @Produce json
@@ -51,16 +63,18 @@ func (this *Test) DailyDividendAndReleaseTest() {
 	one := 0
 	two := 0
 	three := 0
-	ProducerPeer(user, peer_a_bouns, one, two, three)
-	perr_h := models.PeerHistory{
-		Time:             time.Now().Format("2006-01-02 15:04:05"),
-		WholeNetworkTfor: models.NetIncome,
-		PeerABouns:       peer_a_bouns,
-		DiamondsPeer:     one,
-		SuperPeer:        two,
-		CreationPeer:     three,
+	err_peer := ProducerPeer(user, peer_a_bouns, one, two, three)
+	if err_peer == nil {
+		perr_h := models.PeerHistory{
+			Time:             time.Now().Format("2006-01-02 15:04:05"),
+			WholeNetworkTfor: models.NetIncome,
+			PeerABouns:       peer_a_bouns,
+			DiamondsPeer:     one,
+			SuperPeer:        two,
+			CreationPeer:     three,
+		}
+		o.Insert(&perr_h)
 	}
-	o.Insert(&perr_h)
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
@@ -114,6 +128,28 @@ func DailyDividendAndRelease() {
 	logs.Log.Info("结束")
 }
 
+// 设置 全局状态
+func OperationSet(o orm.Ormer, account *models.Account) {
+	g_o := []models.GlobalOperations{}
+	o.Raw("select * from global_operations").QueryRows(&g_o)
+	for _, v := range g_o {
+		switch v.Operation {
+		case "全网静态收益控制":
+			if account.StaticReturn == true {
+				account.StaticReturn = v.State
+			}
+		case "全网动态收益控制":
+			if account.DynamicRevenue == true {
+				account.DynamicRevenue = v.State
+			}
+		case "全网节点收益控制":
+			if account.PeerState == true {
+				account.PeerState = v.State
+			}
+		}
+	}
+}
+
 //生态仓库释放　－　团队收益  --  直推收益
 func ProducerEcology(users []models.User) []models.User {
 	error_users := []models.User{}
@@ -126,7 +162,12 @@ func ProducerEcology(users []models.User) []models.User {
 }
 
 //超级节点　的　释放
-func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) {
+func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) error {
+	g_o := models.GlobalOperations{Operation: "全网节点收益控制"}
+	models.NewOrm().Read(&g_o, "operation")
+	if g_o.State == false {
+		return errors.New("err")
+	}
 	error_users := []models.User{}
 	m := make(map[string][]string)
 	for _, v := range users {
@@ -143,6 +184,7 @@ func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int
 		ProducerPeer(error_users, peer_a_bouns, one, two, three)
 	}
 	HandlerMap(m, peer_a_bouns, one, two, three)
+	return nil
 }
 
 // 工作　函数
@@ -153,6 +195,8 @@ func Worker(user models.User) error {
 		UserId: user.UserId,
 	}
 	o.Read(&account, "user_id")
+
+	OperationSet(o, &account)
 
 	if account.DynamicRevenue != true && account.StaticReturn != true {
 		o.Commit()
@@ -236,12 +280,6 @@ func Jintai(o orm.Ormer, user models.User) error {
 		return err
 	}
 	return nil
-}
-
-type data_users struct {
-	Code int      `json:"code"`
-	Msg  string   `json:"msg"`
-	Data []string `json:"data"`
 }
 
 // 从晓东那里获取团队 成员  直推
