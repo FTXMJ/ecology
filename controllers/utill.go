@@ -106,3 +106,8 @@ func IndexTeamABouns(o orm.Ormer, user_id string) (float64, error) {
 	// 团队收益　结束
 	return value, nil
 }
+
+// 查看用户有史以来所有的收益
+func AddAllSum(o orm.Ormer, user_id string) {
+	o.Raw("select sum(current_outlay) from blocked_detail where user_id=?").Exec()
+}

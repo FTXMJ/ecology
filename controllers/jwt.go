@@ -65,12 +65,12 @@ func CheckLogin(ctx *context.Context) {
 			return
 		}
 		o := models.NewOrm()
-		o.Begin()
 		u := models.User{
 			UserId: tockken.UserID,
 		}
 		err_read := o.Read(&u, "user_id")
 		if err_read != nil && err_read.Error() == "<QuerySeter> no row found" {
+			o.Begin()
 			f, err_get_user := models.PingUser(token)
 			if err_get_user != nil {
 				o.Rollback()
@@ -116,16 +116,16 @@ func CheckLogin(ctx *context.Context) {
 				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)5"}`)
 				return
 			}
-
+			o.Commit()
 		} else if err_read == nil && u.UserName != tockken.Name {
+			o.Begin()
 			u.UserName = tockken.Name
 			o.Update(&u, "user_name")
+			o.Commit()
 		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
-			o.Rollback()
 			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)5"}`)
 			return
 		}
-		o.Commit()
 	}
 }
 

@@ -856,7 +856,7 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	_, err := o.Raw("select * from global_operations").QueryRows(operation_list)
+	_, err := o.Raw("select * from global_operations").QueryRows(&operation_list)
 	if err != nil {
 		logs.Log.Error(api_url, err)
 		data = common.NewErrorResponse(500, "全局控制信息获取失败!", []models.GlobalOperations{})

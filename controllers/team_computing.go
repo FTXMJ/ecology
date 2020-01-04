@@ -105,16 +105,18 @@ func DailyDividendAndRelease() {
 	one := 0
 	two := 0
 	three := 0
-	ProducerPeer(user, peer_a_bouns, one, two, three)
-	perr_h := models.PeerHistory{
-		Time:             time.Now().Format("2006-01-02 15:04:05"),
-		WholeNetworkTfor: models.NetIncome,
-		PeerABouns:       peer_a_bouns,
-		DiamondsPeer:     one,
-		SuperPeer:        two,
-		CreationPeer:     three,
+	err_peer := ProducerPeer(user, peer_a_bouns, one, two, three)
+	if err_peer == nil {
+		perr_h := models.PeerHistory{
+			Time:             time.Now().Format("2006-01-02 15:04:05"),
+			WholeNetworkTfor: models.NetIncome,
+			PeerABouns:       peer_a_bouns,
+			DiamondsPeer:     one,
+			SuperPeer:        two,
+			CreationPeer:     three,
+		}
+		o.Insert(&perr_h)
 	}
-	o.Insert(&perr_h)
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
