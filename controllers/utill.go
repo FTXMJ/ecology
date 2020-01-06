@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ecology/models"
+	"errors"
 	"github.com/astaxie/beego/orm"
 	"strconv"
 )
@@ -20,17 +21,15 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 			return []models.PeerAbouns{}, page, err_1
 		}
 		for _, v := range users {
-			peers := []models.TxIdList{}
-			_, err := o.Raw("select * from tx_id_list where user_id=?", v.UserId).QueryRows(&peers)
-			if err != nil || len(peers) < 1 {
+			_, err := o.Raw("select * from tx_id_list where user_id=?", v.UserId).QueryRows(&peer_a_bouns)
+			if err != nil || len(peer_a_bouns) < 1 {
 				return []models.PeerAbouns{}, page, err
-			}
-			for _, vv := range peers {
-				peer_a_bouns = append(peer_a_bouns, vv)
 			}
 		}
 	}
-
+	if len(peer_a_bouns) < 1 {
+		return []models.PeerAbouns{}, page, errors.New("没有相关数据!")
+	}
 	models.QuickSortPeerABouns(peer_a_bouns, 0, len(peer_a_bouns)-1)
 
 	page.Count = len(peer_a_bouns)
