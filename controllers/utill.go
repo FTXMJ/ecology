@@ -53,23 +53,25 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 	if start == 0 && end == 0 {
 		return []models.PeerAbouns{}, page, nil
 	}
-	for _, v := range peer_a_bouns[start:end] {
-		u := models.User{
-			UserId: v.UserId,
+	if len(peer_a_bouns[start:end]) > 0 {
+		for _, v := range peer_a_bouns[start:end] {
+			u := models.User{
+				UserId: v.UserId,
+			}
+			o.Read(&u)
+			_, level, tfors, err_tfor := ReturnSuperPeerLevel(v.UserId)
+			if err_tfor != nil {
+				return []models.PeerAbouns{}, page, err_tfor
+			}
+			p := models.PeerAbouns{
+				Id:       v.Id,
+				UserName: u.UserName,
+				Level:    level,
+				Tfors:    tfors,
+				Time:     v.CreateTime,
+			}
+			listle = append(listle, p)
 		}
-		o.Read(&u)
-		_, level, tfors, err_tfor := ReturnSuperPeerLevel(v.UserId)
-		if err_tfor != nil {
-			return []models.PeerAbouns{}, page, err_tfor
-		}
-		p := models.PeerAbouns{
-			Id:       v.Id,
-			UserName: u.UserName,
-			Level:    level,
-			Tfors:    tfors,
-			Time:     v.CreateTime,
-		}
-		listle = append(listle, p)
 	}
 	return listle, page, nil
 }
