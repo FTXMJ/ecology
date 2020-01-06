@@ -123,9 +123,9 @@ func CheckLogin(ctx *context.Context) {
 				return
 			}
 			o.Commit()
-		} else if err_read == nil && u.UserName != nicke_name {
+		} else if err_read == nil && u.UserName != nicke_name.(string) {
 			o.Begin()
-			u.UserName = tockken.Name
+			u.UserName = nicke_name.(string)
 			o.Update(&u, "user_name")
 			o.Commit()
 		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
