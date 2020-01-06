@@ -24,7 +24,6 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	var (
 		data          *common.ResponseData
 		account_index []models.Account
-		api_url       = this.Controller.Ctx.Request.RequestURI
 	)
 
 	defer func() {
@@ -39,7 +38,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 	i, erracc := o.QueryTable("account").Filter("user_id", user_id).All(&account_index)
 	if erracc != nil {
 		data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
-		logs.Log.Error(api_url, erracc)
+		logs.Log.Error(erracc)
 		return
 	}
 	indexValues := models.Ecology_index_obj{}
@@ -47,7 +46,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 		models.CouShu(&indexValues)
 		indexValues.Ecological_poject_bool = false
 		indexValues.Super_peer_bool = false
-		logs.Log.Error(api_url, "没有查询到用户的生态仓库!")
+		logs.Log.Error("没有查询到用户的生态仓库!")
 		data = common.NewResponse(indexValues)
 		return
 	}
@@ -58,7 +57,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			errfor := o.Read(&formula_index, "ecology_id")
 			if errfor != nil {
 				data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
-				logs.Log.Error(api_url, errfor)
+				logs.Log.Error(errfor)
 				return
 			}
 			f := models.Formulaindex{
@@ -75,7 +74,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			zhitui, err := models.RecommendReturnRate(user_id, t)
 			if err != nil {
 				models.CouShu(&indexValues)
-				logs.Log.Error(api_url, "计算用户当前直推收益出错!")
+				logs.Log.Error("计算用户当前直推收益出错!")
 				data = common.NewErrorResponse(500, "计算用户当前直推收益出错!", models.Ecology_index_obj{})
 				return
 			}
@@ -83,7 +82,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 			team_coins, err_team := IndexTeamABouns(o, user_id)
 			if err_team != nil {
 				models.CouShu(&indexValues)
-				logs.Log.Error(api_url, err_team.Error())
+				logs.Log.Error(err_team.Error())
 				data = common.NewErrorResponse(500, err_team.Error(), models.Ecology_index_obj{})
 				return
 			}
@@ -115,9 +114,8 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 // @router /create_new_warehouse [POST]
 func (this *EcologyIndexController) CreateNewWarehouse() {
 	var (
-		data    *common.ResponseData
-		o       = models.NewOrm()
-		api_url = this.Controller.Ctx.Request.RequestURI
+		data *common.ResponseData
+		o    = models.NewOrm()
 	)
 
 	coin_number_str := this.GetString("coin_number")
@@ -126,7 +124,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 
 	err_orm_begin := o.Begin()
 	if err_orm_begin != nil {
-		logs.Log.Error(api_url, err_orm_begin)
+		logs.Log.Error(err_orm_begin)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -150,7 +148,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	_, err_acc := o.Insert(&account)
 
 	if err_acc != nil {
-		logs.Log.Error(api_url, err_acc)
+		logs.Log.Error(err_acc)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -160,7 +158,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	err_level := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if err_level != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, err_level)
+		logs.Log.Error(err_level)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -168,7 +166,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	_, err_insert := o.Insert(&formula)
 	if err_insert != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, err_insert)
+		logs.Log.Error(err_insert)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -187,7 +185,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
 	if errtxid_acc != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, errtxid_acc)
+		logs.Log.Error(errtxid_acc)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -196,7 +194,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	token := this.Ctx.Request.Header.Get("Authorization")
 	err := models.PingWalletAdd(token, coin_number)
 	if err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, err.Error(), nil)
 		return
 	}
@@ -206,7 +204,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.NewCreateAndSaveAcc_d(oo, user_id, "普通转入", order_id, 0, coin_number, account.Id)
 	if err_acc_d != nil {
-		logs.Log.Error(api_url, err_acc_d)
+		logs.Log.Error(err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -214,7 +212,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	//铸币交易记录
 	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "转入铸币", order_id, 0, coin_number, account.Id)
 	if err_blo_d != nil {
-		logs.Log.Error(api_url, err_blo_d)
+		logs.Log.Error(err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -234,9 +232,8 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 // @router /to_change_into_USDD [POST]
 func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	var (
-		data    *common.ResponseData
-		o       = models.NewOrm()
-		api_url = this.Controller.Ctx.Request.RequestURI
+		data *common.ResponseData
+		o    = models.NewOrm()
 	)
 
 	coin_number_str := this.GetString("coin_number")
@@ -251,14 +248,14 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 	o.Read(&order_if)
 	if order_if.Id != 0 {
-		logs.Log.Error(api_url, "重复的交易－多次提交")
+		logs.Log.Error("重复的交易－多次提交")
 		data = common.NewErrorResponse(500, "订单以存在，请勿提交!!", nil)
 		return
 	}
 
 	err_orm_begin := o.Begin()
 	if err_orm_begin != nil {
-		logs.Log.Error(api_url, err_orm_begin)
+		logs.Log.Error(err_orm_begin)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -273,7 +270,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	err_for := o.QueryTable("formula").Filter("ecology_id", ecology_id).One(&formula)
 	if err_for != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, err_for)
+		logs.Log.Error(err_for)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -290,7 +287,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, errtxid_blo)
+		logs.Log.Error(errtxid_blo)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -299,7 +296,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 
 	token := this.Ctx.Request.Header.Get("Authorization")
 	if err := models.PingWalletAdd(token, coin_number); err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, err.Error(), nil)
 		return
 	}
@@ -315,14 +312,14 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "普通转入", order_id, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
-		logs.Log.Error(api_url, err_acc_d)
+		logs.Log.Error(err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
 	//铸币交易记录
 	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "转入铸币", order_id, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
-		logs.Log.Error(api_url, err_blo_d)
+		logs.Log.Error(err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -343,9 +340,8 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 // @router /upgrade_warehouse [POST]
 func (this *EcologyIndexController) UpgradeWarehouse() {
 	var (
-		data    *common.ResponseData
-		o       = models.NewOrm()
-		api_url = this.Controller.Ctx.Request.RequestURI
+		data *common.ResponseData
+		o    = models.NewOrm()
 	)
 
 	coin_number_str := this.GetString("cion_number")
@@ -361,14 +357,14 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 	o.Read(&order_if)
 	if order_if.Id != 0 {
-		logs.Log.Error(api_url, "重复的交易－多次提交")
+		logs.Log.Error("重复的交易－多次提交")
 		data = common.NewErrorResponse(500, "订单以存在，请勿提交!!", nil)
 		return
 	}
 
 	err_orm_begin := o.Begin()
 	if err_orm_begin != nil {
-		logs.Log.Error(api_url, err_orm_begin)
+		logs.Log.Error(err_orm_begin)
 		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
@@ -383,7 +379,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 	err_r := o.Read(&formula_table, "level")
 	if err_r != nil || float64(formula_table.LowHold) > coin_number {
-		logs.Log.Error(api_url, err_r)
+		logs.Log.Error(err_r)
 		data = common.NewErrorResponse(500, "不满足升级条件,请填入规定的升级金额", nil)
 		return
 	}
@@ -392,14 +388,14 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	err_read := o.Read(&formula, "ecology_id")
 	if err_read != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, err_read)
+		logs.Log.Error(err_read)
 		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
 	errJu := models.JudgeLevel(o, user_id, levelstr, &formula)
 	if errJu != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, errJu)
+		logs.Log.Error(errJu)
 		data = common.NewErrorResponse(500, errJu.Error(), nil)
 		return
 	}
@@ -418,7 +414,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, errtxid_blo)
+		logs.Log.Error(errtxid_blo)
 		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
@@ -428,7 +424,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	//钱包操作
 	token := this.Ctx.Request.Header.Get("Authorization")
 	if err := models.PingWalletAdd(token, coin_number); err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, err.Error(), nil)
 		return
 	}
@@ -437,14 +433,14 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	}
 	err_rea := o.Read(&order, "tx_id")
 	if err_rea != nil {
-		logs.Log.Error(api_url, err_rea)
+		logs.Log.Error(err_rea)
 		data = common.NewErrorResponse(500, err_rea.Error(), nil)
 		return
 	}
 	order.WalletState = true
 	_, err_up := o.Update(&order)
 	if err_up != nil {
-		logs.Log.Error(api_url, err_up)
+		logs.Log.Error(err_up)
 		data = common.NewErrorResponse(500, err_up.Error(), nil)
 		return
 	}
@@ -454,26 +450,26 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 
 	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
 	if err_up_acc != nil {
-		logs.Log.Error(api_url, err_up_acc)
+		logs.Log.Error(err_up_acc)
 		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
 	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
 		o.Rollback()
-		logs.Log.Error(api_url, err_up_for)
+		logs.Log.Error(err_up_for)
 		data = common.NewErrorResponse(500, "数据库操作失败", nil)
 		return
 	}
 
 	if err_oo != nil {
-		logs.Log.Error(api_url, err_oo)
+		logs.Log.Error(err_oo)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "升级转入", order_id, 0, coin_number, ecology_id)
 	if err_acc_d != nil {
-		logs.Log.Error(api_url, err_acc_d)
+		logs.Log.Error(err_acc_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -481,7 +477,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	//铸币交易记录
 	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "升级铸币", order_id, 0, coin_number, ecology_id)
 	if err_blo_d != nil {
-		logs.Log.Error(api_url, err_blo_d)
+		logs.Log.Error(err_blo_d)
 		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
 		return
 	}
@@ -504,7 +500,6 @@ func (this *EcologyIndexController) ReturnPageListHostry() {
 		ecology_id, _   = this.GetInt("ecology_id")
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
-		api_url         = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -516,7 +511,7 @@ func (this *EcologyIndexController) ReturnPageListHostry() {
 	}
 	values, p, err := models.SelectHostery(ecology_id, page)
 	if err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewResponse(models.HostryPageInfo{})
 		return
 	}

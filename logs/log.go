@@ -1,69 +1,63 @@
 package logs
 
 import (
-	"github.com/astaxie/beego/logs"
+	"github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	log "github.com/sirupsen/logrus"
+	"os"
+	"time"
 )
 
-//"filename" : "searchApi.log", // 文件名
-//"maxlines" : 1000,       // 最大行
-//"maxsize"  : 10240,       // 最大Size
-var jsonConfig = `{
-        "filename" : "logtemp/ecology.log", 
-        "maxlines" : 100000,        
-        "maxsize"  : 10240,       
-        "maxdays":7,
-		 "color":true,
-        "separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"]
-    }`
-
-var Log *logs.BeeLogger
+var Log *log.Logger
 
 func init() {
-	//logs.NewLogger()
-	Log = logs.Async(1000) // 创建一个日志记录器，参数为缓冲区的大小
-	Log.SetLogger(logs.AdapterMultiFile, jsonConfig)
-	//beego.BeeLogger.DelLogger("console")    //不输出到控制台
-	Log.SetLevel(logs.LevelDebug) // 设置日志写入缓冲区的等级
-	Log.EnableFuncCallDepth(true) // 输出log时能显示输出文件名和行号（非必须）
-	Log.SetLogFuncCallDepth(2)
-	// Log.Async(1000)        // message 的长度，单位是字节，这里设置了1000
-}
-
-/*func init() {
-	//Log = logs.NewLogger(10000) // 创建一个日志记录器，参数为缓冲区的大小
-	//// 设置配置文件
-	//jsonConfig := `{
-    //    "filename" : "/logtemp/ecology.log", // 文件名
-    //    "maxlines" : 1000,       // 最大行
-    //    "maxsize"  : 10240       // 最大Size
-    //}`
-	//Log.SetLogger("file", jsonConfig) // 设置日志记录方式：本地文件记录
-	//Log.SetLevel(logs.LevelDebug)     // 设置日志写入缓冲区的等级
-	//Log.EnableFuncCallDepth(true)     // 输出log时能显示输出文件名和行号（非必须）
-	//
-	//Log.Emergency("Emergency")
-	//Log.Alert("Alert")
-	//Log.Critical("Critical")
-	//Log.Error("Error")
-	//Log.Warning("Warning")
-	//Log.Notice("Notice")
-	//Log.Informational("Informational")
-	//Log.Debug("Debug")
-	//
-	//Log.Flush() // 将日志从缓冲区读出，写入到文件
-
-
-	config := make(map[string]interface{})
-	config["filename"] = "/logtemp/logcollect.log"
-	config["level"] = logs.LevelDebug
-
-	configStr, err := json.Marshal(config)
-	if err != nil {
-		fmt.Println("marshal failed,err:", err)
-		return
+	var file *os.File
+	file, er := os.Open("./logs/logtemp/log" + time.Now().Format("2006") + "-" + time.Now().Format("01") + "-" + time.Now().Format("02"))
+	if er != nil && os.IsNotExist(er) {
+		file, _ = os.Create("./logs/logtemp/log" + time.Now().Format("2006") + "-" + time.Now().Format("01") + "-" + time.Now().Format("02"))
+		defer file.Close()
 	}
-	logs.SetLogger(logs.AdapterFile, string(configStr))
-	logs.Debug("this is a test,my name is %s", "stu01")
-	logs.Trace("this is a trace,my name is %s", "stu02")
-	logs.Warn("this is a warn,my name is %s", "stu03")
-}*/
+	// 实例化
+	Log = log.New()
+	// 设置输出
+	//Log.Out = file
+	log.SetFormatter(&log.JSONFormatter{
+		// PrettyPrint: true,//格式化json
+		TimestampFormat: "2006-01-02 15:04:05", //时间格式化
+	})
+	// 设置日志级别
+	Log.SetLevel(log.InfoLevel)
+	Log.SetOutput(os.Stdout)
+	Log.SetReportCaller(true)
+	//logFilePath := config.Log_FILE_PATH
+	//logFileName := config.LOG_FILE_NAME
+	//// 日志文件
+	//fileName := path.Join(logFilePath, logFileName)
+	// 写入文件
+	// 设置 rotatelogs
+	logWriter, err := rotatelogs.New(
+		// 分割后的文件名称
+		"./logs/logtemp/log"+".%Y-%m-%d.log",
+		// 生成软链，指向最新日志文件
+		// 设置最大保存时间(7天)
+		rotatelogs.WithMaxAge(7*24*time.Hour),
+		// 设置日志切割时间间隔(1天)
+		rotatelogs.WithRotationTime(24*time.Hour),
+	)
+	if err != nil {
+		Log.Errorf("config local file system for logger error: %v", err)
+	}
+	writeMap := lfshook.WriterMap{
+		log.InfoLevel:  logWriter,
+		log.FatalLevel: logWriter,
+		log.DebugLevel: logWriter,
+		log.WarnLevel:  logWriter,
+		log.ErrorLevel: logWriter,
+		log.PanicLevel: logWriter,
+	}
+	lfHook := lfshook.NewHook(writeMap, &log.JSONFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+	// 新增 Hook
+	Log.AddHook(lfHook)
+}

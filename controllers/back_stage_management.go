@@ -27,7 +27,6 @@ func (this *BackStageManagement) ShowFormulaList() {
 		data       *common.ResponseData
 		o          = models.NewOrm()
 		force_list []models.ForceTable
-		api_url    = this.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -35,7 +34,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 	}()
 	_, err := o.QueryTable("force_table").All(&force_list)
 	if err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, "算力数据获取失败!", []models.ForceTable{})
 		return
 	}
@@ -54,7 +53,6 @@ func (this *BackStageManagement) ShowUserFormula() {
 	var (
 		data *common.ResponseData
 		o    = models.NewOrm()
-		//api_url    = this.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -94,7 +92,6 @@ func (this *BackStageManagement) OperationFormulaList() {
 	var (
 		data                      *common.ResponseData
 		o                         = models.NewOrm()
-		api_url                   = this.Ctx.Request.RequestURI
 		force_id                  = this.GetString("force_id")
 		action                    = this.GetString("action")
 		levelstr                  = this.GetString("levelstr")
@@ -123,7 +120,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			id, _ := strconv.Atoi(v)
 			_, err := o.QueryTable("force_table").Filter("id", id).Delete()
 			if err != nil {
-				logs.Log.Error(api_url, err)
+				logs.Log.Error(err)
 				data = common.NewErrorResponse(500, "算力表　删除失败!", nil)
 				return
 			}
@@ -137,7 +134,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 			Update(orm.
 				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate, "picture_url": picture_url})
 		if err != nil {
-			logs.Log.Error(api_url, err)
+			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "算力表　更新失败!", nil)
 			return
 		}
@@ -156,14 +153,14 @@ func (this *BackStageManagement) OperationFormulaList() {
 		}
 		_, err := o.Insert(&force)
 		if err != nil {
-			logs.Log.Error(api_url, err)
+			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "算力表新增失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
-		logs.Log.Error(api_url, "未知操作!")
+		logs.Log.Error("未知操作!")
 		data = common.NewErrorResponse(500, "未知操作!", nil)
 		return
 	}
@@ -178,7 +175,6 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
 		o          = models.NewOrm()
-		api_url    = this.Ctx.Request.RequestURI
 		force_list []models.SuperForceTable
 	)
 	defer func() {
@@ -187,7 +183,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 	}()
 	_, err := o.QueryTable("super_force_table").All(&force_list)
 	if err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, "节点算力数据获取失败!", []models.SuperForceTable{})
 		return
 	}
@@ -211,7 +207,6 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
 		data            *common.ResponseData
 		o               = models.NewOrm()
-		api_url         = this.Ctx.Request.RequestURI
 		super_force_id  = this.GetString("super_force_id")
 		action          = this.GetString("action")
 		levelstr        = this.GetString("levelstr")
@@ -233,7 +228,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			id, _ := strconv.Atoi(v)
 			_, err := o.QueryTable("super_force_table").Filter("id", id).Delete()
 			if err != nil {
-				logs.Log.Error(api_url, err)
+				logs.Log.Error(err)
 				data = common.NewErrorResponse(500, "节点算力表 删除失败!", nil)
 				return
 			}
@@ -247,7 +242,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			Update(orm.
 				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
 		if err != nil {
-			logs.Log.Error(api_url, err)
+			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "节点算力表 更新失败!", nil)
 			return
 		}
@@ -261,14 +256,14 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		}
 		_, err := o.Insert(&super_force)
 		if err != nil {
-			logs.Log.Error(api_url, err)
+			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "节点算力表 新增失败!", nil)
 			return
 		}
 		data = common.NewResponse(nil)
 		return
 	default:
-		logs.Log.Error(api_url, "未知操作!")
+		logs.Log.Error("未知操作!")
 		data = common.NewErrorResponse(500, "未知操作!", nil)
 		return
 	}
@@ -286,7 +281,6 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 		data            *common.ResponseData
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
-		api_url         = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -298,7 +292,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 	}
 	values, p, err := models.SelectHosteryRoot(page)
 	if err != nil {
-		logs.Log.Error(api_url+"   更新状态失败,数据库错误", err)
+		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", models.HostryPageInfo{})
 		return
 	}
@@ -334,7 +328,6 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		tx_id             = this.GetString("tx_id")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
-		api_url           = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -366,7 +359,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 
 	list, page, err := models.SelectPondMachinemsg(find_obj, p, table_name)
 	if err != nil {
-		logs.Log.Error(api_url+"   更新状态失败,数据库错误", err)
+		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", []models.HostryFindInfo{})
 		return
 	}
@@ -395,7 +388,6 @@ func (this *BackStageManagement) UserEcologyList() {
 		page_size, _    = this.GetInt("pageSize")
 		user_id         = this.GetString("user_id")
 		user_name       = this.GetString("user_name")
-		//api_url         = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -463,7 +455,6 @@ func (this *BackStageManagement) UserEcologyFalseList() {
 		page_size, _    = this.GetInt("pageSize")
 		user_id         = this.GetString("user_id")
 		user_name       = this.GetString("user_name")
-		//api_url         = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -506,7 +497,6 @@ func (this *BackStageManagement) ComputationalFlow() {
 		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
-		api_url           = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -538,7 +528,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 
 	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
 	if err != nil {
-		logs.Log.Error(api_url+"    更新状态失败,数据库错误", err)
+		logs.Log.Error("    更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, err.Error(), models.FlowList{})
 		return
 	}
@@ -588,7 +578,6 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
-		api_url           = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -620,7 +609,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 	}
 	account_off, page, err := models.FindUserAccountOFF(p, find_obj)
 	if err != nil {
-		logs.Log.Error(api_url+"    数据库错误,数据查询失败", err)
+		logs.Log.Error("    数据库错误,数据查询失败", err)
 		data = common.NewErrorResponse(500, "数据库错误", models.UserAccountOFF{})
 		return
 	}
@@ -646,7 +635,6 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 		profit_type_int, _  = this.GetInt("profit_type")
 		profit_start_int, _ = this.GetInt("profit_start")
 		strs                = this.GetString("account_id")
-		//api_url             = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -706,7 +694,6 @@ func (this *BackStageManagement) PeerUserList() {
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 		user_name       = this.GetString("user_name")
-		//api_url             = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -776,7 +763,6 @@ func (this *BackStageManagement) PeerABounsList() {
 		page_size, _      = this.GetInt("pageSize")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
-		//api_url             = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -836,7 +822,6 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 		page_size, _    = this.GetInt("pageSize")
 		user_name       = this.GetString("user_name")
 		a               = models.PeerListABouns{}
-		//api_url             = this.Controller.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -871,7 +856,6 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 		data           *common.ResponseData
 		o              = models.NewOrm()
 		operation_list []models.GlobalOperations
-		api_url        = this.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -879,7 +863,7 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 	}()
 	_, err := o.Raw("select * from global_operations").QueryRows(&operation_list)
 	if err != nil {
-		logs.Log.Error(api_url, err)
+		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, "全局控制信息获取失败!", []models.GlobalOperations{})
 		return
 	}
@@ -899,7 +883,6 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 		data         *common.ResponseData
 		o            = models.NewOrm()
 		operation_id = this.GetString("operation_id")
-		api_url      = this.Ctx.Request.RequestURI
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -912,14 +895,14 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 		case "1": //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
 			_, err := o.Raw("update global_operations set state=? where id=?", true, id[0]).Exec()
 			if err != nil {
-				logs.Log.Error(api_url, err)
+				logs.Log.Error(err)
 				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
 				return
 			}
 		case "2":
 			_, err := o.Raw("update global_operations set state=? where id=?", false, id[0]).Exec()
 			if err != nil {
-				logs.Log.Error(api_url, err)
+				logs.Log.Error(err)
 				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
 				return
 			}
