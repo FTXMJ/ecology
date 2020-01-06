@@ -326,14 +326,14 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 			page.CurrentPage = 1
 		}
 		listle := []BlockedDetail{}
-		if end > len(blos) && start < len(blos) {
-			for _, v := range blos[start:] {
+		if end > len(list) && start < len(list) {
+			for _, v := range list[start:] {
 				listle = append(listle, v)
 			}
-		} else if start > len(blos) {
+		} else if start > len(list) {
 
-		} else if end < len(blos) && start < len(blos) {
-			for _, v := range blos[start:end] {
+		} else if end < len(list) && start < len(list) {
+			for _, v := range list[start:end] {
 				listle = append(listle, v)
 			}
 		}
