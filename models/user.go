@@ -62,7 +62,7 @@ func PingUser(token string) (interface{}, interface{}, error) {
 		return "", "", errors.New("没有用户信息　 err   func -- ")
 	}
 	response.Body.Close()
-	return values.Data["father_id"], values.Data["nick_name"], nil
+	return values.Data["father_id"], values.Data["nickname"], nil
 }
 
 type Response struct {
