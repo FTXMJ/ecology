@@ -639,7 +639,7 @@ func FindFalseUser(page Page, user_id, user_name string) ([]FalseUser, Page) {
 		return f_u_s[start:end], page
 
 	}
-	return nil, page
+	return []FalseUser{}, page
 }
 
 // Find user ecology information
