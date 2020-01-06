@@ -123,7 +123,7 @@ func CheckLogin(ctx *context.Context) {
 			o.Update(&u, "user_name")
 			o.Commit()
 		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
-			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)5"}`)
+			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)6"}`)
 			return
 		}
 	}
