@@ -74,7 +74,7 @@ func CheckLogin(ctx *context.Context) {
 			f, err_get_user := models.PingUser(token)
 			if err_get_user != nil {
 				o.Rollback()
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)1"}`)
+				ctx.WriteString(`{"code": "500","msg": "用户不存在!"}`)
 				return
 			}
 			user := models.User{}
@@ -90,7 +90,7 @@ func CheckLogin(ctx *context.Context) {
 			_, erruser := o.Insert(&user)
 			if erruser != nil {
 				o.Rollback()
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)2"}`)
+				ctx.WriteString(`{"code": "500","msg": "创建用户失败!"}`)
 				return
 			}
 			account_def := models.Account{
@@ -103,7 +103,7 @@ func CheckLogin(ctx *context.Context) {
 			_, account_def_err := o.Insert(&account_def)
 			if account_def_err != nil {
 				o.Rollback()
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)4"}`)
+				ctx.WriteString(`{"code": "500","msg": "创建生态仓库失败!"}`)
 				return
 			}
 			formula := models.Formula{
@@ -113,7 +113,7 @@ func CheckLogin(ctx *context.Context) {
 			_, err_for := o.Insert(&formula)
 			if err_for != nil {
 				o.Rollback()
-				ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)5"}`)
+				ctx.WriteString(`{"code": "500","msg": "创建算力表失败"}`)
 				return
 			}
 			o.Commit()
@@ -122,8 +122,8 @@ func CheckLogin(ctx *context.Context) {
 			u.UserName = tockken.Name
 			o.Update(&u, "user_name")
 			o.Commit()
-		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
-			ctx.WriteString(`{"code": "500","msg": "后端服务期错误(db)6"}`)
+		} else {
+			ctx.WriteString(`{"code": "500","msg": "后端服务期错误"}`)
 			return
 		}
 	}
