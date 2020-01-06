@@ -657,13 +657,25 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 	}
 	for _, v := range accounts {
 		user_account := AccountOFF{
-			UserId:         v.UserId,
-			Account:        v.Id,
-			DynamicRevenue: m["全局动态收益控制"],
-			StaticReturn:   m["全局静态收益控制"],
-			CreateDate:     v.CreateDate,
-			PeerState:      m["全局节点分红控制"],
+			UserId:     v.UserId,
+			Account:    v.Id,
+			CreateDate: v.CreateDate,
 		}
+		var dynamic_revenue bool = v.DynamicRevenue
+		var static_return bool = v.StaticReturn
+		var peer_state bool = v.PeerState
+		if m["全局动态收益控制"] == false {
+			dynamic_revenue = false
+		}
+		if m["全局静态收益控制"] == false {
+			static_return = false
+		}
+		if m["全局节点分红控制"] == false {
+			peer_state = false
+		}
+		user_account.DynamicRevenue = dynamic_revenue
+		user_account.StaticReturn = static_return
+		user_account.PeerState = peer_state
 		user_accounts = append(user_accounts, user_account)
 	}
 	page.Count = len(user_accounts)

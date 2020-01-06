@@ -726,6 +726,7 @@ func (this *BackStageManagement) PeerUserList() {
 	}
 	g := models.GlobalOperations{}
 	o.Raw("select * from global_operations where operation=?", "全局节点分红控制").QueryRow(&g)
+
 	for _, v := range user {
 		p_u := models.PeerUser{}
 		update_date, level, tfor, _ := ReturnSuperPeerLevel(v.UserId)
@@ -736,9 +737,14 @@ func (this *BackStageManagement) PeerUserList() {
 			p_u.UserId = v.UserId
 			p_u.UserName = v.UserName
 			p_u.Level = level
-			p_u.State = g.State
 			p_u.Number = tfor
 			p_u.UpdateTime = update_date
+
+			var peer_state bool = g.State
+			if g.State == false {
+				peer_state = false
+			}
+			p_u.State = peer_state
 			p_u_s = append(p_u_s, p_u)
 		}
 	}
