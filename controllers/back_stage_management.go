@@ -717,23 +717,26 @@ func (this *BackStageManagement) PeerUserList() {
 	}
 	p_u_s := []models.PeerUser{}
 	user := []models.User{}
+	o := models.NewOrm()
 	switch user_name {
 	case "":
-		models.NewOrm().Raw("select * from user").QueryRows(&user)
+		o.Raw("select * from user").QueryRows(&user)
 	default:
-		models.NewOrm().Raw("select * from user where user_name=?", user_name).QueryRows(&user)
+		o.Raw("select * from user where user_name=?", user_name).QueryRows(&user)
 	}
+	g := models.GlobalOperations{}
+	o.Raw("select * from global_operations where operation=?", "全局节点分红控制").QueryRow(&g)
 	for _, v := range user {
 		p_u := models.PeerUser{}
 		update_date, level, tfor, _ := ReturnSuperPeerLevel(v.UserId)
 		if level != "" {
 			acc := models.Account{UserId: v.UserId}
-			models.NewOrm().Read(&acc, "user_id")
+			o.Read(&acc, "user_id")
 			p_u.AccountId = acc.Id
 			p_u.UserId = v.UserId
 			p_u.UserName = v.UserName
 			p_u.Level = level
-			p_u.State = acc.PeerState
+			p_u.State = g.State
 			p_u.Number = tfor
 			p_u.UpdateTime = update_date
 			p_u_s = append(p_u_s, p_u)

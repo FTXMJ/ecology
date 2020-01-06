@@ -644,19 +644,25 @@ func FindFalseUser(page Page, user_id, user_name string) ([]FalseUser, Page) {
 
 // Find user ecology information
 func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
-	accounts, err := SqlCreateValues2(obj, "account")
+	accounts, o, err := SqlCreateValues2(obj, "account")
 	if err != nil {
 		return []AccountOFF{}, Page{}, err
 	}
 	user_accounts := []AccountOFF{}
+	g := []GlobalOperations{}
+	o.Raw("select * from global_operations").QueryRows(&g)
+	m := make(map[string]bool)
+	for _, v := range g {
+		m[v.Operation] = v.State
+	}
 	for _, v := range accounts {
 		user_account := AccountOFF{
 			UserId:         v.UserId,
 			Account:        v.Id,
-			DynamicRevenue: v.DynamicRevenue,
-			StaticReturn:   v.StaticReturn,
+			DynamicRevenue: m["全局动态收益控制"],
+			StaticReturn:   m["全局静态收益控制"],
 			CreateDate:     v.CreateDate,
-			PeerState:      v.PeerState,
+			PeerState:      m["全局节点分红控制"],
 		}
 		user_accounts = append(user_accounts, user_account)
 	}
@@ -673,7 +679,6 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
-	o := NewOrm()
 	if end > len(user_accounts) {
 		for i := start; i < len(user_accounts); i++ {
 			var u User
@@ -782,7 +787,7 @@ func SqlCreateValues1(p FindObj, table_name string) ([]BlockedDetail, error) {
 }
 
 //   ---   Find user ecology information　　　sql 生成并　查询
-func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
+func SqlCreateValues2(obj FindObj, table_name string) ([]Account, orm.Ormer, error) {
 	var list []Account
 	o := NewOrm()
 	level := ""
@@ -831,7 +836,7 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 		err = er
 	}
 	if err != nil {
-		return []Account{}, err
+		return []Account{}, o, err
 	}
 	list_last := []Account{}
 	if name != "" {
@@ -842,8 +847,8 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 				list_last = append(list_last, v)
 			}
 		}
-		return list_last, nil
+		return list_last, o, nil
 	}
 
-	return list, nil
+	return list, o, nil
 }
