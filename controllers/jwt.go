@@ -122,7 +122,7 @@ func CheckLogin(ctx *context.Context) {
 			u.UserName = tockken.Name
 			o.Update(&u, "user_name")
 			o.Commit()
-		} else {
+		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
 			ctx.WriteString(`{"code": "500","msg": "后端服务期错误"}`)
 			return
 		}
