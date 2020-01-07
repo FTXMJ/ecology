@@ -13,7 +13,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 	o := models.NewOrm()
 	switch user_name {
 	case "":
-		o.Raw("select * from tx_id_list where comment=? order by create_time", "节点分红").QueryRows(&peer_a_bouns)
+		o.Raw("select * from tx_id_list where comment=? order by create_time desc", "节点分红").QueryRows(&peer_a_bouns)
 	default:
 		users := []models.User{}
 		_, err_1 := o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
@@ -21,7 +21,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 			return []models.PeerAbouns{}, page, err_1
 		}
 		for _, v := range users {
-			_, err := o.Raw("select * from tx_id_list where user_id=? and where comment=?", v.UserId, "节点分红").QueryRows(&peer_a_bouns)
+			_, err := o.Raw("select * from tx_id_list where user_id=? and where comment=? order by create_time desc", v.UserId, "节点分红").QueryRows(&peer_a_bouns)
 			if err != nil || len(peer_a_bouns) < 1 {
 				return []models.PeerAbouns{}, page, err
 			}
@@ -57,7 +57,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 			u := models.User{
 				UserId: v.UserId,
 			}
-			o.Read(&u)
+			o.Read(&u, "user_id")
 			_, level, tfors, err_tfor := ReturnSuperPeerLevel(v.UserId)
 			if err_tfor != nil {
 				return []models.PeerAbouns{}, page, err_tfor

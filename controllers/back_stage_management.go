@@ -786,13 +786,13 @@ func (this *BackStageManagement) PeerABounsList() {
 	peer_history := []models.PeerHistory{}
 	switch start_time {
 	case "":
-		_, err := models.NewOrm().Raw("select * from peer_history").QueryRows(&peer_history)
+		_, err := models.NewOrm().Raw("select * from peer_history order by time desc").QueryRows(&peer_history)
 		if err != nil {
 			data = common.NewResponse(models.PeerHistoryList{})
 			return
 		}
 	default:
-		_, err := models.NewOrm().Raw("select * from peer_history where time>=? and time<=?", start_time, end_time).QueryRows(&peer_history)
+		_, err := models.NewOrm().Raw("select * from peer_history where time>=? and time<=? order by time desc", start_time, end_time).QueryRows(&peer_history)
 		if err != nil {
 			data = common.NewResponse(models.PeerHistoryList{})
 			return
@@ -835,7 +835,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 	}
 	list, p, err := SelectPeerABounsList(page, user_name)
 	if err != nil {
-		data = common.NewErrorResponse(500, err.Error(), a)
+		data = common.NewErrorResponse(500, "请重新尝试!", a)
 		return
 	}
 	one := models.PeerListABouns{

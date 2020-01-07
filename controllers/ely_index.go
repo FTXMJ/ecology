@@ -246,7 +246,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	order_if := models.TxIdList{
 		TxId: order_id,
 	}
-	o.Read(&order_if)
+	o.Read(&order_if, "tx_id")
 	if order_if.Id != 0 {
 		logs.Log.Error("重复的交易－多次提交")
 		data = common.NewErrorResponse(500, "订单以存在，请勿提交!!", nil)
@@ -355,7 +355,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	order_if := models.TxIdList{
 		TxId: order_id,
 	}
-	o.Read(&order_if)
+	o.Read(&order_if, "tx_id")
 	if order_if.Id != 0 {
 		logs.Log.Error("重复的交易－多次提交")
 		data = common.NewErrorResponse(500, "订单以存在，请勿提交!!", nil)

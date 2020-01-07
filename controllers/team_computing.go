@@ -678,7 +678,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	formula := models.Formula{
 		EcologyId: account.Id,
 	}
-	o.Read(&formula)
+	o.Read(&formula, "ecology_id")
 
 	blos := []models.BlockedDetail{}
 	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
@@ -1077,7 +1077,7 @@ func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 	formula := models.Formula{
 		EcologyId: account.Id,
 	}
-	o.Read(&formula)
+	o.Read(&formula, "ecology_id")
 
 	blos := []models.BlockedDetail{}
 	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
