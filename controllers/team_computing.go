@@ -7,6 +7,7 @@ import (
 	"ecology/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"io/ioutil"
@@ -41,6 +42,13 @@ type operatio_n struct {
 	Peer    bool
 }
 
+type info struct {
+	peer_a_bouns float64
+	one          int
+	two          int
+	three        int
+}
+
 // @Tags 测试每日释放
 // @Accept  json
 // @Produce json
@@ -59,30 +67,31 @@ func (this *Test) DailyDividendAndReleaseTest() {
 	CreateErrUserTxList(error_users)
 
 	// 超级节点的分红
-	peer_a_bouns := 0.0
-	one := 0
-	two := 0
-	three := 0
-	err_peer := ProducerPeer(user, peer_a_bouns, one, two, three)
+	in_fo := info{}
+	err_peer := ProducerPeer(user, &in_fo)
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
 			WholeNetworkTfor: models.NetIncome,
-			PeerABouns:       peer_a_bouns,
-			DiamondsPeer:     one,
-			SuperPeer:        two,
-			CreationPeer:     three,
+			PeerABouns:       in_fo.peer_a_bouns,
+			DiamondsPeer:     in_fo.one,
+			SuperPeer:        in_fo.two,
+			CreationPeer:     in_fo.three,
 		}
 		o.Insert(&perr_h)
 	}
 
+	m := models.NetIncome
+	fmt.Println(m)
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
 	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
 	shouyi := 0.0
-	for _, v := range blo {
-		shouyi += v.CurrentOutlay
-		shouyi += v.CurrentRevenue
+	if len(blo) >= 1 {
+		for _, v := range blo {
+			shouyi += v.CurrentOutlay
+			shouyi += v.CurrentRevenue
+		}
 	}
 	models.NetIncome = shouyi
 	logs.Log.Info("结束")
@@ -101,19 +110,16 @@ func DailyDividendAndRelease() {
 	CreateErrUserTxList(error_users)
 
 	// 超级节点的分红
-	peer_a_bouns := 0.0
-	one := 0
-	two := 0
-	three := 0
-	err_peer := ProducerPeer(user, peer_a_bouns, one, two, three)
+	in_fo := info{}
+	err_peer := ProducerPeer(user, &in_fo)
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
 			WholeNetworkTfor: models.NetIncome,
-			PeerABouns:       peer_a_bouns,
-			DiamondsPeer:     one,
-			SuperPeer:        two,
-			CreationPeer:     three,
+			PeerABouns:       in_fo.peer_a_bouns,
+			DiamondsPeer:     in_fo.one,
+			SuperPeer:        in_fo.two,
+			CreationPeer:     in_fo.three,
 		}
 		o.Insert(&perr_h)
 	}
@@ -164,7 +170,7 @@ func ProducerEcology(users []models.User) []models.User {
 }
 
 //超级节点　的　释放
-func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) error {
+func ProducerPeer(users []models.User, in_fo *info) (err error) {
 	o := models.NewOrm()
 	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
 	o.Read(&g_o, "operation")
@@ -188,9 +194,9 @@ func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int
 		}
 	}
 	if len(error_users) > 0 {
-		ProducerPeer(error_users, peer_a_bouns, one, two, three)
+		ProducerPeer(error_users, in_fo)
 	}
-	HandlerMap(m, peer_a_bouns, one, two, three)
+	HandlerMap(m, in_fo)
 	return nil
 }
 
@@ -231,6 +237,11 @@ func Worker(user models.User) error {
 	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
 		err_dong := DongtaiBuShiFang(o, user.UserId)
 		if err_dong != nil {
+			o.Rollback()
+			return err_dong
+		}
+		err_team := TeamBuShiFang(o, user.UserId)
+		if err_team != nil {
 			o.Rollback()
 			return err_dong
 		}
@@ -927,7 +938,7 @@ func ReturnMap(m map[string][]string) {
 }
 
 // 处理map数据并给定收益
-func HandlerMap(m map[string][]string, peer_a_bouns float64, one, two, three int) {
+func HandlerMap(m map[string][]string, in_fo *info) {
 	err_m := make(map[string][]string)
 	for k_level, vv := range m {
 		s_f_t := models.SuperForceTable{
@@ -942,20 +953,20 @@ func HandlerMap(m map[string][]string, peer_a_bouns float64, one, two, three int
 			} else {
 				if tfor_some/float64(len(vv)) != 0 {
 					AddFormulaABonus(v, tfor_some/float64(len(vv)))
-					peer_a_bouns += tfor_some / float64(len(vv))
+					in_fo.peer_a_bouns += tfor_some / float64(len(vv))
 				}
 				if k_level == "钻石节点" {
-					one++
+					in_fo.one++
 				} else if k_level == "超级节点" {
-					two++
+					in_fo.two++
 				} else if k_level == "创世节点" {
-					three++
+					in_fo.three++
 				}
 			}
 		}
 	}
 	if len(err_m) != 0 {
-		HandlerMap(err_m, peer_a_bouns, one, two, three)
+		HandlerMap(err_m, in_fo)
 	}
 }
 
