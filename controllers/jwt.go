@@ -237,10 +237,3 @@ func (j *JWT) RefreshToken(tokenString string) (string, error) {
 	}
 	return "", TokenInvalid
 }
-
-/*j := &JWT{
-	[]byte(SignKey),
-}
-c := CustomClaims{UserID:"77e3732c1e4541bebf3782b43631b8b1"}
-s,_ := j.CreateToken(c)
-fmt.Println(s)*/
