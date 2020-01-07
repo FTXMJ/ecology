@@ -32,7 +32,7 @@ func (this *User) Update() (err error) {
 }
 
 // 调用远端接口
-func PingUser(token string) (interface{}, error) {
+func PingUser(token string) (interface{}, interface{}, error) {
 	client := &http.Client{}
 	//生成要访问的url
 	url := consul.GetUserApi + beego.AppConfig.String("api::apiurl_get_user")
@@ -44,25 +44,25 @@ func PingUser(token string) (interface{}, error) {
 	reqest.Header.Add("Authorization", token)
 
 	if errnr != nil {
-		return "", errnr
+		return "", "", errnr
 	}
 	//处理返回结果
 	response, errdo := client.Do(reqest)
 
 	if errdo != nil {
-		return "", errdo
+		return "", "", errdo
 	}
 	bys, err_read := ioutil.ReadAll(response.Body)
 	if err_read != nil {
-		return "", err_read
+		return "", "", err_read
 	}
 	values := Response{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil || values.Data == nil {
-		return "", errors.New("没有用户信息　 err   func -- ")
+		return "", "", errors.New("没有用户信息　 err   func -- ")
 	}
 	response.Body.Close()
-	return values.Data["father_id"], nil
+	return values.Data["father_id"], values.Data["nickname"], nil
 }
 
 type Response struct {

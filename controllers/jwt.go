@@ -68,10 +68,16 @@ func CheckLogin(ctx *context.Context) {
 		u := models.User{
 			UserId: tockken.UserID,
 		}
+		_, nicke_name, err_ping_user := models.PingUser(token)
+		if err_ping_user != nil {
+			o.Rollback()
+			ctx.WriteString(`{"code": "500","msg": "` + err_ping_user.Error() + `"}`)
+			return
+		}
 		err_read := o.Read(&u, "user_id")
 		if err_read != nil && err_read.Error() == "<QuerySeter> no row found" {
 			o.Begin()
-			f, err_get_user := models.PingUser(token)
+			f, _, err_get_user := models.PingUser(token)
 			if err_get_user != nil {
 				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "用户不存在!"}`)
@@ -117,9 +123,9 @@ func CheckLogin(ctx *context.Context) {
 				return
 			}
 			o.Commit()
-		} else if err_read == nil && u.UserName != tockken.Name {
+		} else if err_read == nil && u.UserName != nicke_name.(string) {
 			o.Begin()
-			u.UserName = tockken.Name
+			u.UserName = nicke_name.(string)
 			o.Update(&u, "user_name")
 			o.Commit()
 		} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {

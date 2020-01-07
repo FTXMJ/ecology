@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ecology/models"
+	"errors"
 	"github.com/astaxie/beego/orm"
 	"strconv"
 )
@@ -12,7 +13,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 	o := models.NewOrm()
 	switch user_name {
 	case "":
-		o.Raw("select * from tx_id_list order by create_time limit ?,?", page.Count, page.PageSize).QueryRows(&peer_a_bouns)
+		o.Raw("select * from tx_id_list where comment=? order by create_time", "节点分红").QueryRows(&peer_a_bouns)
 	default:
 		users := []models.User{}
 		_, err_1 := o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
@@ -20,17 +21,15 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 			return []models.PeerAbouns{}, page, err_1
 		}
 		for _, v := range users {
-			peers := []models.TxIdList{}
-			_, err := o.Raw("select * from tx_id_list where user_id=?", v.UserId).QueryRows(&peers)
-			if err != nil || len(peers) < 1 {
+			_, err := o.Raw("select * from tx_id_list where user_id=? and where comment=?", v.UserId, "节点分红").QueryRows(&peer_a_bouns)
+			if err != nil || len(peer_a_bouns) < 1 {
 				return []models.PeerAbouns{}, page, err
-			}
-			for _, vv := range peers {
-				peer_a_bouns = append(peer_a_bouns, vv)
 			}
 		}
 	}
-
+	if len(peer_a_bouns) < 1 {
+		return []models.PeerAbouns{}, page, errors.New("没有相关数据!")
+	}
 	models.QuickSortPeerABouns(peer_a_bouns, 0, len(peer_a_bouns)-1)
 
 	page.Count = len(peer_a_bouns)
@@ -53,23 +52,25 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 	if start == 0 && end == 0 {
 		return []models.PeerAbouns{}, page, nil
 	}
-	for _, v := range peer_a_bouns[start:end] {
-		u := models.User{
-			UserId: v.UserId,
+	if len(peer_a_bouns[start:end]) > 0 {
+		for _, v := range peer_a_bouns[start:end] {
+			u := models.User{
+				UserId: v.UserId,
+			}
+			o.Read(&u)
+			_, level, tfors, err_tfor := ReturnSuperPeerLevel(v.UserId)
+			if err_tfor != nil {
+				return []models.PeerAbouns{}, page, err_tfor
+			}
+			p := models.PeerAbouns{
+				Id:       v.Id,
+				UserName: u.UserName,
+				Level:    level,
+				Tfors:    tfors,
+				Time:     v.CreateTime,
+			}
+			listle = append(listle, p)
 		}
-		o.Read(&u)
-		_, level, tfors, err_tfor := ReturnSuperPeerLevel(v.UserId)
-		if err_tfor != nil {
-			return []models.PeerAbouns{}, page, err_tfor
-		}
-		p := models.PeerAbouns{
-			Id:       v.Id,
-			UserName: u.UserName,
-			Level:    level,
-			Tfors:    tfors,
-			Time:     v.CreateTime,
-		}
-		listle = append(listle, p)
 	}
 	return listle, page, nil
 }

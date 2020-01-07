@@ -144,7 +144,7 @@ func OperationSet(o orm.Ormer, account *models.Account) {
 			if account.DynamicRevenue == true {
 				account.DynamicRevenue = v.State
 			}
-		case "全局节点收益控制":
+		case "全局节点分红控制":
 			if account.PeerState == true {
 				account.PeerState = v.State
 			}
@@ -165,14 +165,14 @@ func ProducerEcology(users []models.User) []models.User {
 
 //超级节点　的　释放
 func ProducerPeer(users []models.User, peer_a_bouns float64, one, two, three int) error {
+	o := models.NewOrm()
 	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
-	models.NewOrm().Read(&g_o, "operation")
+	o.Read(&g_o, "operation")
 	if g_o.State == false && g_o.Id > 0 {
 		return errors.New("err")
 	}
 	error_users := []models.User{}
 	m := make(map[string][]string)
-	o := models.NewOrm()
 	for _, v := range users {
 		acc := models.Account{UserId: v.UserId}
 		o.Read(&acc, "user_id")
@@ -206,9 +206,17 @@ func Worker(user models.User) error {
 	OperationSet(o, &account)
 
 	if account.DynamicRevenue != true && account.StaticReturn != true {
+		JintaiBuShiFang(o, user.UserId)
+		DongtaiBuShiFang(o, user.UserId)
+		TeamBuShiFang(o, user.UserId)
 		o.Commit()
 		return nil
 	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
+		err_jin := JintaiBuShiFang(o, user.UserId)
+		if err_jin != nil {
+			o.Rollback()
+			return err_jin
+		}
 		err_team := Team(o, user)
 		if err_team != nil {
 			o.Rollback()
@@ -221,6 +229,11 @@ func Worker(user models.User) error {
 		}
 
 	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
+		err_dong := DongtaiBuShiFang(o, user.UserId)
+		if err_dong != nil {
+			o.Rollback()
+			return err_dong
+		}
 		err_jintai := Jintai(o, user)
 		if err_jintai != nil {
 			o.Rollback()
@@ -395,7 +408,6 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		EcologyId: account.Id,
 	}
 	o.Read(&formula, "ecology_id")
-	value = value * formula.TeamReturnRate
 
 	if value > account.BockedBalance {
 		value = account.BockedBalance
@@ -974,67 +986,243 @@ func CreateErrUserTxList(users []models.User) {
 	}
 }
 
-/*
-			每日任务－－－思路
-	users := []UserDayTx{}// 准备好的　obj　用来接受　最终处理数据
-	// 计算　所有　用户　当日　发放　的值
-	for _, v := range u {
-		if err := UsersPermissionsFiltering(v,users); err != nil {
-			error_users = append(error_users, v)
+//静态的收益累加
+func JintaiBuShiFang(o orm.Ormer, user_id string) error {
+	account := models.Account{
+		UserId: user_id,
+	}
+	o.Read(&account, "user_id")
+	formula := models.Formula{
+		EcologyId: account.Id,
+	}
+	o.Read(&formula, "ecology_id")
+	blocked_yestoday := []models.AccountDetail{}
+	_, err_raw := o.Raw(
+		"select * from account_detail where user_id=? and create_date<=? order by create_date desc limit 3",
+		user_id,
+		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
+		QueryRows(&blocked_yestoday)
+	if err_raw != nil {
+		if err_raw.Error() != "<QuerySeter> no row found" {
+			return err_raw
 		}
 	}
+	var blocked_old1 models.AccountDetail
+	if len(blocked_yestoday) != 0 {
+		for i := 0; i < len(blocked_yestoday)-1; i++ {
+			for j := i + 1; j < len(blocked_yestoday); j++ {
+				if blocked_yestoday[i].Id > blocked_yestoday[j].Id {
+					blocked_yestoday[i], blocked_yestoday[j] = blocked_yestoday[j], blocked_yestoday[i]
+				}
+			}
+		}
 
-	// 错误的用户,生成　未完成　的用户表　　　　等待"客服人员"操作
-	//TODO
+		blocked_old1 = blocked_yestoday[len(blocked_yestoday)-1]
+		if blocked_old1.Id == 0 {
+			blocked_old1.CurrentBalance = 0
+		}
+	}
+	blocked_olds := []models.BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
 
-	// 集体性的　钱包数据更新　　以及生态数据库的更新
-*/
-/*
-// 执行赋值操作
-func UsersPermissionsFiltering(u models.User,users []UserDayTx) error {
-	o := models.NewOrm()
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
+	}
+	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
+	aabonus := blocked_old.CurrentBalance - abonus
+	if aabonus < 0 {
+		aabonus = 0
+		abonus = blocked_old.CurrentBalance
+	}
+	if abonus == 0 {
+		return nil
+	}
+
+	models.NetIncome += abonus
+	return nil
+}
+
+//直推累加
+func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 	account := models.Account{
-		UserId: u.UserId,
+		UserId: user_id,
 	}
 	o.Read(&account, "user_id")
 
-	user := UserDayTx{
-		UserId: u.UserId,
-		BenJin: 0,
-		Team:   0,
-		ZhiTui: 0,
+	formula := models.Formula{
+		EcologyId: account.Id,
 	}
-	var err error
-	if account.DynamicRevenue != true && account.StaticReturn != true {
+	o.Read(&formula)
 
-	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
-		err = TeamValue(user)
-		err = ZhiTuiValue(user)
-	} else if account.StaticReturn == true && account.DynamicRevenue != true { //静态可以，动态禁止
-		err = BenJinValue(user)
-	} else { // 都可以
-		err = TeamValue(user)
-		err = ZhiTuiValue(user)
-		err = BenJinValue(user)
+	blos := []models.BlockedDetail{}
+	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
+	time_end := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
+	_, err := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
+	if err != nil {
+		if err.Error() != "<QuerySeter> no row found" {
+			return err
+		}
 	}
+	shouyi := 0.0
+	for _, v := range blos {
+		shouyi += v.CurrentOutlay
+	}
+
+	blocked_olds := []models.BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
+	}
+	shouyia := blocked_old.CurrentBalance - shouyi
+	if shouyia < 0 {
+		shouyia = 0
+		shouyi = blocked_old.CurrentBalance
+	}
+
+	if shouyi == 0 {
+		return nil
+	}
+	models.NetIncome += shouyi
 	return nil
 }
 
-// 给所有人的　每日本金自由算力收益　　　赋值
-func BenJinValue(user UserDayTx) error {
-
+// 团队累加
+func TeamBuShiFang(o orm.Ormer, user_id string) error {
+	coins := []float64{}
+	user_current_layer := []models.User{}
+	// 团队收益　开始
+	o.QueryTable("user").Filter("father_id", user_id).All(&user_current_layer)
+	if len(user_current_layer) > 0 {
+		for _, v := range user_current_layer {
+			if user_id != v.UserId {
+				// 获取用户teams
+				team_user, err := GetTeams(v)
+				if err != nil {
+					if err.Error() != "用户未激活或被拉入黑名单" {
+						return err
+					}
+				}
+				if len(team_user) > 0 {
+					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
+					coin, err_handler := HandlerOperation(team_user, v.UserId)
+					if err_handler != nil {
+						return err_handler
+					}
+					coins = append(coins, coin)
+				}
+			}
+		}
+	}
+	err_sort_a_r := TeamWork(o, coins, user_id)
+	if err_sort_a_r != nil {
+		return err_sort_a_r
+	}
+	// 团队收益　结束
 	return nil
 }
 
-// 给所有人的　每日团队收益　　			赋值
-func TeamValue(user UserDayTx) error {
+//　计算团队的收益,但是不给定
+func TeamWork(o orm.Ormer, coins []float64, user_id string) error {
+	for i := 0; i < len(coins)-1; i++ {
+		for j := i + 1; j < len(coins); j++ {
+			if coins[i] > coins[j] {
+				coins[i], coins[j] = coins[j], coins[i]
+			}
+		}
+	}
+	value := 0.0
+	for i := 0; i < len(coins)-1; i++ {
+		value += coins[i]
+	}
 
+	if value == 0 {
+		return nil
+	}
+
+	acc := models.Account{
+		UserId: user_id,
+	}
+	o.Read(&acc, "user_id")
+	for_m := models.Formula{
+		EcologyId: acc.Id,
+	}
+	o.Read(&for_m, "ecology_id")
+
+	value = value * for_m.TeamReturnRate
+
+	var account = models.Account{
+		UserId: user_id,
+	}
+	o.Read(&account, "user_id")
+	var formula = models.Formula{
+		EcologyId: account.Id,
+	}
+	o.Read(&formula, "ecology_id")
+	value = value * formula.TeamReturnRate
+
+	if value > account.BockedBalance {
+		value = account.BockedBalance
+	}
+
+	if value == 0 {
+		return nil
+	}
+
+	//找最近的数据记录表
+	blocked_olds := []models.BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user_id).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old models.BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
+				}
+			}
+		}
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
+		}
+	}
+	models.NetIncome += value
 	return nil
 }
-
-// 给所有人的　前一天的直推收益　　　	赋值
-func ZhiTuiValue(user UserDayTx) error {
-
-	return nil
-}
-*/

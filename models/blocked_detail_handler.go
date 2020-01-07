@@ -326,14 +326,14 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 			page.CurrentPage = 1
 		}
 		listle := []BlockedDetail{}
-		if end > len(blos) && start < len(blos) {
-			for _, v := range blos[start:] {
+		if end > len(list) && start < len(list) {
+			for _, v := range list[start:] {
 				listle = append(listle, v)
 			}
-		} else if start > len(blos) {
+		} else if start > len(list) {
 
-		} else if end < len(blos) && start < len(blos) {
-			for _, v := range blos[start:end] {
+		} else if end < len(list) && start < len(list) {
+			for _, v := range list[start:end] {
 				listle = append(listle, v)
 			}
 		}
@@ -639,25 +639,43 @@ func FindFalseUser(page Page, user_id, user_name string) ([]FalseUser, Page) {
 		return f_u_s[start:end], page
 
 	}
-	return nil, page
+	return []FalseUser{}, page
 }
 
 // Find user ecology information
 func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
-	accounts, err := SqlCreateValues2(obj, "account")
+	accounts, o, err := SqlCreateValues2(obj, "account")
 	if err != nil {
 		return []AccountOFF{}, Page{}, err
 	}
 	user_accounts := []AccountOFF{}
+	g := []GlobalOperations{}
+	o.Raw("select * from global_operations").QueryRows(&g)
+	m := make(map[string]bool)
+	for _, v := range g {
+		m[v.Operation] = v.State
+	}
 	for _, v := range accounts {
 		user_account := AccountOFF{
-			UserId:         v.UserId,
-			Account:        v.Id,
-			DynamicRevenue: v.DynamicRevenue,
-			StaticReturn:   v.StaticReturn,
-			CreateDate:     v.CreateDate,
-			PeerState:      v.PeerState,
+			UserId:     v.UserId,
+			Account:    v.Id,
+			CreateDate: v.CreateDate,
 		}
+		var dynamic_revenue bool = v.DynamicRevenue
+		var static_return bool = v.StaticReturn
+		var peer_state bool = v.PeerState
+		if m["全局动态收益控制"] == false {
+			dynamic_revenue = false
+		}
+		if m["全局静态收益控制"] == false {
+			static_return = false
+		}
+		if m["全局节点分红控制"] == false {
+			peer_state = false
+		}
+		user_account.DynamicRevenue = dynamic_revenue
+		user_account.StaticReturn = static_return
+		user_account.PeerState = peer_state
 		user_accounts = append(user_accounts, user_account)
 	}
 	page.Count = len(user_accounts)
@@ -673,7 +691,6 @@ func FindUserAccountOFF(page Page, obj FindObj) ([]AccountOFF, Page, error) {
 	if page.Count <= 5 {
 		page.CurrentPage = 1
 	}
-	o := NewOrm()
 	if end > len(user_accounts) {
 		for i := start; i < len(user_accounts); i++ {
 			var u User
@@ -782,7 +799,7 @@ func SqlCreateValues1(p FindObj, table_name string) ([]BlockedDetail, error) {
 }
 
 //   ---   Find user ecology information　　　sql 生成并　查询
-func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
+func SqlCreateValues2(obj FindObj, table_name string) ([]Account, orm.Ormer, error) {
 	var list []Account
 	o := NewOrm()
 	level := ""
@@ -831,7 +848,7 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 		err = er
 	}
 	if err != nil {
-		return []Account{}, err
+		return []Account{}, o, err
 	}
 	list_last := []Account{}
 	if name != "" {
@@ -842,8 +859,8 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, error) {
 				list_last = append(list_last, v)
 			}
 		}
-		return list_last, nil
+		return list_last, o, nil
 	}
 
-	return list, nil
+	return list, o, nil
 }

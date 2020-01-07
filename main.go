@@ -2,8 +2,8 @@ package main
 
 import (
 	"ecology/controllers"
+	"ecology/logs"
 	_ "ecology/routers"
-	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/robfig/cron"
 )
@@ -11,8 +11,6 @@ import (
 var c = cron.New()
 
 func main() {
-	//c.AddFunc("0 0 2 1/1 * ? ", controllers.DailyDividendAndRelease) //定时更新首页数据
-	//c.AddFunc("0 0 2 1/1 * ? *", controllers.DailyDividendAndRelease) //定时更新首页数据
 	c.AddFunc(beego.AppConfig.String("crontab::schedules"), controllers.DailyDividendAndRelease) //定时更新首页数据
 	//c.AddFunc("0/10 * * * * *", Fp)                                                              //定时更新首页数据
 	c.Start()
@@ -29,5 +27,5 @@ func main() {
 }
 
 func Fp() {
-	fmt.Println("hello -_- world")
+	logs.Log.Error("hello -_- world")
 }
