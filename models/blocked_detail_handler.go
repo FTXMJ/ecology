@@ -212,8 +212,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 		}
 		_, err := o.Insert(&blocked_new)
 		if err != nil {
-			logs.Log.Error("直推算力　铸币表生成失败　：", err)
-			return err
+			ForAddCoin(o, father_id, coin, proportion)
 		}
 	}
 	if coin*proportion*proportion >= 1 && user.FatherId != "" {
