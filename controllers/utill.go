@@ -13,7 +13,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 	o := models.NewOrm()
 	switch user_name {
 	case "":
-		o.Raw("select * from tx_id_list order by create_time limit ?,?", page.Count, page.PageSize).QueryRows(&peer_a_bouns)
+		o.Raw("select * from tx_id_list order by create_time").QueryRows(&peer_a_bouns)
 	default:
 		users := []models.User{}
 		_, err_1 := o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
