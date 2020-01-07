@@ -730,7 +730,7 @@ func (this *BackStageManagement) PeerUserList() {
 			p_u.Number = tfor
 			p_u.UpdateTime = update_date
 
-			var peer_state bool = g.State
+			var peer_state bool = acc.PeerState
 			if g.State == false {
 				peer_state = false
 			}
