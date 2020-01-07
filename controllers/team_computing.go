@@ -906,13 +906,13 @@ func ReturnSuperPeerLevel(user_id string) (time, level string, tfor float64, err
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-1; j++ {
 			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
-				s_f_t[i].CoinNumberRule, s_f_t[j].CoinNumberRule = s_f_t[j].CoinNumberRule, s_f_t[i].CoinNumberRule
+				s_f_t[i], s_f_t[j] = s_f_t[j], s_f_t[i]
 			}
 		}
 	}
 	index := []int{}
 	for i, v := range s_f_t {
-		if tfor_number > float64(v.CoinNumberRule) {
+		if tfor_number >= float64(v.CoinNumberRule) {
 			index = append(index, i)
 		}
 	}
