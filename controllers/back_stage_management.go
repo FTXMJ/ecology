@@ -532,7 +532,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 		data = common.NewErrorResponse(500, err.Error(), models.FlowList{})
 		return
 	}
-	var flowss []models.Flow
+	flowss := []models.Flow{}
 	for _, v := range flows {
 		flow := models.Flow{}
 		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.HoldReturnRate), 64)
