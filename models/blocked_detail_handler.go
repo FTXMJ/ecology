@@ -153,67 +153,64 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 
 	account := Account{}
 	o.QueryTable("account").Filter("user_id", father_id).One(&account)
-
-	if account.DynamicRevenue == true {
-		//任务表 USDD  铸币记录
-		order_id := utils.TimeUUID()
-		blo_txid_dcmt := TxIdList{
-			TxId:        order_id,
-			OrderState:  true,
-			WalletState: true,
-			UserId:      father_id,
-			Comment:     "直推收益",
-			CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
-			Expenditure: (coin * proportion),
-			InCome:      0,
-		}
-		_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-		if errtxid_blo != nil {
-			logs.Log.Error("直推算力累加错误", errtxid_blo)
-			return errtxid_blo
-		}
-		blocked_olds := []BlockedDetail{}
-		o.QueryTable("blocked_detail").
-			Filter("user_id", user.UserId).
-			Filter("account", account.Id).
-			OrderBy("-create_date").
-			Limit(3).
-			All(&blocked_olds)
-		var blocked_old BlockedDetail
-		if len(blocked_olds) != 0 {
-			for i := 0; i < len(blocked_olds)-1; i++ {
-				for j := i + 1; j < len(blocked_olds); j++ {
-					if blocked_olds[i].Id > blocked_olds[j].Id {
-						blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-					}
+	//任务表 USDD  铸币记录
+	order_id := utils.TimeUUID()
+	blo_txid_dcmt := TxIdList{
+		TxId:        order_id,
+		OrderState:  true,
+		WalletState: true,
+		UserId:      father_id,
+		Comment:     "直推收益",
+		CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
+		Expenditure: (coin * proportion),
+		InCome:      0,
+	}
+	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
+	if errtxid_blo != nil {
+		logs.Log.Error("直推算力累加错误", errtxid_blo)
+		return errtxid_blo
+	}
+	blocked_olds := []BlockedDetail{}
+	o.QueryTable("blocked_detail").
+		Filter("user_id", user.UserId).
+		Filter("account", account.Id).
+		OrderBy("-create_date").
+		Limit(3).
+		All(&blocked_olds)
+	var blocked_old BlockedDetail
+	if len(blocked_olds) != 0 {
+		for i := 0; i < len(blocked_olds)-1; i++ {
+			for j := i + 1; j < len(blocked_olds); j++ {
+				if blocked_olds[i].Id > blocked_olds[j].Id {
+					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
 				}
 			}
-
-			blocked_old = blocked_olds[len(blocked_olds)-1]
-			if blocked_old.Id == 0 {
-				blocked_old.CurrentBalance = 0
-			}
 		}
 
-		blocked_new := BlockedDetail{
-			UserId:         father_id,
-			CurrentRevenue: 0,
-			CurrentOutlay:  (coin * proportion),
-			OpeningBalance: blocked_old.CurrentBalance,
-			CurrentBalance: blocked_old.CurrentBalance,
-			CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
-			Comment:        "直推收益",
-			TxId:           order_id,
-			Account:        account.Id,
-			CoinType:       "USDD",
+		blocked_old = blocked_olds[len(blocked_olds)-1]
+		if blocked_old.Id == 0 {
+			blocked_old.CurrentBalance = 0
 		}
-		if blocked_new.CurrentBalance < 0 {
-			blocked_new.CurrentBalance = 0
-		}
-		_, err := o.Insert(&blocked_new)
-		if err != nil {
-			ForAddCoin(o, father_id, coin, proportion)
-		}
+	}
+
+	blocked_new := BlockedDetail{
+		UserId:         father_id,
+		CurrentRevenue: 0,
+		CurrentOutlay:  (coin * proportion),
+		OpeningBalance: blocked_old.CurrentBalance,
+		CurrentBalance: blocked_old.CurrentBalance,
+		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
+		Comment:        "直推收益",
+		TxId:           order_id,
+		Account:        account.Id,
+		CoinType:       "USDD",
+	}
+	if blocked_new.CurrentBalance < 0 {
+		blocked_new.CurrentBalance = 0
+	}
+	_, err := o.Insert(&blocked_new)
+	if err != nil {
+		ForAddCoin(o, father_id, coin, proportion)
 	}
 	if coin*proportion*proportion >= 1 && user.FatherId != "" {
 		ForAddCoin(o, user.FatherId, (coin * proportion), proportion)

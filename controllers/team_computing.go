@@ -180,23 +180,19 @@ func ProducerPeer(users []models.User, in_fo *info) (err error) {
 	error_users := []models.User{}
 	m := make(map[string][]string)
 	for _, v := range users {
-		acc := models.Account{UserId: v.UserId}
-		o.Read(&acc, "user_id")
-		if acc.PeerState == true {
-			_, level, _, err := ReturnSuperPeerLevel(v.UserId)
-			if err != nil {
-				error_users = append(error_users, v)
-			} else if level == "" && err == nil {
-				// 没有出错，但是不符合超级节点的规则
-			} else if level != "" && err == nil {
-				m[level] = append(m[level], v.UserId)
-			}
+		_, level, _, err := ReturnSuperPeerLevel(v.UserId)
+		if err != nil {
+			error_users = append(error_users, v)
+		} else if level == "" && err == nil {
+			// 没有出错，但是不符合超级节点的规则
+		} else if level != "" && err == nil {
+			m[level] = append(m[level], v.UserId)
 		}
 	}
 	if len(error_users) > 0 {
 		ProducerPeer(error_users, in_fo)
 	}
-	HandlerMap(m, in_fo)
+	HandlerMap(o, m, in_fo)
 	return nil
 }
 
@@ -938,7 +934,7 @@ func ReturnMap(m map[string][]string) {
 }
 
 // 处理map数据并给定收益
-func HandlerMap(m map[string][]string, in_fo *info) {
+func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info) {
 	err_m := make(map[string][]string)
 	for k_level, vv := range m {
 		s_f_t := models.SuperForceTable{
@@ -948,10 +944,12 @@ func HandlerMap(m map[string][]string, in_fo *info) {
 		tfor_some := models.NetIncome * s_f_t.BonusCalculation
 		for _, v := range vv {
 			err := PingAddWalletCoin(v, tfor_some/float64(len(vv)))
+			acc := models.Account{UserId: v}
+			o.Read(&acc, "user_id")
 			if err != nil {
 				err_m[k_level] = append(err_m[k_level], v)
 			} else {
-				if tfor_some/float64(len(vv)) != 0 {
+				if tfor_some/float64(len(vv)) != 0 && acc.PeerState == true {
 					AddFormulaABonus(v, tfor_some/float64(len(vv)))
 					in_fo.peer_a_bouns += tfor_some / float64(len(vv))
 				}
@@ -966,7 +964,7 @@ func HandlerMap(m map[string][]string, in_fo *info) {
 		}
 	}
 	if len(err_m) != 0 {
-		HandlerMap(err_m, in_fo)
+		HandlerMap(o, err_m, in_fo)
 	}
 }
 
