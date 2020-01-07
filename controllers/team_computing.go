@@ -408,7 +408,6 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 		EcologyId: account.Id,
 	}
 	o.Read(&formula, "ecology_id")
-	value = value * formula.TeamReturnRate
 
 	if value > account.BockedBalance {
 		value = account.BockedBalance
