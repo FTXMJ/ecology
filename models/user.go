@@ -59,7 +59,7 @@ func PingUser(token string) (interface{}, interface{}, error) {
 	values := Response{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil || values.Data == nil {
-		return "", "", errors.New("没有用户信息　 err   func -- ")
+		return "", "", errors.New("没有该用户信息")
 	}
 	response.Body.Close()
 	return values.Data["father_id"], values.Data["nickname"], nil
