@@ -860,3 +860,75 @@ func SqlCreateValues2(obj FindObj, table_name string) ([]Account, orm.Ormer, err
 
 	return list, o, nil
 }
+
+func ShowMrsfTable(page Page, user_name, user_id, date string, state bool) ([]MrsfStateTable, Page, error) {
+	list := []MrsfStateTable{}
+	o := NewOrm()
+	acc := Account{UserId: user_id}
+	o.Read(&acc, "user_id")
+	level := ""
+	var err error
+	s_ql := "select * from mrsf_state_table where "
+	if user_id != "" {
+		level += "1"
+	}
+	if user_name != "" {
+		level += "2"
+	}
+	if date != "" {
+		level += "3"
+	}
+	if level == "1" {
+		s_ql = s_ql + "user_id=? and state=? order by time desc"
+		_, er := o.Raw(s_ql, user_id, state).QueryRows(&list)
+		err = er
+	} else if level == "12" {
+		s_ql = s_ql + "user_id=? and user_name=? and state=? order by time desc"
+		_, er := o.Raw(s_ql, user_id, user_name, state).QueryRows(&list)
+		err = er
+	} else if level == "123" {
+		s_ql = s_ql + "user_id=? and user_name=? and order_id=? and state=? order by time desc"
+		_, er := o.Raw(s_ql, user_id, user_name, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		err = er
+	} else if level == "13" {
+		s_ql = s_ql + "user_id=? and order_id=? and state=? order by time desc"
+		_, er := o.Raw(s_ql, user_id, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		err = er
+	} else if level == "23" {
+		s_ql = s_ql + "user_name=? and order_id=? and state=? order by time desc"
+		_, er := o.Raw(s_ql, user_name, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		err = er
+	} else if level == "3" {
+		s_ql = s_ql + "order_id=? and state=? order by time desc"
+		_, er := o.Raw(s_ql, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		err = er
+	} else {
+		s_ql = s_ql + "id>0 and state=? order by time desc"
+		_, er := o.Raw(s_ql, state).QueryRows(&list)
+		err = er
+	}
+	if err != nil {
+		return []MrsfStateTable{}, page, err
+	}
+	page.Count = len(list)
+	if page.PageSize < 5 {
+		page.PageSize = 5
+	}
+	if page.CurrentPage == 0 {
+		page.CurrentPage = 1
+	}
+	start := (page.CurrentPage - 1) * page.PageSize
+	end := start + page.PageSize
+	page.TotalPage = (page.Count / page.PageSize) + 1 //总页数
+	if page.Count <= 5 {
+		page.CurrentPage = 1
+	}
+	if end > len(list) && start < len(list) {
+		return list[start:], page, nil
+	} else if start > len(list) {
+		return []MrsfStateTable{}, page, nil
+	} else if end <= len(list) && start <= len(list) {
+		return list[start:end], page, nil
+	}
+	return []MrsfStateTable{}, page, nil
+}

@@ -61,7 +61,7 @@ func (this *Test) DailyDividendAndReleaseTest() {
 	o.QueryTable("user").All(&user)
 
 	//    每日释放___and___团队收益___and___直推收益
-	error_users := ProducerEcology(user) // 返回错误的用户名单
+	error_users := ProducerEcology(user, "") // 返回错误的用户名单
 
 	//    给失败的用户　添加失败的任务记录表
 	CreateErrUserTxList(error_users)
@@ -104,7 +104,7 @@ func DailyDividendAndRelease() {
 	o.QueryTable("user").All(&user)
 
 	//    每日释放___and___团队收益___and___直推收益
-	error_users := ProducerEcology(user) // 返回错误的用户名单
+	error_users := ProducerEcology(user, "") // 返回错误的用户名单
 
 	//    给失败的用户　添加失败的任务记录表
 	CreateErrUserTxList(error_users)
@@ -112,6 +112,49 @@ func DailyDividendAndRelease() {
 	// 超级节点的分红
 	in_fo := info{}
 	err_peer := ProducerPeer(user, &in_fo)
+	if err_peer == nil {
+		perr_h := models.PeerHistory{
+			Time:             time.Now().Format("2006-01-02 15:04:05"),
+			WholeNetworkTfor: models.NetIncome,
+			PeerABouns:       in_fo.peer_a_bouns,
+			DiamondsPeer:     in_fo.one,
+			SuperPeer:        in_fo.two,
+			CreationPeer:     in_fo.three,
+		}
+		o.Insert(&perr_h)
+	}
+
+	// 让收益回归今日
+	blo := []models.BlockedDetail{}
+	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
+	shouyi := 0.0
+	for _, v := range blo {
+		shouyi += v.CurrentOutlay
+		shouyi += v.CurrentRevenue
+	}
+	models.NetIncome = shouyi
+	logs.Log.Info("结束")
+}
+
+func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
+	logs.Log.Info("开始")
+	o := models.NewOrm()
+	users := []models.User{}
+	for _, v := range user {
+		u := models.User{UserId: v}
+		o.Read(&u)
+		users = append(users, u)
+	}
+
+	//    每日释放___and___团队收益___and___直推收益
+	error_users := ProducerEcology(users, order_id) // 返回错误的用户名单
+
+	//    给失败的用户　添加失败的任务记录表
+	CreateErrUserTxList(error_users)
+
+	// 超级节点的分红
+	in_fo := info{}
+	err_peer := ProducerPeer(users, &in_fo)
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
@@ -159,10 +202,10 @@ func OperationSet(o orm.Ormer, account *models.Account) {
 }
 
 //生态仓库释放　－　团队收益  --  直推收益
-func ProducerEcology(users []models.User) []models.User {
+func ProducerEcology(users []models.User, order_id string) []models.User {
 	error_users := []models.User{}
 	for _, v := range users {
-		if err := Worker(v); err != nil {
+		if err := Worker(v, order_id); err != nil {
 			error_users = append(error_users, v)
 		}
 	}
@@ -197,7 +240,7 @@ func ProducerPeer(users []models.User, in_fo *info) (err error) {
 }
 
 // 工作　函数
-func Worker(user models.User) error {
+func Worker(user models.User, order_id string) error {
 	o := models.NewOrm()
 	o.Begin()
 	account := models.Account{
@@ -212,21 +255,25 @@ func Worker(user models.User) error {
 		DongtaiBuShiFang(o, user.UserId)
 		TeamBuShiFang(o, user.UserId)
 		o.Commit()
+		CreateMrsfTable(o, user, account, true, order_id)
 		return nil
 	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
 		err_jin := JintaiBuShiFang(o, user.UserId)
 		if err_jin != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_jin
 		}
 		err_team := Team(o, user)
 		if err_team != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_team
 		}
 		err_zhitui := ZhiTui(o, user.UserId)
 		if err_zhitui != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_zhitui
 		}
 
@@ -234,37 +281,69 @@ func Worker(user models.User) error {
 		err_dong := DongtaiBuShiFang(o, user.UserId)
 		if err_dong != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_dong
 		}
 		err_team := TeamBuShiFang(o, user.UserId)
 		if err_team != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_dong
 		}
 		err_jintai := Jintai(o, user)
 		if err_jintai != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_jintai
 		}
 	} else { // 都可以
 		err_team := Team(o, user)
 		if err_team != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_team
 		}
 		err_zhitui := ZhiTui(o, user.UserId)
 		if err_zhitui != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_zhitui
 		}
 		err_jintai := Jintai(o, user)
 		if err_jintai != nil {
 			o.Rollback()
+			CreateMrsfTable(o, user, account, false, order_id)
 			return err_jintai
 		}
 	}
+	CreateMrsfTable(o, user, account, true, order_id)
 	o.Commit()
 	return nil
+}
+
+func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_tate bool, order_id string) {
+	switch order_id {
+	case "":
+		mrsf_table := models.MrsfStateTable{
+			UserId:   user.UserId,
+			UserName: user.UserName,
+			State:    s_tate,
+			Time:     time.Now().Format("2006-01-02 15:04:05"),
+			OrderId:  strconv.Itoa(account.Id) + time.Now().Format("2006-01-02"),
+		}
+		_, err := o.Insert(&mrsf_table)
+		if err != nil {
+			CreateMrsfTable(o, user, account, s_tate, order_id)
+		}
+	default:
+		m := models.MrsfStateTable{OrderId: order_id}
+		o.Read(&m, "order_id")
+		m.State = s_tate
+		_, err := o.Update(&m)
+		if err != nil {
+			CreateMrsfTable(o, user, account, s_tate, order_id)
+		}
+	}
 }
 
 func Team(o orm.Ormer, user models.User) error {

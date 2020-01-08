@@ -605,6 +605,95 @@
                 }
             }
         },
+        "/ecology/admin/show_one_day_mrsf": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "description": "分页信息　－　当前页数",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageSize",
+                        "description": "分页信息　－　每页数据量",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "date_time",
+                        "description": "开始时间",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "user_name",
+                        "description": "用户名字  不搜就传空，搜索就传user_name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "user_id",
+                        "description": "用户id  不搜就传空，搜索就传user_id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "state",
+                        "description": "状态　1=完成的 2=未完成的",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200__每日释放任务表": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/admin/the_release_of_err_users": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "user_id",
+                        "description": "用户id+order_id   格式－   user_id-order_id;user_id-order_id;.....",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200__每日释放任务表": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/admin/update_global_operations": {
             "post": {
                 "tags": [
