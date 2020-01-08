@@ -58,7 +58,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 				UserId: v.UserId,
 			}
 			o.Read(&u, "user_id")
-			_, level, tfors, err_tfor := ReturnSuperPeerLevel(v.UserId)
+			_, level, _, err_tfor := ReturnSuperPeerLevel(v.UserId)
 			if err_tfor != nil {
 				return []models.PeerAbouns{}, page, err_tfor
 			}
@@ -66,7 +66,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 				Id:       v.Id,
 				UserName: u.UserName,
 				Level:    level,
-				Tfors:    tfors,
+				Tfors:    v.Expenditure,
 				Time:     v.CreateTime,
 			}
 			listle = append(listle, p)
