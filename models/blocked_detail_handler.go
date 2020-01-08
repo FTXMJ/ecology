@@ -887,20 +887,20 @@ func ShowMrsfTable(page Page, user_name, user_id, date string, state bool) ([]Mr
 		_, er := o.Raw(s_ql, user_id, user_name, state).QueryRows(&list)
 		err = er
 	} else if level == "123" {
-		s_ql = s_ql + "user_id=? and user_name=? and order_id=? and state=? order by time desc"
-		_, er := o.Raw(s_ql, user_id, user_name, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		s_ql = s_ql + "user_id=? and user_name=? and order_id=? and state=? and date=? order by time desc"
+		_, er := o.Raw(s_ql, user_id, user_name, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
 		err = er
 	} else if level == "13" {
-		s_ql = s_ql + "user_id=? and order_id=? and state=? order by time desc"
-		_, er := o.Raw(s_ql, user_id, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		s_ql = s_ql + "user_id=? and order_id=? and state=? and date=? order by time desc"
+		_, er := o.Raw(s_ql, user_id, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
 		err = er
 	} else if level == "23" {
-		s_ql = s_ql + "user_name=? and order_id=? and state=? order by time desc"
-		_, er := o.Raw(s_ql, user_name, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		s_ql = s_ql + "user_name=? and order_id=? and state=? and date=? order by time desc"
+		_, er := o.Raw(s_ql, user_name, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
 		err = er
 	} else if level == "3" {
-		s_ql = s_ql + "order_id=? and state=? order by time desc"
-		_, er := o.Raw(s_ql, strconv.Itoa(acc.Id)+date, state).QueryRows(&list)
+		s_ql = s_ql + "order_id=? and state=? and date=? order by time desc"
+		_, er := o.Raw(s_ql, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
 		err = er
 	} else {
 		s_ql = s_ql + "id>0 and state=? order by time desc"

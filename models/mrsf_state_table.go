@@ -7,4 +7,5 @@ type MrsfStateTable struct {
 	State    bool   `orm:"column(state)" json:"state"`
 	Time     string `orm:"column(time)" json:"time"`
 	OrderId  string `orm:"column(order_id)" json:"order_id"`
+	Date     string `orm:"column(date)" json:"date"`
 }
