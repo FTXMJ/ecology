@@ -668,7 +668,7 @@
             }
         },
         "/ecology/admin/the_release_of_err_users": {
-            "get": {
+            "post": {
                 "tags": [
                     "ecology"
                 ],

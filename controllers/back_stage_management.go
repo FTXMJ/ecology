@@ -972,7 +972,7 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 // @Produce json
 // @Param user_id query string true "用户id+order_id   格式－   user_id-order_id;user_id-order_id;....."
 // @Success 200__每日释放任务表
-// @router /admin/the_release_of_err_users [GET]
+// @router /admin/the_release_of_err_users [POST]
 func (this *BackStageManagement) TheReleaseOfErrUsers() {
 	var (
 		data    *common.ResponseData

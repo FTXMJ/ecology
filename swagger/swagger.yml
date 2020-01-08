@@ -450,7 +450,7 @@ paths:
         200__每日释放任务表:
           description: ""
   /ecology/admin/the_release_of_err_users:
-    get:
+    post:
       tags:
       - ecology
       consumes:
