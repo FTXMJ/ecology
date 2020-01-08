@@ -66,9 +66,9 @@ func (this *BackStageManagement) ShowUserFormula() {
 	o.Read(&for_mula, "ecology_id")
 	for_mula_table := models.ForceTable{Level: for_mula.Level}
 	if for_mula.Level == "" {
-		for_mula_table.Level = "无等级"
+		for_mula_table.ReturnMultiple = 1
 	}
-	o.Read(&for_mula_table, "level")
+	o.Read(&for_mula_table, "rrturn_multiple")
 	data = common.NewResponse(for_mula_table)
 	return
 }
@@ -908,6 +908,99 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 			}
 		}
 	}
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 每日释放任务表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param date_time query string true "开始时间"
+// @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
+// @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
+// @Param state query string true "状态　1=完成的 2=未完成的"
+// @Success 200__每日释放任务表
+// @router /admin/show_one_day_mrsf [GET]
+func (this *BackStageManagement) ShowOneDayMrsf() {
+	var (
+		data             *common.ResponseData
+		current_page, _  = this.GetInt("page")
+		page_size, _     = this.GetInt("pageSize")
+		date_time_int, _ = this.GetInt64("date_time")
+		user_name        = this.GetString("user_name")
+		user_id          = this.GetString("user_id")
+		state_int, _     = this.GetInt("state")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	date_time := ""
+	if date_time_int == 0 {
+		date_time = ""
+	} else {
+		date_time = time.Unix(date_time_int, 0).Format("2006-01-02")
+	}
+	state := true
+	if state_int == 2 {
+		state = false
+	}
+	mrsf_list, p, err := models.ShowMrsfTable(page, user_name, user_id, date_time, state)
+	if err != nil {
+		logs.Log.Error(err)
+		data = common.NewErrorResponse(500, "请尝试刷新!", []models.MrsfTable{})
+		return
+	}
+	m_t := models.MrsfTable{
+		Items: mrsf_list,
+		Page:  p,
+	}
+	data = common.NewResponse(m_t)
+	return
+}
+
+// @Tags 每日释放任务_手动释放错误用户
+// @Accept  json
+// @Produce json
+// @Param user_id query string true "用户id+order_id   格式－   user_id-order_id;user_id-order_id;....."
+// @Success 200__每日释放任务表
+// @router /admin/the_release_of_err_users [GET]
+func (this *BackStageManagement) TheReleaseOfErrUsers() {
+	var (
+		data    *common.ResponseData
+		user_id = this.GetString("user_id")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+	users := strings.Split(user_id, ";")
+	o := models.NewOrm()
+	order_id := ""
+	user_mrsf := []string{}
+	for i, v := range users {
+		user := strings.Split(v, "-")
+		if i == 0 {
+			order_id = user[1]
+		}
+		m_s_t := models.MrsfStateTable{OrderId: user[1]}
+		o.Read(&m_s_t, "order_id")
+		if m_s_t.State == false && order_id == user[1] {
+			user_mrsf = append(user_mrsf, user[0])
+		} else {
+			data = common.NewErrorResponse(500, "只能释放未释放没有释放的用户!", nil)
+			return
+		}
+	}
+	DailyDividendAndReleaseToSomeOne(users, order_id)
 	data = common.NewResponse(nil)
 	return
 }
