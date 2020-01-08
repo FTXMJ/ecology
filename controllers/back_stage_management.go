@@ -853,14 +853,14 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 // @router /admin/show_global_operations [GET]
 func (this *BackStageManagement) ShowGlobalOperations() {
 	var (
-		data           *common.ResponseData
-		o              = models.NewOrm()
-		operation_list []models.GlobalOperations
+		data *common.ResponseData
+		o    = models.NewOrm()
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
+	operation_list := []models.GlobalOperations{}
 	_, err := o.Raw("select * from global_operations").QueryRows(&operation_list)
 	if err != nil {
 		logs.Log.Error(err)
