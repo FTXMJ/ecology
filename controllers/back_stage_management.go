@@ -987,7 +987,7 @@ func (this *BackStageManagement) TheReleaseOfErrUsers() {
 	order_id := ""
 	user_mrsf := []string{}
 	for i, v := range users {
-		user := strings.Split(v, "-")
+		user := strings.Split(v, "_")
 		if i == 0 {
 			order_id = user[1]
 		}
