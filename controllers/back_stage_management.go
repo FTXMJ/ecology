@@ -64,11 +64,12 @@ func (this *BackStageManagement) ShowUserFormula() {
 	o.Read(&account, "user_id")
 	for_mula := models.Formula{EcologyId: account.Id}
 	o.Read(&for_mula, "ecology_id")
-	for_mula_table := models.ForceTable{Level: for_mula.Level}
+	for_mula_table := models.ForceTable{Level: for_mula.Level, ReturnMultiple: for_mula.ReturnMultiple}
 	if for_mula.Level == "" {
 		for_mula_table.ReturnMultiple = 1
 	}
-	o.Read(&for_mula_table, "rrturn_multiple")
+	err := o.Read(&for_mula_table, "return_multiple")
+	fmt.Println(err)
 	data = common.NewResponse(for_mula_table)
 	return
 }
