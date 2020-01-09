@@ -813,15 +813,19 @@ func (this *BackStageManagement) PeerABounsList() {
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
+// @Param start_time query string true "开始时间"
+// @Param end_time query string true "结束时间"
 // @Success 200____节点收益记录流水 {object} models.PeerListABouns_test
 // @router /admin/peer_a_bouns_history_list [GET]
 func (this *BackStageManagement) PeerABounsHistoryList() {
 	var (
-		data            *common.ResponseData
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
-		user_name       = this.GetString("user_name")
-		a               = models.PeerListABouns{}
+		data              *common.ResponseData
+		current_page, _   = this.GetInt("page")
+		page_size, _      = this.GetInt("pageSize")
+		user_name         = this.GetString("user_name")
+		start_time_int, _ = this.GetInt64("start_time")
+		end_time_int, _   = this.GetInt64("end_time")
+		a                 = models.PeerListABouns{}
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -833,7 +837,16 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	list, p, err := SelectPeerABounsList(page, user_name)
+	start_time := ""
+	end_time := ""
+	if start_time_int == 0 || end_time_int == 0 {
+		start_time = ""
+		end_time = ""
+	} else {
+		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+	}
+	list, p, err := SelectPeerABounsList(page, user_name, start_time, end_time)
 	if err != nil {
 		data = common.NewErrorResponse(500, "请重新尝试!", a)
 		return
@@ -949,7 +962,7 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 	} else {
 		date_time = time.Unix(date_time_int, 0).Format("2006-01-02")
 	}
-	state := true
+	state := true //1578412800
 	if state_int == 2 {
 		state = false
 	}

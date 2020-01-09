@@ -469,7 +469,7 @@ func SelectFlows(p FindObj, page Page, table_name string) ([]Flow, Page, error) 
 		o.Read(&u, "user_id")
 		flow.UserId = v.UserId
 		flow.UserName = u.UserName
-		flow.HoldReturnRate = v.CurrentBalance // 本金自由算力
+		flow.HoldReturnRate = v.CurrentOutlay // 本金自由算力
 		flow.RecommendReturnRate = zhitui.CurrentOutlay
 		flow.TeamReturnRate = tuandui.CurrentOutlay
 		flow.Released = zhitui.CurrentOutlay + tuandui.CurrentOutlay + v.CurrentOutlay
@@ -895,12 +895,16 @@ func ShowMrsfTable(page Page, user_name, user_id, date string, state bool) ([]Mr
 		_, er := o.Raw(s_ql, user_id, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
 		err = er
 	} else if level == "23" {
-		s_ql = s_ql + "user_name=? and order_id=? and state=? and date=? order by time desc"
-		_, er := o.Raw(s_ql, user_name, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
+		s_ql = s_ql + "user_name=? and state=? and date=? order by time desc"
+		_, er := o.Raw(s_ql, user_name, state, date).QueryRows(&list)
 		err = er
 	} else if level == "3" {
-		s_ql = s_ql + "order_id=? and state=? and date=? order by time desc"
-		_, er := o.Raw(s_ql, strconv.Itoa(acc.Id)+date, state, date).QueryRows(&list)
+		s_ql = s_ql + "state=? and date=? order by time desc"
+		_, er := o.Raw(s_ql, state, date).QueryRows(&list)
+		err = er
+	} else if level == "2" {
+		s_ql = s_ql + "state=? and user_name=? order by time desc"
+		_, er := o.Raw(s_ql, state, user_name).QueryRows(&list)
 		err = er
 	} else {
 		s_ql = s_ql + "id>0 and state=? order by time desc"

@@ -8,12 +8,16 @@ import (
 )
 
 // 查看节点收益流水
-func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbouns, models.Page, error) {
+func SelectPeerABounsList(page models.Page, user_name, start_time, end_time string) ([]models.PeerAbouns, models.Page, error) {
 	peer_a_bouns := []models.TxIdList{}
 	o := models.NewOrm()
+	time := ""
+	if start_time != "" {
+		time = "and create_time>=" + "'" + start_time + "'" + " and create_time<=" + "'" + end_time + "'"
+	}
 	switch user_name {
 	case "":
-		o.Raw("select * from tx_id_list where comment=? order by create_time desc", "节点分红").QueryRows(&peer_a_bouns)
+		o.Raw("select * from tx_id_list where comment=? "+time+" order by create_time desc", "节点分红").QueryRows(&peer_a_bouns)
 	default:
 		users := []models.User{}
 		_, err_1 := o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
@@ -21,7 +25,7 @@ func SelectPeerABounsList(page models.Page, user_name string) ([]models.PeerAbou
 			return []models.PeerAbouns{}, page, err_1
 		}
 		for _, v := range users {
-			_, err := o.Raw("select * from tx_id_list where user_id=? and where comment=? order by create_time desc", v.UserId, "节点分红").QueryRows(&peer_a_bouns)
+			_, err := o.Raw("select * from tx_id_list where user_id=? and comment=? "+time+" order by create_time desc", v.UserId, "节点分红").QueryRows(&peer_a_bouns)
 			if err != nil || len(peer_a_bouns) < 1 {
 				return []models.PeerAbouns{}, page, err
 			}
