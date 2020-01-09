@@ -68,7 +68,7 @@ func (this *Test) DailyDividendAndReleaseTest() {
 
 	// 超级节点的分红
 	in_fo := info{}
-	err_peer := ProducerPeer(user, &in_fo)
+	err_peer := ProducerPeer(user, &in_fo, "")
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
@@ -111,7 +111,7 @@ func DailyDividendAndRelease() {
 
 	// 超级节点的分红
 	in_fo := info{}
-	err_peer := ProducerPeer(user, &in_fo)
+	err_peer := ProducerPeer(user, &in_fo, "")
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
@@ -154,7 +154,7 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 
 	// 超级节点的分红
 	in_fo := info{}
-	err_peer := ProducerPeer(users, &in_fo)
+	err_peer := ProducerPeer(users, &in_fo, order_id)
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
@@ -213,7 +213,7 @@ func ProducerEcology(users []models.User, order_id string) []models.User {
 }
 
 //超级节点　的　释放
-func ProducerPeer(users []models.User, in_fo *info) (err error) {
+func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
 	o := models.NewOrm()
 	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
 	o.Read(&g_o, "operation")
@@ -233,15 +233,18 @@ func ProducerPeer(users []models.User, in_fo *info) (err error) {
 		}
 	}
 	if len(error_users) > 0 {
-		ProducerPeer(error_users, in_fo)
+		ProducerPeer(error_users, in_fo, order_id)
 	}
-	HandlerMap(o, m, in_fo)
+	HandlerMap(o, m, in_fo, order_id)
 	return nil
 }
 
 // 工作　函数
 func Worker(user models.User, order_id string) error {
 	o := models.NewOrm()
+	team_a_bouns := 0.0
+	ziyou_a_bouns := 0.0
+	zhitui_a_bouns := 0.0
 	o.Begin()
 	account := models.Account{
 		UserId: user.UserId,
@@ -255,25 +258,27 @@ func Worker(user models.User, order_id string) error {
 		DongtaiBuShiFang(o, user.UserId)
 		TeamBuShiFang(o, user.UserId)
 		o.Commit()
-		CreateMrsfTable(o, user, account, true, order_id)
+		CreateMrsfTable(o, user, account, true, order_id, 0, 0, 0)
 		return nil
 	} else if account.DynamicRevenue == true && account.StaticReturn != true { // 动态可以，静态禁止
 		err_jin := JintaiBuShiFang(o, user.UserId)
 		if err_jin != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_jin
 		}
-		err_team := Team(o, user)
+		t, err_team := Team(o, user)
+		team_a_bouns = t
 		if err_team != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_team
 		}
-		err_zhitui := ZhiTui(o, user.UserId)
+		z, err_zhitui := ZhiTui(o, user.UserId)
+		zhitui_a_bouns = z
 		if err_zhitui != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_zhitui
 		}
 
@@ -281,73 +286,84 @@ func Worker(user models.User, order_id string) error {
 		err_dong := DongtaiBuShiFang(o, user.UserId)
 		if err_dong != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_dong
 		}
 		err_team := TeamBuShiFang(o, user.UserId)
 		if err_team != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_dong
 		}
-		err_jintai := Jintai(o, user)
+		j, err_jintai := Jintai(o, user)
+		ziyou_a_bouns = j
 		if err_jintai != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_jintai
 		}
 	} else { // 都可以
-		err_team := Team(o, user)
+		t, err_team := Team(o, user)
+		team_a_bouns = t
 		if err_team != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_team
 		}
-		err_zhitui := ZhiTui(o, user.UserId)
+		z, err_zhitui := ZhiTui(o, user.UserId)
+		zhitui_a_bouns = z
 		if err_zhitui != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_zhitui
 		}
-		err_jintai := Jintai(o, user)
+		j, err_jintai := Jintai(o, user)
+		ziyou_a_bouns = j
 		if err_jintai != nil {
 			o.Rollback()
-			CreateMrsfTable(o, user, account, false, order_id)
+			CreateMrsfTable(o, user, account, false, order_id, 0, 0, 0)
 			return err_jintai
 		}
 	}
-	CreateMrsfTable(o, user, account, true, order_id)
+	CreateMrsfTable(o, user, account, true, order_id, ziyou_a_bouns, zhitui_a_bouns, team_a_bouns)
 	o.Commit()
 	return nil
 }
 
-func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_tate bool, order_id string) {
+func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_tate bool, order_id string, ziyou, zhitui, team float64) {
 	switch order_id {
 	case "":
 		mrsf_table := models.MrsfStateTable{
-			UserId:   user.UserId,
-			UserName: user.UserName,
-			State:    s_tate,
-			Time:     time.Now().Format("2006-01-02 15:04:05"),
-			OrderId:  strconv.Itoa(account.Id) + time.Now().Format("2006-01-02"),
-			Date:     time.Now().Format("2006-01-02"),
+			UserId:       user.UserId,
+			UserName:     user.UserName,
+			State:        s_tate,
+			Time:         time.Now().Format("2006-01-02 15:04:05"),
+			OrderId:      strconv.Itoa(account.Id) + time.Now().Format("2006-01-02"),
+			Date:         time.Now().Format("2006-01-02"),
+			ZiYouABouns:  ziyou,
+			ZhiTuiABouns: zhitui,
+			TeamABouns:   team,
 		}
 		_, err := o.Insert(&mrsf_table)
 		if err != nil {
-			CreateMrsfTable(o, user, account, s_tate, order_id)
+			CreateMrsfTable(o, user, account, s_tate, order_id, ziyou, zhitui, team)
 		}
 	default:
 		m := models.MrsfStateTable{OrderId: order_id}
 		o.Read(&m, "order_id")
 		m.State = s_tate
+		m.Time = time.Now().Format("2006-01-02 15:04:05")
+		m.ZiYouABouns = ziyou
+		m.ZhiTuiABouns = zhitui
+		m.TeamABouns = team
 		_, err := o.Update(&m)
 		if err != nil {
-			CreateMrsfTable(o, user, account, s_tate, order_id)
+			CreateMrsfTable(o, user, account, s_tate, order_id, ziyou, zhitui, team)
 		}
 	}
 }
 
-func Team(o orm.Ormer, user models.User) error {
+func Team(o orm.Ormer, user models.User) (float64, error) {
 	coins := []float64{}
 	user_current_layer := []models.User{}
 	// 团队收益　开始
@@ -359,34 +375,34 @@ func Team(o orm.Ormer, user models.User) error {
 				team_user, err := GetTeams(v)
 				if err != nil {
 					if err.Error() != "用户未激活或被拉入黑名单" {
-						return err
+						return 0, err
 					}
 				}
 				if len(team_user) > 0 {
 					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
 					coin, err_handler := HandlerOperation(team_user, v.UserId)
 					if err_handler != nil {
-						return err_handler
+						return 0, err_handler
 					}
 					coins = append(coins, coin)
 				}
 			}
 		}
 	}
-	err_sort_a_r := SortABonusRelease(o, coins, user.UserId)
+	value, err_sort_a_r := SortABonusRelease(o, coins, user.UserId)
 	if err_sort_a_r != nil {
-		return err_sort_a_r
+		return 0, err_sort_a_r
 	}
 	// 团队收益　结束
-	return nil
+	return value, nil
 }
 
-func Jintai(o orm.Ormer, user models.User) error {
-	err := DailyRelease(o, user.UserId)
+func Jintai(o orm.Ormer, user models.User) (float64, error) {
+	z, err := DailyRelease(o, user.UserId)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return z, nil
 }
 
 // 从晓东那里获取团队 成员  直推
@@ -459,7 +475,7 @@ func HandlerOperation(users []string, user_id string) (float64, error) {
 }
 
 // 去掉最大的 团队收益
-func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
+func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, error) {
 	for i := 0; i < len(coins)-1; i++ {
 		for j := i + 1; j < len(coins); j++ {
 			if coins[i] > coins[j] {
@@ -473,7 +489,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 
 	if value == 0 {
-		return nil
+		return 0, nil
 	}
 
 	acc := models.Account{
@@ -501,7 +517,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 
 	if value == 0 {
-		return nil
+		return 0, nil
 	}
 
 	//任务表 USDD  铸币记录
@@ -518,7 +534,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
-		return errtxid_blo
+		return 0, errtxid_blo
 	}
 
 	//找最近的数据记录表
@@ -561,34 +577,34 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) error {
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	//更新生态仓库属性
 	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
 	if err_up != nil {
-		return err_up
+		return 0, err_up
 	}
 
 	err_ping_shifang := PingAddWalletCoin(user_id, value)
 	if err_ping_shifang != nil {
-		return err_ping_shifang
+		return 0, err_ping_shifang
 	}
 	order := models.TxIdList{
 		TxId: order_id,
 	}
 	err_rea := o.Read(&order, "tx_id")
 	if err_rea != nil {
-		return err_rea
+		return 0, err_rea
 	}
 	order.WalletState = true
 	_, err_up_tx := o.Update(&order, "wallet_state")
 	if err_up_tx != nil {
-		return err_up_tx
+		return 0, err_up_tx
 	}
 
 	models.NetIncome += value
-	return nil
+	return value, nil
 }
 
 // 超级节点的分红
@@ -619,7 +635,7 @@ func AddFormulaABonus(user_id string, abonus float64) {
 }
 
 // 每日释放
-func DailyRelease(o orm.Ormer, user_id string) error {
+func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 	account := models.Account{
 		UserId: user_id,
 	}
@@ -636,7 +652,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		QueryRows(&blocked_yestoday)
 	if err_raw != nil {
 		if err_raw.Error() != "<QuerySeter> no row found" {
-			return err_raw
+			return 0, err_raw
 		}
 	}
 	var blocked_old1 models.AccountDetail
@@ -683,7 +699,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 		abonus = blocked_old.CurrentBalance
 	}
 	if abonus == 0 {
-		return nil
+		return 0, nil
 	}
 	//任务表 USDD  铸币记录
 	order_id := utils.TimeUUID()
@@ -699,7 +715,7 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
-		return errtxid_blo
+		return 0, errtxid_blo
 	}
 
 	blocked_new := models.BlockedDetail{
@@ -716,40 +732,40 @@ func DailyRelease(o orm.Ormer, user_id string) error {
 	}
 	_, err := o.Insert(&blocked_new)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	//更新生态仓库属性
 	account.BockedBalance = aabonus
 	_, err_up := o.Update(&account, "bocked_balance")
 	if err_up != nil {
-		return err_up
+		return 0, err_up
 	}
 
 	// 钱包　数据　修改
 	err_ping := PingAddWalletCoin(user_id, abonus)
 	if err_ping != nil {
-		return err_ping
+		return 0, err_ping
 	}
 	order := models.TxIdList{
 		TxId: order_id,
 	}
 	err_rea := o.Read(&order, "tx_id")
 	if err_rea != nil {
-		return err_rea
+		return 0, err_rea
 	}
 	order.WalletState = true
 	_, err_up_tx := o.Update(&order)
 	if err_up_tx != nil {
-		return err_up_tx
+		return 0, err_up_tx
 	}
 
 	models.NetIncome += abonus
-	return nil
+	return abonus, nil
 }
 
 //　直推收益
-func ZhiTui(o orm.Ormer, user_id string) error {
+func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	account := models.Account{
 		UserId: user_id,
 	}
@@ -766,7 +782,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	_, err := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
 	if err != nil {
 		if err.Error() != "<QuerySeter> no row found" {
-			return err
+			return 0, err
 		}
 	}
 	shouyi := 0.0
@@ -803,7 +819,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	}
 
 	if shouyi == 0 {
-		return nil
+		return 0, nil
 	}
 
 	//任务表 USDD  铸币记录
@@ -820,7 +836,7 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	}
 	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
 	if errtxid_blo != nil {
-		return errtxid_blo
+		return 0, errtxid_blo
 	}
 
 	blocked_new := models.BlockedDetail{
@@ -841,35 +857,35 @@ func ZhiTui(o orm.Ormer, user_id string) error {
 	}
 	_, err_in := o.Insert(&blocked_new)
 	if err_in != nil {
-		return err_in
+		return 0, err_in
 	}
 
 	account.BockedBalance = blocked_new.CurrentBalance
 	_, err_update := o.Update(&account, "bocked_balance")
 	if err_update != nil {
-		return err_update
+		return 0, err_update
 	}
 
 	// 钱包　数据　修改
 	err_ping := PingAddWalletCoin(user_id, shouyi)
 	if err_ping != nil {
-		return err_ping
+		return 0, err_ping
 	}
 	order := models.TxIdList{
 		TxId: order_id,
 	}
 	err_rea := o.Read(&order, "tx_id")
 	if err_rea != nil {
-		return err_rea
+		return 0, err_rea
 	}
 	order.WalletState = true
 	_, err_up_tx := o.Update(&order)
 	if err_up_tx != nil {
-		return err_up_tx
+		return 0, err_up_tx
 	}
 
 	models.NetIncome += shouyi
-	return nil
+	return shouyi, nil
 }
 
 // 远端连接  -  给定分红收益  释放通用
@@ -1014,7 +1030,7 @@ func ReturnMap(m map[string][]string) {
 }
 
 // 处理map数据并给定收益
-func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info) {
+func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string) {
 	err_m := make(map[string][]string)
 	for k_level, vv := range m {
 		s_f_t := models.SuperForceTable{
@@ -1023,28 +1039,41 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info) {
 		models.NewOrm().Read(&s_f_t, "level")
 		tfor_some := models.NetIncome * s_f_t.BonusCalculation
 		for _, v := range vv {
-			err := PingAddWalletCoin(v, tfor_some/float64(len(vv)))
 			acc := models.Account{UserId: v}
 			o.Read(&acc, "user_id")
-			if err != nil {
-				err_m[k_level] = append(err_m[k_level], v)
-			} else {
-				if tfor_some/float64(len(vv)) != 0 && acc.PeerState == true {
-					AddFormulaABonus(v, tfor_some/float64(len(vv)))
-					in_fo.peer_a_bouns += tfor_some / float64(len(vv))
-				}
-				if k_level == "钻石节点" {
-					in_fo.one++
-				} else if k_level == "超级节点" {
-					in_fo.two++
-				} else if k_level == "创世节点" {
-					in_fo.three++
+			if acc.PeerState == true {
+				err := PingAddWalletCoin(v, tfor_some/float64(len(vv)))
+				if err != nil {
+					err_m[k_level] = append(err_m[k_level], v)
+				} else {
+					if tfor_some/float64(len(vv)) != 0 {
+						AddFormulaABonus(v, tfor_some/float64(len(vv)))
+						in_fo.peer_a_bouns += tfor_some / float64(len(vv))
+						if order_id != "" {
+							mrsd_table := models.MrsfStateTable{OrderId: order_id, UserId: v}
+							o.Read(&mrsd_table, "order_id", "user_id")
+							mrsd_table.PeerABouns = tfor_some / float64(len(vv))
+							o.Update(&mrsd_table)
+						} else {
+							mrsd_table := models.MrsfStateTable{OrderId: time.Now().AddDate(0, 0, -1).Format("2006-01-02"), UserId: v}
+							o.Read(&mrsd_table, "order_id", "user_id")
+							mrsd_table.PeerABouns = tfor_some / float64(len(vv))
+							o.Update(&mrsd_table)
+						}
+					}
+					if k_level == "钻石节点" {
+						in_fo.one++
+					} else if k_level == "超级节点" {
+						in_fo.two++
+					} else if k_level == "创世节点" {
+						in_fo.three++
+					}
 				}
 			}
 		}
 	}
 	if len(err_m) != 0 {
-		HandlerMap(o, err_m, in_fo)
+		HandlerMap(o, err_m, in_fo, order_id)
 	}
 }
 

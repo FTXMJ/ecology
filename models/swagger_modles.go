@@ -168,3 +168,23 @@ type PeerUser_test struct {
 	Number数量        float64 `json:"number_数量"`
 	UpdateTime更新时间  string  `json:"update_time_更新时间"`
 }
+
+// user`s account false table
+type MrsfTable_test struct {
+	Items []MrsfStateTableTest `json:"items"` //数据列表
+	Page  Page                 `json:"page"`  //分页信息
+}
+
+type MrsfStateTableTest struct {
+	Id                 int     `orm:"column(id);pk;auto" json:"id"`
+	UserId__用户id       string  `orm:"column(user_id)" json:"user_id"`
+	UserName用户名        string  `orm:"column(user_name)" json:"user_name"`
+	State执行状态          bool    `orm:"column(state)" json:"state"`
+	Time实际任务执行时间       string  `orm:"column(time)" json:"time"`
+	OrderId任务id        string  `orm:"column(order_id)" json:"order_id"`
+	Date任务执行时间         string  `orm:"column(date)" json:"date"`
+	ZiYouABouns自由算力收益  float64 `orm:"column(ziyou_a_bouns)"json:"ziyou_a_bouns"`
+	ZhiTuiABouns直推算力收益 float64 `orm:"column(zhitui_a_bouns)" json:"zhitui_a_bouns"`
+	TeamABouns团队算力收益   float64 `orm:"column(team_a_bouns)" json:"team_a_bouns"`
+	PeerABouns节点算力收益   float64 `orm:"column(peer_a_bouns)" json:"peer_a_bouns"`
+}

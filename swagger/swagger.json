@@ -446,6 +446,20 @@
                         "description": "用户名字  不搜就传空，搜索就传user_name",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "start_time",
+                        "description": "开始时间",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "end_time",
+                        "description": "结束时间",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -662,7 +676,10 @@
                 ],
                 "responses": {
                     "200__每日释放任务表": {
-                        "description": ""
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.MrsfTable_test"
+                        }
                     }
                 }
             }
@@ -1385,6 +1402,65 @@
                 },
                 "user_id___": {
                     "type": "string"
+                }
+            }
+        },
+        "models.MrsfStateTableTest": {
+            "title": "MrsfStateTableTest",
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "peer_a_bouns": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "state": {
+                    "type": "boolean"
+                },
+                "team_a_bouns": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                },
+                "zhitui_a_bouns": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "ziyou_a_bouns": {
+                    "type": "number",
+                    "format": "double"
+                }
+            }
+        },
+        "models.MrsfTable_test": {
+            "title": "MrsfTable_test",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MrsfStateTableTest"
+                    }
+                },
+                "page": {
+                    "$ref": "#/definitions/models.Page"
                 }
             }
         },

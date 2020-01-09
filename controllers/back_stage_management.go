@@ -934,7 +934,7 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Param user_id query string true "用户id  不搜就传空，搜索就传user_id"
 // @Param state query string true "状态　1=完成的 2=未完成的"
-// @Success 200__每日释放任务表
+// @Success 200__每日释放任务表 {object} models.MrsfTable_test
 // @router /admin/show_one_day_mrsf [GET]
 func (this *BackStageManagement) ShowOneDayMrsf() {
 	var (
