@@ -26,11 +26,12 @@ var (
 
 // 载荷，可以加一些自己需要的信息
 type CustomClaims struct {
-	UserID   string `json:"user_id"`
-	Name     string `json:"name"`
-	Mobile   string `json:"mobile"`
-	Email    string `json:"email"`
-	FatherId string `json:"father_id"`
+	UserID    string `json:"user_id"`
+	Name      string `json:"name"`
+	Mobile    string `json:"mobile"`
+	Email     string `json:"email"`
+	FatherId  string `json:"father_id"`
+	NameSpace string `json:"name_space"`
 	jwt.StandardClaims
 }
 
@@ -68,16 +69,16 @@ func CheckLogin(ctx *context.Context) {
 		u := models.User{
 			UserId: tockken.UserID,
 		}
-		_, nicke_name, err_ping_user := models.PingUser(token)
+		_, nicke_name, err_ping_user := models.PingUserAdmin(token, tockken.UserID)
 		if err_ping_user != nil {
 			o.Rollback()
 			ctx.WriteString(`{"code": "500","msg": "` + err_ping_user.Error() + `"}`)
 			return
 		}
 		err_read := o.Read(&u, "user_id")
-		if err_read != nil && err_read.Error() == "<QuerySeter> no row found" {
+		if err_read != nil && err_read.Error() == "<QuerySeter> no row found" && tockken.NameSpace == "" {
 			o.Begin()
-			f, _, err_get_user := models.PingUser(token)
+			f, _, err_get_user := models.PingUser(token, tockken.UserID)
 			if err_get_user != nil {
 				o.Rollback()
 				ctx.WriteString(`{"code": "500","msg": "用户不存在!"}`)
@@ -123,7 +124,7 @@ func CheckLogin(ctx *context.Context) {
 				return
 			}
 			o.Commit()
-		} else if err_read == nil && u.UserName != nicke_name.(string) {
+		} else if err_read == nil && u.UserName != nicke_name.(string) && tockken.NameSpace == "" {
 			o.Begin()
 			u.UserName = nicke_name.(string)
 			o.Update(&u, "user_name")
@@ -151,6 +152,7 @@ func generateToken(user models.User) (bool, string) {
 	}
 	claims := CustomClaims{
 		user.UserId,
+		"",
 		"",
 		"",
 		"",

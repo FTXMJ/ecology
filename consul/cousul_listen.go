@@ -47,6 +47,7 @@ func registerServer() {
 var MicroClient *consulapi.Client
 var GetUserApi string
 var GetWalletApi string
+var GetAuthApi string
 
 // 从consul中发现服务
 func init() {
@@ -60,6 +61,7 @@ func init() {
 		//log.Log.Fatal("consul client error : ", err)
 	}
 	GetUserApi = GetService(beego.AppConfig.String("api::user_tfor"), "http://192.168.8.126:8089")
+	GetAuthApi = GetService(beego.AppConfig.String("api::auth_tfor"), "http://192.168.8.126:8088")
 	GetWalletApi = GetService(beego.AppConfig.String("api::wallet_tfor"), "http://192.168.8.126:8088")
 	//consulDeRegister()
 }

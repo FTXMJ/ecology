@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
@@ -34,5 +35,6 @@ func init() {
 		new(MrsfStateTable),
 		new(User))
 	orm.Debug = true // 是否开启调试模式 调试模式下会打印出sql语句
-	orm.RegisterDataBase("default", "mysql", dsn, 100, 200)
+	er := orm.RegisterDataBase("default", "mysql", dsn, 100, 200)
+	fmt.Println(er)
 }
