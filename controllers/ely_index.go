@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"ecology/actuator"
 	"ecology/common"
+	"ecology/filter"
 	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
+	"errors"
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
 	"strconv"
 	"time"
 )
@@ -22,84 +24,39 @@ type EcologyIndexController struct {
 // @router /show_ecology_index [GET]
 func (this *EcologyIndexController) ShowEcologyIndex() {
 	var (
-		data          *common.ResponseData
-		account_index []models.Account
-	)
+		data        *common.ResponseData
+		account     = models.Account{}
+		indexValues = models.Ecology_index_obj{Ecological_poject_bool: true}
+		err         error
+		o           = models.NewOrm()
 
+		token   = filter.GetJwtValues(this.Ctx)
+		user_id = token.UserID
+	)
 	defer func() {
+		if err != nil {
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	token := GetJwtValues(this.Ctx)
-	user_id := token.UserID
-
-	o := models.NewOrm()
-	i, erracc := o.QueryTable("account").Filter("user_id", user_id).All(&account_index)
-	if erracc != nil {
-		data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
-		logs.Log.Error(erracc)
+	if err = o.Raw("select * from account where user_id=?", user_id).QueryRow(&account); err != nil {
 		return
-	}
-	indexValues := models.Ecology_index_obj{}
-	if 1 > i {
-		models.CouShu(&indexValues)
-		indexValues.Ecological_poject_bool = false
-		indexValues.Super_peer_bool = false
-		logs.Log.Error("没有查询到用户的生态仓库!")
-		data = common.NewResponse(indexValues)
-		return
-	}
-	indexValues.Ecological_poject_bool = true
-	if len(account_index) > 0 {
-		for _, v := range account_index {
-			formula_index := models.Formula{EcologyId: v.Id}
-			errfor := o.Read(&formula_index, "ecology_id")
-			if errfor != nil {
-				data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
-				logs.Log.Error(errfor)
-				return
-			}
-			f := models.Formulaindex{
-				Id:             v.Id,
-				Level:          v.Level,
-				BockedBalance:  v.BockedBalance,
-				Balance:        v.Balance,
-				LowHold:        formula_index.LowHold,
-				HighHold:       formula_index.HighHold,
-				ReturnMultiple: formula_index.ReturnMultiple,
-				HoldReturnRate: formula_index.HoldReturnRate * v.Balance,
-			}
-			t := time.Now().Format("2006-01-02") + " 00:00:00"
-			zhitui, err := models.RecommendReturnRate(user_id, t)
-			if err != nil {
-				models.CouShu(&indexValues)
-				logs.Log.Error("计算用户当前直推收益出错!")
-				data = common.NewErrorResponse(500, "计算用户当前直推收益出错!", models.Ecology_index_obj{})
-				return
-			}
-			f.RecommendReturnRate = zhitui
-			team_coins, err_team := IndexTeamABouns(o, user_id)
-			if err_team != nil {
-				models.CouShu(&indexValues)
-				logs.Log.Error(err_team.Error())
-				data = common.NewErrorResponse(500, err_team.Error(), models.Ecology_index_obj{})
-				return
-			}
-			f.TeamReturnRate = team_coins * formula_index.TeamReturnRate
-			to_day_rate := zhitui + f.TeamReturnRate + f.HoldReturnRate
-			f.ToDayRate = to_day_rate
-			indexValues.Ecological_poject = append(indexValues.Ecological_poject, f)
-		}
 	}
 
-	_, tfors, err_tfor := PingSelectTforNumber(user_id)
-	if err_tfor != nil {
-		data = common.NewErrorResponse(500, err_tfor.Error(), models.Ecology_index_obj{})
+	if err = actuator.TheWheel(o, user_id, account, &indexValues); err != nil {
 		return
 	}
-	indexValues.Usdd = AddAllSum(o, user_id)
-	models.SuperLevelSet(user_id, &indexValues, tfors)
+
+	tfors := 0.0
+	if _, tfors, err = actuator.PingSelectTforNumber(user_id); err != nil {
+		return
+	}
+
+	indexValues.Usdd = actuator.AddAllSum(o, user_id)
+	actuator.SuperLevelSet(o, user_id, &indexValues, tfors)
 	data = common.NewResponse(indexValues)
 	return
 }
@@ -114,60 +71,44 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 // @router /create_new_warehouse [POST]
 func (this *EcologyIndexController) CreateNewWarehouse() {
 	var (
-		data *common.ResponseData
-		o    = models.NewOrm()
+		data            *common.ResponseData
+		o               = models.NewOrm()
+		coin_number_str = this.GetString("coin_number")
+		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
+		levelstr        = this.GetString("levelstr")
+		jwtValues       = filter.GetJwtValues(this.Ctx)
+		user_id         = jwtValues.UserID
+		err             error
 	)
 
-	coin_number_str := this.GetString("coin_number")
-	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
-	levelstr := this.GetString("levelstr")
-
-	err_orm_begin := o.Begin()
-	if err_orm_begin != nil {
-		logs.Log.Error(err_orm_begin)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
-		return
-	}
-
 	defer func() {
+		if err != nil {
+			o.Rollback()
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	jwtValues := GetJwtValues(this.Ctx)
-	user_id := jwtValues.UserID
-
+	o.Begin()
 	//项目生成
 	account := models.Account{
-		UserId:        user_id,
-		Balance:       0,
-		Currency:      "USDD",
-		BockedBalance: 0,
-		Level:         levelstr,
+		UserId:   user_id,
+		Currency: "USDD",
+		Level:    levelstr,
 	}
-	_, err_acc := o.Insert(&account)
-
-	if err_acc != nil {
-		logs.Log.Error(err_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if _, err = o.Insert(&account); err != nil {
 		return
 	}
 
 	//生态项目的算力表
 	formula := models.Formula{}
-	err_level := models.JudgeLevel(o, user_id, levelstr, &formula)
-	if err_level != nil {
-		o.Rollback()
-		logs.Log.Error(err_level)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.JudgeLevel(o, user_id, levelstr, &formula); err != nil {
 		return
 	}
 	formula.EcologyId = account.Id
-	_, err_insert := o.Insert(&formula)
-	if err_insert != nil {
-		o.Rollback()
-		logs.Log.Error(err_insert)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if _, err = o.Insert(&formula.EcologyId); err != nil {
 		return
 	}
 
@@ -182,41 +123,27 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 		Expenditure: 0,
 		InCome:      coin_number,
 	}
-	_, errtxid_acc := o.Insert(&acc_txid_dcmt)
-	if errtxid_acc != nil {
-		o.Rollback()
-		logs.Log.Error(errtxid_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if _, err = o.Insert(&acc_txid_dcmt); err != nil {
 		return
 	}
 	o.Commit()
 
 	token := this.Ctx.Request.Header.Get("Authorization")
-	err := models.PingWalletAdd(token, coin_number)
-	if err != nil {
-		logs.Log.Error(err)
-		data = common.NewErrorResponse(500, err.Error(), nil)
+	if err = actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
 
-	oo := models.NewOrm()
-	oo.Begin()
+	o.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.NewCreateAndSaveAcc_d(oo, user_id, "普通转入", order_id, 0, coin_number, account.Id)
-	if err_acc_d != nil {
-		logs.Log.Error(err_acc_d)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.NewCreateAndSaveAcc_d(o, user_id, "普通转入", order_id, 0, coin_number, account.Id); err != nil {
 		return
 	}
-
 	//铸币交易记录
-	err_blo_d := models.NewCreateAndSaveBlo_d(oo, user_id, "转入铸币", order_id, 0, coin_number, account.Id)
-	if err_blo_d != nil {
-		logs.Log.Error(err_blo_d)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.NewCreateAndSaveBlo_d(o, user_id, "转入铸币", order_id, 0, coin_number, account.Id); err != nil {
 		return
 	}
-	oo.Commit()
+	o.Commit()
+
 	data = common.NewResponse(nil)
 	return
 }
@@ -232,48 +159,38 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 // @router /to_change_into_USDD [POST]
 func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	var (
-		data *common.ResponseData
-		o    = models.NewOrm()
+		data            *common.ResponseData
+		o               = models.NewOrm()
+		coin_number_str = this.GetString("coin_number")
+		order_id        = this.GetString("order_id")
+		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
+		ecology_id, _   = this.GetInt("ecology_id")
+		jwtValues       = filter.GetJwtValues(this.Ctx)
+		user_id         = jwtValues.UserID
+		err             error
 	)
-
-	coin_number_str := this.GetString("coin_number")
-	order_id := this.GetString("order_id")
-	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
-	ecology_id, _ := this.GetInt("ecology_id")
-	jwtValues := GetJwtValues(this.Ctx)
-	user_id := jwtValues.UserID
-
-	order_if := models.TxIdList{
-		TxId: order_id,
-	}
-	o.Read(&order_if, "tx_id")
-	if order_if.Id != 0 {
-		logs.Log.Error("重复的交易－多次提交")
-		data = common.NewErrorResponse(500, "订单以存在，请勿提交!!", nil)
-		return
-	}
-
-	err_orm_begin := o.Begin()
-	if err_orm_begin != nil {
-		logs.Log.Error(err_orm_begin)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
-		return
-	}
-
 	defer func() {
+		if err != nil {
+			o.Rollback()
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, err.Error(), nil)
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	//任务表 USDD  铸币记录
-	formula := models.Formula{}
-	err_for := o.QueryTable("formula").Filter("ecology_id", ecology_id).One(&formula)
-	if err_for != nil {
-		o.Rollback()
-		logs.Log.Error(err_for)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	o.Begin()
+	order_if := models.TxIdList{
+		TxId: order_id,
+	}
+	if err = o.Read(&order_if, "tx_id"); err != nil {
+		err = errors.New("订单以存在，请勿提交!!")
 		return
 	}
+
+	//任务表 USDD  铸币记录
+	formula := models.Formula{}
+	o.Raw("select * from formula where ecology_id=?", ecology_id).QueryRow(&formula)
 	blo_txid_dcmt := models.TxIdList{
 		TxId:        order_id,
 		OrderState:  false,
@@ -284,20 +201,14 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		Expenditure: 0,
 		InCome:      formula.ReturnMultiple * coin_number,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		o.Rollback()
-		logs.Log.Error(errtxid_blo)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if _, err = o.Insert(&blo_txid_dcmt); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
-
 	o.Commit()
 
 	token := this.Ctx.Request.Header.Get("Authorization")
-	if err := models.PingWalletAdd(token, coin_number); err != nil {
-		logs.Log.Error(err)
-		data = common.NewErrorResponse(500, err.Error(), nil)
+	if err = actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
 	order := models.TxIdList{
@@ -307,23 +218,19 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	order.WalletState = true
 	o.Update(&order)
 
-	oo := models.NewOrm()
-	oo.Begin()
+	o.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "普通转入", order_id, 0, coin_number, ecology_id)
-	if err_acc_d != nil {
-		logs.Log.Error(err_acc_d)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.FindLimitOneAndSaveAcc_d(o, user_id, "普通转入", order_id, 0, coin_number, ecology_id); err != nil {
+		err = errors.New("数据库操作失败!!")
 		return
 	}
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "转入铸币", order_id, 0, coin_number, ecology_id)
-	if err_blo_d != nil {
-		logs.Log.Error(err_blo_d)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.FindLimitOneAndSaveBlo_d(o, user_id, "转入铸币", order_id, 0, coin_number, ecology_id); err != nil {
+		err = errors.New("数据库操作失败!!")
 		return
 	}
-	oo.Commit()
+	o.Commit()
+
 	data = common.NewResponse(nil)
 	return
 }
@@ -340,63 +247,48 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 // @router /upgrade_warehouse [POST]
 func (this *EcologyIndexController) UpgradeWarehouse() {
 	var (
-		data *common.ResponseData
-		o    = models.NewOrm()
+		data            *common.ResponseData
+		o               = models.NewOrm()
+		coin_number_str = this.GetString("cion_number")
+		order_id        = this.GetString("order_id")
+		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
+		ecology_id, _   = this.GetInt("ecology_id")
+		levelstr        = this.GetString("levelstr")
+		jwtValues       = filter.GetJwtValues(this.Ctx)
+		user_id         = jwtValues.UserID
+		err             error
 	)
 
-	coin_number_str := this.GetString("cion_number")
-	order_id := this.GetString("order_id")
-	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
-	ecology_id, _ := this.GetInt("ecology_id")
-	levelstr := this.GetString("levelstr")
-	jwtValues := GetJwtValues(this.Ctx)
-	user_id := jwtValues.UserID
-
-	order_if := models.TxIdList{
-		TxId: order_id,
-	}
-	o.Read(&order_if, "tx_id")
-	if order_if.Id != 0 {
-		logs.Log.Error("重复的交易－多次提交")
-		data = common.NewErrorResponse(500, "订单以存在，请勿提交!!", nil)
-		return
-	}
-
-	err_orm_begin := o.Begin()
-	if err_orm_begin != nil {
-		logs.Log.Error(err_orm_begin)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
-		return
-	}
-
 	defer func() {
+		if err != nil {
+			o.Rollback()
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, err.Error(), nil)
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
+	o.Begin()
+	order_if := models.TxIdList{
+		TxId: order_id,
+	}
+	if err = o.Read(&order_if, "tx_id"); err != nil {
+		err = errors.New("订单以存在，请勿提交!!")
+		return
+	}
 	formula_table := models.ForceTable{
 		Level: levelstr,
 	}
-	err_r := o.Read(&formula_table, "level")
-	if err_r != nil || float64(formula_table.LowHold) > coin_number {
-		logs.Log.Error(err_r)
-		data = common.NewErrorResponse(500, "不满足升级条件,请填入规定的升级金额", nil)
+	o.Read(&formula_table, "level")
+	if float64(formula_table.LowHold) > coin_number {
+		err = errors.New("不满足升级条件,请填入规定的升级金额")
 		return
 	}
 
 	formula := models.Formula{EcologyId: ecology_id}
-	err_read := o.Read(&formula, "ecology_id")
-	if err_read != nil {
-		o.Rollback()
-		logs.Log.Error(err_read)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
-		return
-	}
-	errJu := models.JudgeLevel(o, user_id, levelstr, &formula)
-	if errJu != nil {
-		o.Rollback()
-		logs.Log.Error(errJu)
-		data = common.NewErrorResponse(500, errJu.Error(), nil)
+	o.Read(&formula, "ecology_id")
+	if err = actuator.JudgeLevel(o, user_id, levelstr, &formula); err != nil {
 		return
 	}
 
@@ -411,77 +303,47 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		Expenditure: 0,
 		InCome:      formula.ReturnMultiple * coin_number,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		o.Rollback()
-		logs.Log.Error(errtxid_blo)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
+	if _, err = o.Insert(&blo_txid_dcmt); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
-
 	o.Commit()
 
 	//钱包操作
 	token := this.Ctx.Request.Header.Get("Authorization")
-	if err := models.PingWalletAdd(token, coin_number); err != nil {
-		logs.Log.Error(err)
-		data = common.NewErrorResponse(500, err.Error(), nil)
+	if err := actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
 	order := models.TxIdList{
 		TxId: order_id,
 	}
-	err_rea := o.Read(&order, "tx_id")
-	if err_rea != nil {
-		logs.Log.Error(err_rea)
-		data = common.NewErrorResponse(500, err_rea.Error(), nil)
-		return
-	}
+	o.Read(&order, "tx_id")
 	order.WalletState = true
-	_, err_up := o.Update(&order)
-	if err_up != nil {
-		logs.Log.Error(err_up)
-		data = common.NewErrorResponse(500, err_up.Error(), nil)
+	if _, err = o.Update(&order); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
 
-	oo := models.NewOrm()
-	err_oo := oo.Begin()
-
-	_, err_up_acc := o.QueryTable("account").Filter("id", ecology_id).Update(orm.Params{"level": levelstr})
-	if err_up_acc != nil {
-		logs.Log.Error(err_up_acc)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
+	o.Begin()
+	if _, err = o.Raw("update account set level=? where id=?", levelstr, ecology_id).Exec(); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
-	if _, err_up_for := o.Update(&formula, "level", "low_hold", "high_hold", "return_multiple", "hold_return_rate", "recommend_return_rate", "team_return_rate"); err_up_for != nil {
-		o.Rollback()
-		logs.Log.Error(err_up_for)
-		data = common.NewErrorResponse(500, "数据库操作失败", nil)
-		return
-	}
-
-	if err_oo != nil {
-		logs.Log.Error(err_oo)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if _, err := o.Update(&formula); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
 	//TFOR交易记录 - 更新生态仓库的交易余额
-	err_acc_d := models.FindLimitOneAndSaveAcc_d(oo, user_id, "升级转入", order_id, 0, coin_number, ecology_id)
-	if err_acc_d != nil {
-		logs.Log.Error(err_acc_d)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.FindLimitOneAndSaveAcc_d(o, user_id, "升级转入", order_id, 0, coin_number, ecology_id); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
-
 	//铸币交易记录
-	err_blo_d := models.FindLimitOneAndSaveBlo_d(oo, user_id, "升级铸币", order_id, 0, coin_number, ecology_id)
-	if err_blo_d != nil {
-		logs.Log.Error(err_blo_d)
-		data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+	if err = actuator.FindLimitOneAndSaveBlo_d(o, user_id, "升级铸币", order_id, 0, coin_number, ecology_id); err != nil {
+		err = errors.New("数据库操作失败!")
 		return
 	}
-	oo.Commit()
+	o.Commit()
 	data = common.NewResponse(nil)
 	return
 }
@@ -509,7 +371,7 @@ func (this *EcologyIndexController) ReturnPageListHostry() {
 		CurrentPage: current_page,
 		PageSize:    page_size,
 	}
-	values, p, err := models.SelectHostery(ecology_id, page)
+	values, p, err := actuator.SelectHostery(ecology_id, page)
 	if err != nil {
 		logs.Log.Error(err)
 		data = common.NewResponse(models.HostryPageInfo{})

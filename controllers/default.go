@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"ecology/actuator"
 	"ecology/common"
 	"ecology/models"
 	"errors"
@@ -41,12 +42,12 @@ func SumTeamProfit(user_id string) (float64, error) {
 	if len(user_team) > 0 {
 		for _, v := range user_team {
 			// 获取用户teams
-			team_user, err := GetTeams(v)
+			team_user, err := actuator.GetTeams(v)
 			if err != nil {
 				return 0.0, errors.New("查询用户团队直推成员时出错,请重试")
 			}
 			// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-			coin, err_handler := HandlerOperation(team_user, user_id)
+			coin, err_handler := actuator.HandlerOperation(team_user, user_id)
 			if err_handler != nil {
 				return 0.0, errors.New("查询用户团队成员时出错,请重试")
 			}

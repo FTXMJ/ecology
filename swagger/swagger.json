@@ -734,9 +734,6 @@
                 "responses": {
                     "200__全局状态修改": {
                         "description": ""
-                    },
-                    "200__全局状态显示": {
-                        "description": ""
                     }
                 }
             }

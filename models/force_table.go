@@ -12,35 +12,3 @@ type ForceTable struct {
 	TeamReturnRate      float64 `orm:"column(team_return_rate)" json:"team_return_rate"`           //动态算力
 	PictureUrl          string  `orm:"column(picture_url)" json:"picture_url"`
 }
-
-// QuickSort
-func QuickSortForce(arr []ForceTable, start, end int) {
-	temp := arr[start]
-	index := start
-	i := start
-	j := end
-
-	for i <= j {
-		for j >= index && arr[j].LowHold >= temp.LowHold {
-			j--
-		}
-		if j > index {
-			arr[index] = arr[j]
-			index = j
-		}
-		for i <= index && arr[i].LowHold <= temp.LowHold {
-			i++
-		}
-		if i <= index {
-			arr[index] = arr[i]
-			index = i
-		}
-	}
-	arr[index] = temp
-	if index-start > 1 {
-		QuickSortForce(arr, start, index-1)
-	}
-	if end-index > 1 {
-		QuickSortForce(arr, index+1, end)
-	}
-}

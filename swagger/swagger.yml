@@ -495,8 +495,6 @@ paths:
       responses:
         200__全局状态修改:
           description: ""
-        200__全局状态显示:
-          description: ""
   /ecology/admin/user_ecology_false_list:
     get:
       tags:

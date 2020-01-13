@@ -1,20 +1,15 @@
 package controllers
 
 import (
-	"ecology/consul"
+	"ecology/actuator"
 	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -28,12 +23,6 @@ type UserDayTx struct {
 	BenJin float64
 	Team   float64
 	ZhiTui float64
-}
-
-type data_users struct {
-	Code int      `json:"code"`
-	Msg  string   `json:"msg"`
-	Data []string `json:"data"`
 }
 
 type operatio_n struct {
@@ -223,7 +212,7 @@ func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
 	error_users := []models.User{}
 	m := make(map[string][]string)
 	for _, v := range users {
-		_, level, _, err := ReturnSuperPeerLevel(v.UserId)
+		_, level, _, err := actuator.ReturnSuperPeerLevel(v.UserId)
 		if err != nil {
 			error_users = append(error_users, v)
 		} else if level == "" && err == nil {
@@ -372,7 +361,7 @@ func Team(o orm.Ormer, user models.User) (float64, error) {
 		for _, v := range user_current_layer {
 			if user.UserId != v.UserId {
 				// 获取用户teams
-				team_user, err := GetTeams(v)
+				team_user, err := actuator.GetTeams(v)
 				if err != nil {
 					if err.Error() != "用户未激活或被拉入黑名单" {
 						return 0, err
@@ -380,7 +369,7 @@ func Team(o orm.Ormer, user models.User) (float64, error) {
 				}
 				if len(team_user) > 0 {
 					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-					coin, err_handler := HandlerOperation(team_user, v.UserId)
+					coin, err_handler := actuator.HandlerOperation(team_user, v.UserId)
 					if err_handler != nil {
 						return 0, err_handler
 					}
@@ -403,75 +392,6 @@ func Jintai(o orm.Ormer, user models.User) (float64, error) {
 		return 0, err
 	}
 	return z, nil
-}
-
-// 从晓东那里获取团队 成员  直推
-func GetTeams(user models.User) ([]string, error) {
-	client := &http.Client{}
-	//生成要访问的url
-	url := consul.GetUserApi + beego.AppConfig.String("api::apiurl_get_team")
-	//提交请求
-	reqest, errnr := http.NewRequest("GET", url, nil)
-
-	b, token := generateToken(user)
-	if b != true {
-		return nil, errors.New("err")
-	}
-
-	//增加header选项
-	reqest.Header.Add("Authorization", token)
-	if errnr != nil {
-		return nil, errnr
-	}
-
-	//处理返回结果
-	response, errdo := client.Do(reqest)
-	defer response.Body.Close()
-	if errdo != nil {
-		return nil, errdo
-	}
-	bys, err_read := ioutil.ReadAll(response.Body)
-	if err_read != nil {
-		return nil, err_read
-	}
-	values := data_users{}
-	err := json.Unmarshal(bys, &values)
-	if err != nil {
-		return values.Data, errors.New("钱包金额操作失败!")
-	} else if values.Code != 200 {
-		return values.Data, errors.New(values.Msg)
-	}
-	users := []string{}
-	for _, v := range values.Data {
-		users = append(users, v)
-	}
-	return users, nil
-}
-
-// 处理器，计算所有用户的收益  并发布任务和 分红记录
-func HandlerOperation(users []string, user_id string) (float64, error) {
-	o := models.NewOrm()
-	var coin_abouns float64
-	for _, v := range users {
-		// 拿到生态项目实例
-		account := models.Account{}
-		err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
-		if err_acc != nil {
-			if err_acc.Error() != "<QuerySeter> no row found" {
-				return 0, err_acc
-			}
-		}
-		// 拿到生态项目对应的算力表
-		formula := models.Formula{}
-		err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
-		if err_for != nil {
-			if err_for.Error() != "<QuerySeter> no row found" {
-				return 0, err_for
-			}
-		}
-		coin_abouns += formula.HoldReturnRate * account.Balance
-	}
-	return coin_abouns, nil
 }
 
 // 去掉最大的 团队收益
@@ -586,7 +506,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 		return 0, err_up
 	}
 
-	err_ping_shifang := PingAddWalletCoin(user_id, value)
+	err_ping_shifang := actuator.PingAddWalletCoin(user_id, value)
 	if err_ping_shifang != nil {
 		return 0, err_ping_shifang
 	}
@@ -743,7 +663,7 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 	}
 
 	// 钱包　数据　修改
-	err_ping := PingAddWalletCoin(user_id, abonus)
+	err_ping := actuator.PingAddWalletCoin(user_id, abonus)
 	if err_ping != nil {
 		return 0, err_ping
 	}
@@ -867,7 +787,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	}
 
 	// 钱包　数据　修改
-	err_ping := PingAddWalletCoin(user_id, shouyi)
+	err_ping := actuator.PingAddWalletCoin(user_id, shouyi)
 	if err_ping != nil {
 		return 0, err_ping
 	}
@@ -886,136 +806,6 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 
 	models.NetIncome += shouyi
 	return shouyi, nil
-}
-
-// 远端连接  -  给定分红收益  释放通用
-func PingAddWalletCoin(user_id string, abonus float64) error {
-	if abonus == 0 {
-		return nil
-	}
-	user := models.User{
-		UserId: user_id,
-	}
-	b, token := generateToken(user)
-	if b != true {
-		return errors.New("err")
-	}
-	//生成要访问的url
-	apiurl := consul.GetWalletApi
-	resoure := beego.AppConfig.String("api::apiurl_share_bonus")
-	data := url.Values{}
-	data.Set("money", strconv.FormatFloat(abonus, 'f', -1, 64))
-	data.Set("symbol", "USDD")
-
-	u, _ := url.ParseRequestURI(apiurl)
-	u.Path = resoure
-	urlStr := u.String()
-
-	client := &http.Client{}
-	req, err1 := http.NewRequest(`POST`, urlStr, strings.NewReader(data.Encode()))
-	if err1 != nil {
-		return err1
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", token)
-
-	//处理返回结果
-	response, errdo := client.Do(req)
-	if errdo != nil {
-		return errdo
-	}
-
-	bys, err_read := ioutil.ReadAll(response.Body)
-	if err_read != nil {
-		return err_read
-	}
-	values := models.Data_wallet{}
-	err := json.Unmarshal(bys, &values)
-	if err != nil {
-		return errors.New("钱包金额操作失败!")
-	} else if values.Code != 200 {
-		return errors.New(values.Msg)
-	}
-	response.Body.Close()
-	return nil
-}
-
-// TFOR 数量查询
-func PingSelectTforNumber(user_id string) (string, float64, error) {
-	user := models.User{
-		UserId: user_id,
-	}
-	b, token := generateToken(user)
-	if b != true {
-		return "", 0.0, errors.New("err")
-	}
-	//生成要访问的url
-	apiurl := consul.GetWalletApi
-	resoure := beego.AppConfig.String("api::apiurl_tfor_info")
-	data := url.Values{}
-
-	u, _ := url.ParseRequestURI(apiurl)
-	u.Path = resoure
-	urlStr := u.String()
-
-	client := &http.Client{}
-	req, err1 := http.NewRequest(`GET`, urlStr, strings.NewReader(data.Encode()))
-	if err1 != nil {
-		return "", 0.0, err1
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", token)
-
-	//处理返回结果
-	response, errdo := client.Do(req)
-	if errdo != nil {
-		return "", 0.0, errdo
-	}
-
-	bys, err_read := ioutil.ReadAll(response.Body)
-	if err_read != nil {
-		return "", 0.0, err_read
-	}
-	values := models.Data_wallet{}
-	err := json.Unmarshal(bys, &values)
-	if err != nil {
-		return "", 0.0, errors.New("钱包金额操作失败!")
-	} else if values.Code != 200 {
-		return "", 0.0, errors.New(values.Msg)
-	}
-	response.Body.Close()
-	aa := values.Data["balance"].(string)
-	time := values.Data["updated_at"].(string)
-	bb, err := strconv.ParseFloat(aa, 64)
-	return time, bb, nil
-}
-
-// 返回超级节点的等级
-func ReturnSuperPeerLevel(user_id string) (time, level string, tfor float64, err error) {
-	s_f_t := []models.SuperForceTable{}
-	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
-	up_time, tfor_number, err_tfor := PingSelectTforNumber(user_id)
-	if err_tfor != nil {
-		return "", "", 0.0, err_tfor
-	}
-
-	for i := 0; i < len(s_f_t); i++ {
-		for j := i + 1; j < len(s_f_t)-1; j++ {
-			if s_f_t[i].CoinNumberRule > s_f_t[j].CoinNumberRule {
-				s_f_t[i], s_f_t[j] = s_f_t[j], s_f_t[i]
-			}
-		}
-	}
-	index := []int{}
-	for i, v := range s_f_t {
-		if tfor_number >= float64(v.CoinNumberRule) {
-			index = append(index, i)
-		}
-	}
-	if len(index) > 0 {
-		return up_time, s_f_t[index[len(index)-1]].Level, tfor_number, nil
-	}
-	return "", "", 0.0, err_tfor
 }
 
 // 创建用于超级节点　等级记录的　map 每个　values 第一个元素都是　等级标示
@@ -1042,7 +832,7 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 			acc := models.Account{UserId: v}
 			o.Read(&acc, "user_id")
 			if acc.PeerState == true {
-				err := PingAddWalletCoin(v, tfor_some/float64(len(vv)))
+				err := actuator.PingAddWalletCoin(v, tfor_some/float64(len(vv)))
 				if err != nil {
 					err_m[k_level] = append(err_m[k_level], v)
 				} else {
@@ -1247,7 +1037,7 @@ func TeamBuShiFang(o orm.Ormer, user_id string) error {
 		for _, v := range user_current_layer {
 			if user_id != v.UserId {
 				// 获取用户teams
-				team_user, err := GetTeams(v)
+				team_user, err := actuator.GetTeams(v)
 				if err != nil {
 					if err.Error() != "用户未激活或被拉入黑名单" {
 						return err
@@ -1255,7 +1045,7 @@ func TeamBuShiFang(o orm.Ormer, user_id string) error {
 				}
 				if len(team_user) > 0 {
 					// 去处理这些数据 // 处理器，计算所有用户的收益  并发布任务和 分红记录
-					coin, err_handler := HandlerOperation(team_user, v.UserId)
+					coin, err_handler := actuator.HandlerOperation(team_user, v.UserId)
 					if err_handler != nil {
 						return err_handler
 					}

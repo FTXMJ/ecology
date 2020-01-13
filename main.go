@@ -2,6 +2,7 @@ package main
 
 import (
 	"ecology/controllers"
+	"ecology/filter"
 	"ecology/logs"
 	_ "ecology/routers"
 	"github.com/astaxie/beego"
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	sk := beego.AppConfig.DefaultString("jwt::SignKey", "1233444")
-	controllers.SetSignKey(sk)
+	filter.SetSignKey(sk)
 	beego.Run()
 }
 
