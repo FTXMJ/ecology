@@ -48,7 +48,7 @@ func CheckLogin(ctx *context.Context) {
 		token := ctx.Request.Header.Get("Authorization")
 		if token == "" {
 			fmt.Println("拦截：", api)
-			ctx.WriteString(`{"code": "500","msg": "未经允许的访问，已拦截！"}`)
+			ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
 			fmt.Println(generateToken(models.User{
 				UserId: "77e3732c1e4541bebf3782b43631b8b1",
 			}))
@@ -59,10 +59,10 @@ func CheckLogin(ctx *context.Context) {
 		tockken, err := j.ParseToken(token)
 		if err != nil {
 			if err == TokenExpired {
-				ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
+				ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截R！"}`)
 				return
 			}
-			ctx.WriteString(`{"code": "400","msg": "数据格式不正确"}`)
+			ctx.WriteString(`{"code": "401","msg": "数据格式不正确"}`)
 			return
 		}
 		o := models.NewOrm()
