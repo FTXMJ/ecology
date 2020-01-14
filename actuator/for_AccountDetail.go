@@ -9,12 +9,7 @@ import (
 // 生成充值表的借贷记录
 func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
 	account_old := models.AccountDetail{}
-	o.QueryTable("account_detail").
-		Filter("user_id", user_id).
-		Filter("account", account_id).
-		OrderBy("-create_date").
-		Limit(1).
-		One(&account_old)
+	o.Raw("select * from account_detail where user_id=? and account=? order by create_date desc limit 1").QueryRow(&account_old)
 	if account_old.Id == 0 {
 		account_old.CurrentBalance = 0
 	}
@@ -43,7 +38,7 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 		UserId: user_id,
 	}
 	o.Read(&account, "user_id")
-	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"balance": account_new.CurrentBalance})
+	_, err_up := o.Raw("update account set balance=? where id=?", account_new.CurrentBalance, account_id).Exec()
 	if err_up != nil {
 		o.Rollback()
 		return err_acc
@@ -53,8 +48,6 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 
 // 创建第一条充值表的借贷记录
 func NewCreateAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
-	o.Begin()
-
 	account_new := models.AccountDetail{
 		UserId:         user_id,
 		CurrentRevenue: money_in,

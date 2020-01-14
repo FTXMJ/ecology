@@ -3,7 +3,6 @@ package main
 import (
 	"ecology/controllers"
 	"ecology/filter"
-	"ecology/logs"
 	_ "ecology/routers"
 	"github.com/astaxie/beego"
 	"github.com/robfig/cron"
@@ -12,8 +11,8 @@ import (
 var c = cron.New()
 
 func main() {
-	c.AddFunc(beego.AppConfig.String("crontab::schedules"), controllers.DailyDividendAndRelease) //定时更新首页数据
-	//c.AddFunc("0/10 * * * * *", Fp)                                                              //定时更新首页数据
+	//定时更新首页数据
+	c.AddFunc(beego.AppConfig.String("crontab::schedules"), controllers.DailyDividendAndRelease)
 	c.Start()
 	//http://localhost:8080/swagger/
 	//bee run -gendoc=true -downdoc=true
@@ -25,8 +24,4 @@ func main() {
 	sk := beego.AppConfig.DefaultString("jwt::SignKey", "1233444")
 	filter.SetSignKey(sk)
 	beego.Run()
-}
-
-func Fp() {
-	logs.Log.Error("hello -_- world")
 }
