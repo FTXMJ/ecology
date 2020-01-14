@@ -1009,3 +1009,233 @@ func (this *BackStageManagement) TheReleaseOfErrUsers() {
 	data = common.NewResponse(nil)
 	return
 }
+
+// @Tags 展示_DAPP_列表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param dapp_name query string true "dapp的应用 名字"
+// @Param dapp_id query string true "dapp的应用 id"
+// @Param dapp_type query string true "类型"
+// @Success 200____展示_DAPP_列表 {object} models.DAPPListTest
+// @router /admin/show_dapp_list [GET]
+func (this *BackStageManagement) ShowDAPPList() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		dapp_name       = this.GetString("dapp_name")
+		dapp_id         = this.GetString("dapp_id")
+		dapp_type       = this.GetString("dapp_type")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	dapp_list, err := models.SelectDAPP(o, dapp_name, dapp_id, dapp_type, &page)
+	if err != nil {
+		data = common.NewErrorResponse(500, "出现错误,请再次刷新!", models.DAPPList{})
+		return
+	}
+
+	dapp := models.DAPPList{
+		Items: dapp_list,
+		Page:  page,
+	}
+	data = common.NewResponse(dapp)
+	return
+}
+
+// @Tags 插入_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_name query string true "名字"
+// @Param image_url query string true "图片_url"
+// @Param dapp_link_address query string true "dapp的链接地址"
+// @Param dapp_contract_address query string true "dapp的合约地址"
+// @Param dapp_type query string true "类型"
+// @Success 200____插入_DAPP
+// @router /admin/insert_dapp [POST]
+func (this *BackStageManagement) InsertDAPP() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+
+		dapp_name             = this.GetString("dapp_id")
+		image_url             = this.GetString("image_url")
+		dapp_type             = this.GetString("dapp_type")
+		dapp_link_address     = this.GetString("dapp_link_address")
+		dapp_contract_address = this.GetString("dapp_contract_address")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	dapp := models.DAPPTable{
+		Name:            dapp_name,
+		AgreementType:   dapp_type,
+		Start:           true,
+		TheLinkAddress:  dapp_link_address,
+		ContractAddress: dapp_contract_address,
+		Image:           image_url,
+		CreateTime:      time.Now().Format("2006-01-02 15:04:05"),
+	}
+	_, err := o.Insert(&dapp)
+	if err != nil {
+		data = common.NewErrorResponse(500, "新增失败,请重试!", nil)
+		return
+	}
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 更新_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_id query string true "dapp id"
+// @Param dapp_name query string true "名字"
+// @Param image_url query string true "图片_url"
+// @Param dapp_link_address query string true "dapp的链接地址"
+// @Param dapp_contract_address query string true "dapp的合约地址"
+// @Param dapp_type query string true "类型"
+// @Success 200____更新_DAPP
+// @router /admin/update_dapp [POST]
+func (this *BackStageManagement) UpdateDAPP() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+
+		dapp_id, _            = this.GetInt("dapp_id")
+		dapp_name             = this.GetString("dapp_name")
+		image_url             = this.GetString("image_url")
+		dapp_type             = this.GetString("dapp_type")
+		dapp_link_address     = this.GetString("dapp_link_address")
+		dapp_contract_address = this.GetString("dapp_contract_address")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	_, err := o.Raw(
+		"update dapp_table set name=?,agreement_type=?,the_link_address=?,contract_address=?,image=?,update_time=? where id=?",
+		dapp_name,
+		dapp_type,
+		dapp_link_address,
+		dapp_contract_address,
+		image_url,
+		time.Now().Format("2006-01-02 15:04:05"),
+		dapp_id).Exec()
+	if err != nil {
+		data = common.NewErrorResponse(500, "更新失败,请重试!", nil)
+		return
+	}
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 修改状态_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_id query string true "dapp id"
+// @Param dapp_state query string true "状态 1=true(开启)  2=false(失败)"
+// @Success 200____修改状态_DAPP
+// @router /admin/update_dapp_state [POST]
+func (this *BackStageManagement) UpdateDAPPState() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+
+		dapp_id, _    = this.GetInt("dapp_id")
+		dapp_state, _ = this.GetInt("dapp_state")
+
+		state = true
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	if dapp_state == 2 {
+		state = false
+	}
+	_, err := o.Raw(
+		"update dapp_table set agreement_type=?,update_time=? where id=?",
+		state,
+		time.Now().Format("2006-01-02 15:04:05"),
+		dapp_id).Exec()
+	if err != nil {
+		data = common.NewErrorResponse(500, "更改状态失败,请重试!", nil)
+		return
+	}
+
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 删除_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_id query string true "dapp id"
+// @Success 200____删除_DAPP
+// @router /admin/delete_dapp [POST]
+func (this *BackStageManagement) DeleteDAPP() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+
+		dapp_id, _ = this.GetInt("dapp_id")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	_, err := o.Raw("delete from dapp_table where id=?", dapp_id).Exec()
+	if err != nil {
+		data = common.NewErrorResponse(500, "删除应用失败,请重试!", nil)
+		return
+	}
+
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 分组_展示_DAPP_列表_to_the_app
+// @Accept  json
+// @Produce json
+// @Success 200____分组_展示_DAPP_列表_to_the_app {object} models.DAPPListTest
+// @router /show_group_by_type [GET]
+func (this *BackStageManagement) ShowGroupByType() {
+	var (
+		data *common.ResponseData
+		o    = models.NewOrm()
+		list = []models.DAPPTable{}
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	m := make(map[string][]models.DAPPTable)
+
+	o.Raw("select from dapp_table").QueryRows(&list)
+
+	for _, v := range list {
+		m[v.AgreementType] = append(m[v.AgreementType], v)
+	}
+
+	data = common.NewResponse(m)
+	return
+}
