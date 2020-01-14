@@ -1042,7 +1042,7 @@ func (this *BackStageManagement) ShowDAPPList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	dapp_list, err := models.SelectDAPP(o, dapp_name, dapp_id, dapp_type, &page)
+	dapp_list, err := actuator.SelectDAPP(o, dapp_name, dapp_id, dapp_type, &page)
 	if err != nil {
 		data = common.NewErrorResponse(500, "出现错误,请再次刷新!", models.DAPPList{})
 		return

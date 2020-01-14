@@ -6,7 +6,7 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-func SelectDAPP(o orm.Ormer, dapp_name, dapp_id, dapp_type string, page *models.Page) (dapp_list []DAPPTable, err error) {
+func SelectDAPP(o orm.Ormer, dapp_name, dapp_id, dapp_type string, page *models.Page) (dapp_list []models.DAPPTable, err error) {
 	q := o.QueryTable("dapp_table")
 	if dapp_name != "" {
 		q.Filter("name", dapp_name)
@@ -27,7 +27,7 @@ func SelectDAPP(o orm.Ormer, dapp_name, dapp_id, dapp_type string, page *models.
 
 	} else if start > len(dapp_list) {
 
-		return []DAPPTable{}, nil
+		return []models.DAPPTable{}, nil
 
 	} else if end < len(dapp_list) && start < len(dapp_list) {
 
