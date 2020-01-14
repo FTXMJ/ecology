@@ -3,9 +3,11 @@ package models
 import (
 	"ecology/consul"
 	"encoding/json"
+
+	"github.com/astaxie/beego"
+
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego"
 	"io/ioutil"
 	"net/http"
 )
@@ -30,6 +32,12 @@ func (this *User) Insert() error {
 func (this *User) Update() (err error) {
 	_, err = NewOrm().Update(this)
 	return err
+}
+
+type Response struct {
+	Code int                    `json:"code""`
+	Msg  string                 `json:"msg"`
+	Data map[string]interface{} `json:"data"`
 }
 
 // 调用远端接口
@@ -110,10 +118,4 @@ func PingUser(token, user_id string) (interface{}, interface{}, error) {
 	}
 	response.Body.Close()
 	return values.Data["father_id"], values.Data["nick_name"], nil
-}
-
-type Response struct {
-	Code int                    `json:"code""`
-	Msg  string                 `json:"msg"`
-	Data map[string]interface{} `json:"data"`
 }

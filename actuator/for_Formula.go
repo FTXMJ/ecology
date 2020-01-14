@@ -2,8 +2,10 @@ package actuator
 
 import (
 	"ecology/models"
-	"errors"
+
 	"github.com/astaxie/beego/orm"
+
+	"errors"
 )
 
 // 根据等级 进行算力的更新

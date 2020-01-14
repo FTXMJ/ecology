@@ -2,10 +2,12 @@ package models
 
 import (
 	"ecology/models"
-	"fmt"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
+
+	"fmt"
 )
 
 func init() {

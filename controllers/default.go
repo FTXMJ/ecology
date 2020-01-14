@@ -4,8 +4,10 @@ import (
 	"ecology/actuator"
 	"ecology/common"
 	"ecology/models"
-	"errors"
+
 	"github.com/astaxie/beego"
+
+	"errors"
 )
 
 type FirstController struct {

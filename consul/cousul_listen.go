@@ -1,9 +1,10 @@
 package consul
 
 import (
-	"fmt"
 	"github.com/astaxie/beego"
 	consulapi "github.com/hashicorp/consul/api"
+
+	"fmt"
 	"strconv"
 )
 

@@ -2,11 +2,13 @@ package filter
 
 import (
 	"ecology/models"
-	"errors"
-	"fmt"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/dgrijalva/jwt-go"
+
+	"errors"
+	"fmt"
 	"time"
 )
 

@@ -3,9 +3,11 @@ package actuator
 import (
 	"ecology/common"
 	"ecology/models"
+
+	"github.com/astaxie/beego/orm"
+
 	"encoding/json"
 	"errors"
-	"github.com/astaxie/beego/orm"
 	"io/ioutil"
 	"net/http"
 	"net/url"
