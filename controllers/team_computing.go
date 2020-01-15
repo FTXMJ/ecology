@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"ecology/actuator"
-	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/astaxie/beego/orm"
 
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -46,7 +44,6 @@ type info struct {
 // @Success 200
 // @router /admin/test_mrsf [GET]
 func (this *Test) DailyDividendAndReleaseTest() {
-	logs.Log.Info("开始")
 	o := models.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
@@ -72,8 +69,6 @@ func (this *Test) DailyDividendAndReleaseTest() {
 		o.Insert(&perr_h)
 	}
 
-	m := models.NetIncome
-	fmt.Println(m)
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
 	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
@@ -85,11 +80,9 @@ func (this *Test) DailyDividendAndReleaseTest() {
 		}
 	}
 	models.NetIncome = shouyi
-	logs.Log.Info("结束")
 }
 
 func DailyDividendAndRelease() {
-	logs.Log.Info("开始")
 	o := models.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
@@ -124,11 +117,9 @@ func DailyDividendAndRelease() {
 		shouyi += v.CurrentRevenue
 	}
 	models.NetIncome = shouyi
-	logs.Log.Info("结束")
 }
 
 func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
-	logs.Log.Info("开始")
 	o := models.NewOrm()
 	users := []models.User{}
 	for _, v := range user {
@@ -167,7 +158,6 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 		shouyi += v.CurrentRevenue
 	}
 	models.NetIncome = shouyi
-	logs.Log.Info("结束")
 }
 
 // 设置 全局状态
@@ -460,27 +450,9 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 	}
 
 	//找最近的数据记录表
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
-	}
+	blocked_old := models.BlockedDetail{}
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
+
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
 		CurrentRevenue: 0,
@@ -503,7 +475,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.QueryTable("account").Filter("id", account.Id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	_, err_up := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account.Id).Exec()
 	if err_up != nil {
 		return 0, err_up
 	}
@@ -512,15 +484,8 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 	if err_ping_shifang != nil {
 		return 0, err_ping_shifang
 	}
-	order := models.TxIdList{
-		TxId: order_id,
-	}
-	err_rea := o.Read(&order, "tx_id")
-	if err_rea != nil {
-		return 0, err_rea
-	}
-	order.WalletState = true
-	_, err_up_tx := o.Update(&order, "wallet_state")
+
+	_, err_up_tx := o.Raw("update tx_id_list set wallet_state=? where tx_id=?", true, order_id).Exec()
 	if err_up_tx != nil {
 		return 0, err_up_tx
 	}
@@ -566,55 +531,18 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 		EcologyId: account.Id,
 	}
 	o.Read(&formula, "ecology_id")
-	blocked_yestoday := []models.AccountDetail{}
+	blocked_yestoday := models.AccountDetail{}
+	date_time := time.Now().AddDate(0, 0, -1).Format("2006-01-02 ") + "23:59:59"
 	_, err_raw := o.Raw(
-		"select * from account_detail where user_id=? and create_date<=? order by create_date desc limit 3",
-		user_id,
-		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
-		QueryRows(&blocked_yestoday)
+		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1", user_id, date_time).QueryRows(&blocked_yestoday)
 	if err_raw != nil {
 		if err_raw.Error() != "<QuerySeter> no row found" {
 			return 0, err_raw
 		}
 	}
-	var blocked_old1 models.AccountDetail
-	if len(blocked_yestoday) != 0 {
-		for i := 0; i < len(blocked_yestoday)-1; i++ {
-			for j := i + 1; j < len(blocked_yestoday); j++ {
-				if blocked_yestoday[i].Id > blocked_yestoday[j].Id {
-					blocked_yestoday[i], blocked_yestoday[j] = blocked_yestoday[j], blocked_yestoday[i]
-				}
-			}
-		}
-
-		blocked_old1 = blocked_yestoday[len(blocked_yestoday)-1]
-		if blocked_old1.Id == 0 {
-			blocked_old1.CurrentBalance = 0
-		}
-	}
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
-
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
-	}
-	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
+	blocked_old := models.BlockedDetail{}
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
+	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
 		aabonus = 0
@@ -659,7 +587,7 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 
 	//更新生态仓库属性
 	account.BockedBalance = aabonus
-	_, err_up := o.Update(&account, "bocked_balance")
+	_, err_up := o.Raw("update account set bocked_balance=? where id=?", aabonus, account.Id).Exec()
 	if err_up != nil {
 		return 0, err_up
 	}
@@ -669,19 +597,10 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 	if err_ping != nil {
 		return 0, err_ping
 	}
-	order := models.TxIdList{
-		TxId: order_id,
-	}
-	err_rea := o.Read(&order, "tx_id")
-	if err_rea != nil {
-		return 0, err_rea
-	}
-	order.WalletState = true
-	_, err_up_tx := o.Update(&order)
+	_, err_up_tx := o.Raw("update tx_id_list set wallet_state=? where tx_id=?", true, order_id).Exec()
 	if err_up_tx != nil {
 		return 0, err_up_tx
 	}
-
 	models.NetIncome += abonus
 	return abonus, nil
 }
@@ -712,28 +631,8 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 		shouyi += v.CurrentOutlay
 	}
 
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
-
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
-	}
+	blocked_old := models.BlockedDetail{}
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
 		shouyia = 0
@@ -783,7 +682,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	}
 
 	account.BockedBalance = blocked_new.CurrentBalance
-	_, err_update := o.Update(&account, "bocked_balance")
+	_, err_update := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account.Id).Exec()
 	if err_update != nil {
 		return 0, err_update
 	}
@@ -793,15 +692,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	if err_ping != nil {
 		return 0, err_ping
 	}
-	order := models.TxIdList{
-		TxId: order_id,
-	}
-	err_rea := o.Read(&order, "tx_id")
-	if err_rea != nil {
-		return 0, err_rea
-	}
-	order.WalletState = true
-	_, err_up_tx := o.Update(&order)
+	_, err_up_tx := o.Raw("update tx_id_list set wallet_state=? where tx_id=?", true, order_id).Exec()
 	if err_up_tx != nil {
 		return 0, err_up_tx
 	}
@@ -828,7 +719,7 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 		s_f_t := models.SuperForceTable{
 			Level: k_level,
 		}
-		models.NewOrm().Read(&s_f_t, "level")
+		o.Read(&s_f_t, "level")
 		tfor_some := models.NetIncome * s_f_t.BonusCalculation
 		for _, v := range vv {
 			acc := models.Account{UserId: v}
@@ -842,15 +733,13 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 						AddFormulaABonus(v, tfor_some/float64(len(vv)))
 						in_fo.peer_a_bouns += tfor_some / float64(len(vv))
 						if order_id != "" {
-							mrsd_table := models.MrsfStateTable{OrderId: order_id, UserId: v}
-							o.Read(&mrsd_table, "order_id", "user_id")
-							mrsd_table.PeerABouns = tfor_some / float64(len(vv))
-							o.Update(&mrsd_table)
+							o.Raw("update mrsf_state_table set peer_a_bouns=? where order_id=? and user_id=?", tfor_some/float64(len(vv)), order_id, v).Exec()
 						} else {
-							mrsd_table := models.MrsfStateTable{OrderId: time.Now().AddDate(0, 0, -1).Format("2006-01-02"), UserId: v}
-							o.Read(&mrsd_table, "order_id", "user_id")
-							mrsd_table.PeerABouns = tfor_some / float64(len(vv))
-							o.Update(&mrsd_table)
+							o.Raw(
+								"update mrsf_state_table set peer_a_bouns=? where order_id=? and user_id=?",
+								tfor_some/float64(len(vv)),
+								time.Now().AddDate(0, 0, -1).Format("2006-01-02"),
+								v).Exec()
 						}
 					}
 					if k_level == "钻石节点" {
@@ -906,9 +795,9 @@ func JintaiBuShiFang(o orm.Ormer, user_id string) error {
 		EcologyId: account.Id,
 	}
 	o.Read(&formula, "ecology_id")
-	blocked_yestoday := []models.AccountDetail{}
+	blocked_yestoday := models.AccountDetail{}
 	_, err_raw := o.Raw(
-		"select * from account_detail where user_id=? and create_date<=? order by create_date desc limit 3",
+		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1",
 		user_id,
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
 		QueryRows(&blocked_yestoday)
@@ -917,44 +806,9 @@ func JintaiBuShiFang(o orm.Ormer, user_id string) error {
 			return err_raw
 		}
 	}
-	var blocked_old1 models.AccountDetail
-	if len(blocked_yestoday) != 0 {
-		for i := 0; i < len(blocked_yestoday)-1; i++ {
-			for j := i + 1; j < len(blocked_yestoday); j++ {
-				if blocked_yestoday[i].Id > blocked_yestoday[j].Id {
-					blocked_yestoday[i], blocked_yestoday[j] = blocked_yestoday[j], blocked_yestoday[i]
-				}
-			}
-		}
-
-		blocked_old1 = blocked_yestoday[len(blocked_yestoday)-1]
-		if blocked_old1.Id == 0 {
-			blocked_old1.CurrentBalance = 0
-		}
-	}
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
-
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
-	}
-	abonus := formula.HoldReturnRate * blocked_old1.CurrentBalance
+	blocked_old := models.BlockedDetail{}
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
+	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
 		aabonus = 0
@@ -994,28 +848,9 @@ func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 		shouyi += v.CurrentOutlay
 	}
 
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
+	blocked_old := models.BlockedDetail{}
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
 
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
-	}
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
 		shouyia = 0
@@ -1034,7 +869,7 @@ func TeamBuShiFang(o orm.Ormer, user_id string) error {
 	coins := []float64{}
 	user_current_layer := []models.User{}
 	// 团队收益　开始
-	o.QueryTable("user").Filter("father_id", user_id).All(&user_current_layer)
+	o.Raw("select * from user where father_id=?", user_id).QueryRows(&user_current_layer)
 	if len(user_current_layer) > 0 {
 		for _, v := range user_current_layer {
 			if user_id != v.UserId {
@@ -1109,29 +944,6 @@ func TeamWork(o orm.Ormer, coins []float64, user_id string) error {
 
 	if value == 0 {
 		return nil
-	}
-
-	//找最近的数据记录表
-	blocked_olds := []models.BlockedDetail{}
-	o.QueryTable("blocked_detail").
-		Filter("user_id", user_id).
-		Filter("account", account.Id).
-		OrderBy("-create_date").
-		Limit(3).
-		All(&blocked_olds)
-	var blocked_old models.BlockedDetail
-	if len(blocked_olds) != 0 {
-		for i := 0; i < len(blocked_olds)-1; i++ {
-			for j := i + 1; j < len(blocked_olds); j++ {
-				if blocked_olds[i].Id > blocked_olds[j].Id {
-					blocked_olds[i], blocked_olds[j] = blocked_olds[j], blocked_olds[i]
-				}
-			}
-		}
-		blocked_old = blocked_olds[len(blocked_olds)-1]
-		if blocked_old.Id == 0 {
-			blocked_old.CurrentBalance = 0
-		}
 	}
 	models.NetIncome += value
 	return nil
