@@ -824,6 +824,24 @@
                 }
             }
         },
+        "/ecology/admin/test_mrsf": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/admin/the_release_of_err_users": {
             "post": {
                 "tags": [
@@ -1285,24 +1303,6 @@
                         "schema": {
                             "$ref": "#/definitions/models.ForceTable_test"
                         }
-                    }
-                }
-            }
-        },
-        "/ecology/test_mrsf": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
                     }
                 }
             }
