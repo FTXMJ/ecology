@@ -42,7 +42,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 		return
 	}
 	actuator.QuickSortForce(force_list, 0, len(force_list)-1)
-	data = common.NewResponse(force_list)
+	data = common.NewResponse(force_list[1:])
 	return
 }
 
