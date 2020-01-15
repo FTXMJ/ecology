@@ -1044,11 +1044,11 @@ func (this *BackStageManagement) ShowDAPPList() {
 	}
 	dapp_list, err := actuator.SelectDAPP(o, dapp_name, dapp_id, dapp_type, &page)
 	if err != nil {
-		data = common.NewErrorResponse(500, "出现错误,请再次刷新!", models.DAPPList{})
+		data = common.NewErrorResponse(500, "出现错误,请再次刷新!", models.DappList{})
 		return
 	}
 
-	dapp := models.DAPPList{
+	dapp := models.DappList{
 		Items: dapp_list,
 		Page:  page,
 	}
@@ -1071,7 +1071,7 @@ func (this *BackStageManagement) InsertDAPP() {
 		data *common.ResponseData
 		o    = models.NewOrm()
 
-		dapp_name             = this.GetString("dapp_id")
+		dapp_name             = this.GetString("dapp_name")
 		image_url             = this.GetString("image_url")
 		dapp_type             = this.GetString("dapp_type")
 		dapp_link_address     = this.GetString("dapp_link_address")
@@ -1082,7 +1082,7 @@ func (this *BackStageManagement) InsertDAPP() {
 		this.ServeJSON()
 	}()
 
-	dapp := models.DAPPTable{
+	dapp := models.DappTable{
 		Name:            dapp_name,
 		AgreementType:   dapp_type,
 		Start:           true,
@@ -1221,21 +1221,32 @@ func (this *BackStageManagement) ShowGroupByType() {
 	var (
 		data *common.ResponseData
 		o    = models.NewOrm()
-		list = []models.DAPPTable{}
+
+		list = []models.DappTable{}
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	m := make(map[string][]models.DAPPTable)
+	m := make(map[string][]models.DappTable)
 
-	o.Raw("select from dapp_table").QueryRows(&list)
+	o.Raw("select * from dapp_table").QueryRows(&list)
 
 	for _, v := range list {
 		m[v.AgreementType] = append(m[v.AgreementType], v)
 	}
 
-	data = common.NewResponse(m)
+	values := models.DappGroupList{}
+	for i, v := range m {
+		a := models.List{
+			Title: i,
+		}
+		for _, vv := range v {
+			a.Values = append(a.Values, vv)
+		}
+		values.Items = append(values.Items, a)
+	}
+	data = common.NewResponse(values)
 	return
 }

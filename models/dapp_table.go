@@ -1,6 +1,6 @@
 package models
 
-type DAPPTable struct {
+type DappTable struct {
 	Id              int    `orm:"column(id);pk;auto"  json:"id"`
 	Name            string `orm:"column(name)" json:"name"`                         //  名字
 	AgreementType   string `orm:"column(agreement_type)" json:"agreement_type"`     // DAPP类型
@@ -13,7 +13,16 @@ type DAPPTable struct {
 }
 
 // user ecology information
-type DAPPList struct {
-	Items []DAPPTable `json:"items"` //数据列表
+type DappList struct {
+	Items []DappTable `json:"items"` //数据列表
 	Page  Page        `json:"page"`  //分页信息
+}
+
+type DappGroupList struct {
+	Items []List `json:"items"` //数据列表
+}
+
+type List struct {
+	Values []DappTable `json:"values"`
+	Title  string      `json:"title"`
 }

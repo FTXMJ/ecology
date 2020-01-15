@@ -19,10 +19,10 @@ func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos
 	q_user := o.QueryTable("user")
 
 	if p.UserName != "" {
-		q_user.Filter("user_name", p.UserName)
+		q_user = q_user.Filter("user_name", p.UserName)
 	}
 	if p.UserId != "" {
-		q_user.Filter("user_id", p.UserId)
+		q_user = q_user.Filter("user_id", p.UserId)
 	}
 	q_user.All(&us)
 	user_ids := []string{}
@@ -33,7 +33,7 @@ func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos
 	q_blos := o.QueryTable(table_name).Filter("user_id__in", user_ids)
 
 	if p.StartTime != "" && p.EndTime != "" {
-		q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
+		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
 	}
 	q_blos.OrderBy("-create_date").All(&blos)
 

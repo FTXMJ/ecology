@@ -32,7 +32,6 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 	}
 	_, err_acc := o.Insert(&account_new)
 	if err_acc != nil {
-		o.Rollback()
 		return err_acc
 	}
 
@@ -42,7 +41,6 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 	o.Read(&account, "user_id")
 	_, err_up := o.Raw("update account set balance=? where id=?", account_new.CurrentBalance, account_id).Exec()
 	if err_up != nil {
-		o.Rollback()
 		return err_acc
 	}
 	return nil
@@ -65,19 +63,11 @@ func NewCreateAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_ou
 
 	_, err_acc := o.Insert(&account_new)
 	if err_acc != nil {
-		o.Rollback()
 		return err_acc
 	}
 
-	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"state": "true"})
-	if err_txid != nil {
-		o.Rollback()
-		return err_txid
-	}
-
-	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"balance": account_new.CurrentBalance})
+	_, err_up := o.Raw("update account set balance=? where id=?", account_new.CurrentBalance, account_id).Exec()
 	if err_up != nil {
-		o.Rollback()
 		return err_acc
 	}
 	return nil

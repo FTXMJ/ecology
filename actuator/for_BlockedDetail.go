@@ -41,13 +41,13 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 	}
 
 	// 更新任务完成状态
-	_, err_txid := o.QueryTable("tx_id_list").Filter("tx_id", tx_id).Update(orm.Params{"order_state": true})
+	_, err_txid := o.Raw("update tx_id_list set order_state=? where tx_id=?", true, tx_id).Exec()
 	if err_txid != nil {
 		return err_txid
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.QueryTable("account").Filter("id", account_id).Update(orm.Params{"bocked_balance": blocked_new.CurrentBalance})
+	_, err_up := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account_id).Exec()
 	if err_up != nil {
 		return err_up
 	}
@@ -205,10 +205,10 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 	q_user := o.QueryTable("user")
 
 	if p.UserName != "" {
-		q_user.Filter("user_name", p.UserName)
+		q_user = q_user.Filter("user_name", p.UserName)
 	}
 	if p.UserId != "" {
-		q_user.Filter("user_id", p.UserId)
+		q_user = q_user.Filter("user_id", p.UserId)
 	}
 	q_user.All(&us)
 	user_ids := []string{}
@@ -219,7 +219,7 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 	q_blos := o.QueryTable(table_name).Filter("user_id__in", user_ids)
 
 	if p.StartTime != "" && p.EndTime != "" {
-		q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
+		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
 	}
 	q_blos.All(&blos)
 
@@ -266,10 +266,10 @@ func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]mo
 
 	q_user := o.QueryTable("user")
 	if user_name != "" {
-		q_user.Filter("user_name", user_name)
+		q_user = q_user.Filter("user_name", user_name)
 	}
 	if user_id != "" {
-		q_user.Filter("user_id", user_id)
+		q_user = q_user.Filter("user_id", user_id)
 	}
 	q_user.All(&users)
 	user_ids := []string{}
@@ -360,10 +360,10 @@ func FindFalseUser(o orm.Ormer, page models.Page, user_id, user_name string) ([]
 
 	q_user := o.QueryTable("user")
 	if user_name != "" {
-		q_user.Filter("user_name", user_name)
+		q_user = q_user.Filter("user_name", user_name)
 	}
 	if user_id != "" {
-		q_user.Filter("user_id", user_id)
+		q_user = q_user.Filter("user_id", user_id)
 	}
 	q_user.All(&users)
 
@@ -475,13 +475,13 @@ func ShowMrsfTable(o orm.Ormer, page models.Page, user_name, user_id, date strin
 
 	q := o.QueryTable("mrsf_state_table")
 	if user_name != "" {
-		q.Filter("user_name", user_name)
+		q = q.Filter("user_name", user_name)
 	}
 	if user_id != "" {
-		q.Filter("user_id", user_id)
+		q = q.Filter("user_id", user_id)
 	}
 	if date != "" {
-		q.Filter("date", date)
+		q = q.Filter("date", date)
 	}
 	q.Filter("state", state).All(&list)
 
