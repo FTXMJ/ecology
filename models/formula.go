@@ -12,17 +12,3 @@ type Formula struct {
 	RecommendReturnRate float64 `orm:"column(recommend_return_rate)"` //直推算力
 	TeamReturnRate      float64 `orm:"column(team_return_rate)"`      //动态算力
 }
-
-func (this *Formula) TableName() string {
-	return "formula"
-}
-
-func (this *Formula) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *Formula) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}

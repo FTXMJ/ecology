@@ -1,6 +1,7 @@
 package actuator
 
 import (
+	db "ecology/db"
 	"ecology/models"
 	"errors"
 
@@ -80,7 +81,7 @@ func ListLimit(list []interface{}, start, end int) []interface{} {
 func RecommendReturnRate(user_id, time string) (float64, error) {
 	blo := orm.ParamsList{}
 	sql_str := "SELECT sum(current_outlay) from blocked_detail where user_id=? and create_date>=? and comment=? "
-	_, err := models.NewOrm().Raw(sql_str, user_id, time, "直推收益").ValuesFlat(&blo)
+	_, err := db.NewOrm().Raw(sql_str, user_id, time, "直推收益").ValuesFlat(&blo)
 	if err != nil {
 		return 0, err
 	}
@@ -97,7 +98,7 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64, error) {
 	blo := orm.ParamsList{}
 	sql_str := "SELECT sum(current_outlay) from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=? "
-	_, err := models.NewOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").ValuesFlat(&blo)
+	_, err := db.NewOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").ValuesFlat(&blo)
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +124,7 @@ func AddAllSum(o orm.Ormer, user_id string) float64 {
 
 // 处理器，计算所有用户的收益  并发布任务和 分红记录
 func HandlerOperation(users []string, user_id string) (float64, error) {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	var coin_abouns float64
 	for _, v := range users {
 		// 拿到生态项目实例

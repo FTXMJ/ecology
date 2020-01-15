@@ -3,6 +3,7 @@ package controllers
 import (
 	"ecology/actuator"
 	"ecology/common"
+	db "ecology/db"
 	"ecology/filter"
 	"ecology/logs"
 	"ecology/models"
@@ -30,7 +31,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 		account     = models.Account{}
 		indexValues = models.Ecology_index_obj{Ecological_poject_bool: true}
 		err         error
-		o           = models.NewOrm()
+		o           = db.NewOrm()
 
 		token   = filter.GetJwtValues(this.Ctx)
 		user_id = token.UserID
@@ -74,7 +75,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 func (this *EcologyIndexController) CreateNewWarehouse() {
 	var (
 		data            *common.ResponseData
-		o               = models.NewOrm()
+		o               = db.NewOrm()
 		coin_number_str = this.GetString("coin_number")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
 		levelstr        = this.GetString("levelstr")
@@ -162,7 +163,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	var (
 		data            *common.ResponseData
-		o               = models.NewOrm()
+		o               = db.NewOrm()
 		coin_number_str = this.GetString("coin_number")
 		order_id        = this.GetString("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
@@ -186,6 +187,11 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 		TxId: order_id,
 	}
 	if err = o.Read(&order_if, "tx_id"); err != nil {
+		if err.Error() != "<QuerySeter> no row found" {
+			err = errors.New("订单以存在，请勿提交!!")
+			return
+		}
+	} else if order_if.Id > 0 {
 		err = errors.New("订单以存在，请勿提交!!")
 		return
 	}
@@ -250,7 +256,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 func (this *EcologyIndexController) UpgradeWarehouse() {
 	var (
 		data            *common.ResponseData
-		o               = models.NewOrm()
+		o               = db.NewOrm()
 		coin_number_str = this.GetString("cion_number")
 		order_id        = this.GetString("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
@@ -276,6 +282,11 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 		TxId: order_id,
 	}
 	if err = o.Read(&order_if, "tx_id"); err != nil {
+		if err.Error() != "<QuerySeter> no row found" {
+			err = errors.New("订单以存在，请勿提交!!")
+			return
+		}
+	} else if order_if.Id > 0 {
 		err = errors.New("订单以存在，请勿提交!!")
 		return
 	}

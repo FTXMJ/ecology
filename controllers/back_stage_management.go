@@ -3,6 +3,7 @@ package controllers
 import (
 	"ecology/actuator"
 	"ecology/common"
+	db "ecology/db"
 	"ecology/filter"
 	"ecology/logs"
 	"ecology/models"
@@ -28,7 +29,7 @@ type BackStageManagement struct {
 func (this *BackStageManagement) ShowFormulaList() {
 	var (
 		data       *common.ResponseData
-		o          = models.NewOrm()
+		o          = db.NewOrm()
 		force_list []models.ForceTable
 	)
 	defer func() {
@@ -55,7 +56,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 func (this *BackStageManagement) ShowUserFormula() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -94,7 +95,7 @@ func (this *BackStageManagement) ShowUserFormula() {
 func (this *BackStageManagement) OperationFormulaList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 		err  error
 
 		force_id                  = this.GetString("force_id")
@@ -180,7 +181,7 @@ func (this *BackStageManagement) OperationFormulaList() {
 func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
-		o          = models.NewOrm()
+		o          = db.NewOrm()
 		force_list []models.SuperForceTable
 	)
 	defer func() {
@@ -206,7 +207,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 		err  error
 
 		super_force_id  = this.GetString("super_force_id")
@@ -272,7 +273,7 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 func (this *BackStageManagement) ReturnPageHostryRoot() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
@@ -315,7 +316,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 func (this *BackStageManagement) FilterHistoryInfo() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
@@ -382,7 +383,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 func (this *BackStageManagement) UserEcologyList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
@@ -423,7 +424,7 @@ func (this *BackStageManagement) UserEcologyList() {
 func (this *BackStageManagement) UserEcologyFalseList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
@@ -465,7 +466,7 @@ func (this *BackStageManagement) UserEcologyFalseList() {
 func (this *BackStageManagement) ComputationalFlow() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
@@ -534,7 +535,7 @@ func (this *BackStageManagement) ComputationalFlow() {
 func (this *BackStageManagement) EcologicalIncomeControl() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
@@ -598,7 +599,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		profit_type_int, _  = this.GetInt("profit_type")
 		profit_start_int, _ = this.GetInt("profit_start")
@@ -658,7 +659,7 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 func (this *BackStageManagement) PeerUserList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
@@ -729,7 +730,7 @@ func (this *BackStageManagement) PeerUserList() {
 func (this *BackStageManagement) PeerABounsList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
@@ -795,7 +796,7 @@ func (this *BackStageManagement) PeerABounsList() {
 func (this *BackStageManagement) PeerABounsHistoryList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
@@ -846,7 +847,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 func (this *BackStageManagement) ShowGlobalOperations() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -872,7 +873,7 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 func (this *BackStageManagement) UpdateGlobalOperations() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		operation_id = this.GetString("operation_id")
 
@@ -924,7 +925,7 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 func (this *BackStageManagement) ShowOneDayMrsf() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _  = this.GetInt("page")
 		page_size, _     = this.GetInt("pageSize")
@@ -978,7 +979,7 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 func (this *BackStageManagement) TheReleaseOfErrUsers() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		user_id = this.GetString("user_id")
 
@@ -1023,7 +1024,7 @@ func (this *BackStageManagement) TheReleaseOfErrUsers() {
 func (this *BackStageManagement) ShowDAPPList() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
@@ -1069,7 +1070,7 @@ func (this *BackStageManagement) ShowDAPPList() {
 func (this *BackStageManagement) InsertDAPP() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		dapp_name             = this.GetString("dapp_name")
 		image_url             = this.GetString("image_url")
@@ -1114,7 +1115,7 @@ func (this *BackStageManagement) InsertDAPP() {
 func (this *BackStageManagement) UpdateDAPP() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		dapp_id, _            = this.GetInt("dapp_id")
 		dapp_name             = this.GetString("dapp_name")
@@ -1155,7 +1156,7 @@ func (this *BackStageManagement) UpdateDAPP() {
 func (this *BackStageManagement) UpdateDAPPState() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		dapp_id, _    = this.GetInt("dapp_id")
 		dapp_state, _ = this.GetInt("dapp_state")
@@ -1193,7 +1194,7 @@ func (this *BackStageManagement) UpdateDAPPState() {
 func (this *BackStageManagement) DeleteDAPP() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		dapp_id, _ = this.GetInt("dapp_id")
 	)
@@ -1220,7 +1221,7 @@ func (this *BackStageManagement) DeleteDAPP() {
 func (this *BackStageManagement) ShowGroupByType() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewOrm()
 
 		list = []models.DappTable{}
 	)

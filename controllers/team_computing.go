@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ecology/actuator"
+	db "ecology/db"
 	"ecology/models"
 	"ecology/utils"
 
@@ -44,7 +45,7 @@ type info struct {
 // @Success 200
 // @router /admin/test_mrsf [GET]
 func (this *Test) DailyDividendAndReleaseTest() {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
 
@@ -60,7 +61,7 @@ func (this *Test) DailyDividendAndReleaseTest() {
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
-			WholeNetworkTfor: models.NetIncome,
+			WholeNetworkTfor: db.NetIncome,
 			PeerABouns:       in_fo.peer_a_bouns,
 			DiamondsPeer:     in_fo.one,
 			SuperPeer:        in_fo.two,
@@ -79,11 +80,11 @@ func (this *Test) DailyDividendAndReleaseTest() {
 			shouyi += v.CurrentRevenue
 		}
 	}
-	models.NetIncome = shouyi
+	db.NetIncome = shouyi
 }
 
 func DailyDividendAndRelease() {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
 
@@ -99,7 +100,7 @@ func DailyDividendAndRelease() {
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
-			WholeNetworkTfor: models.NetIncome,
+			WholeNetworkTfor: db.NetIncome,
 			PeerABouns:       in_fo.peer_a_bouns,
 			DiamondsPeer:     in_fo.one,
 			SuperPeer:        in_fo.two,
@@ -116,11 +117,11 @@ func DailyDividendAndRelease() {
 		shouyi += v.CurrentOutlay
 		shouyi += v.CurrentRevenue
 	}
-	models.NetIncome = shouyi
+	db.NetIncome = shouyi
 }
 
 func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	users := []models.User{}
 	for _, v := range user {
 		u := models.User{UserId: v}
@@ -140,7 +141,7 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 	if err_peer == nil {
 		perr_h := models.PeerHistory{
 			Time:             time.Now().Format("2006-01-02 15:04:05"),
-			WholeNetworkTfor: models.NetIncome,
+			WholeNetworkTfor: db.NetIncome,
 			PeerABouns:       in_fo.peer_a_bouns,
 			DiamondsPeer:     in_fo.one,
 			SuperPeer:        in_fo.two,
@@ -157,7 +158,7 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 		shouyi += v.CurrentOutlay
 		shouyi += v.CurrentRevenue
 	}
-	models.NetIncome = shouyi
+	db.NetIncome = shouyi
 }
 
 // 设置 全局状态
@@ -195,7 +196,7 @@ func ProducerEcology(users []models.User, order_id string) []models.User {
 
 //超级节点　的　释放
 func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
 	o.Read(&g_o, "operation")
 	if g_o.State == false && g_o.Id > 0 {
@@ -222,7 +223,7 @@ func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
 
 // 工作　函数
 func Worker(user models.User, order_id string) error {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	team_a_bouns := 0.0
 	ziyou_a_bouns := 0.0
 	zhitui_a_bouns := 0.0
@@ -490,13 +491,13 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 		return 0, err_up_tx
 	}
 
-	models.NetIncome += value
+	db.NetIncome += value
 	return value, nil
 }
 
 // 超级节点的分红
 func AddFormulaABonus(user_id string, abonus float64) {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	o.Begin()
 
 	//任务表 USDD  铸币记录
@@ -601,7 +602,7 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 	if err_up_tx != nil {
 		return 0, err_up_tx
 	}
-	models.NetIncome += abonus
+	db.NetIncome += abonus
 	return abonus, nil
 }
 
@@ -697,14 +698,14 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 		return 0, err_up_tx
 	}
 
-	models.NetIncome += shouyi
+	db.NetIncome += shouyi
 	return shouyi, nil
 }
 
 // 创建用于超级节点　等级记录的　map 每个　values 第一个元素都是　等级标示
 func ReturnMap(m map[string][]string) {
 	s_f_t := []models.SuperForceTable{}
-	models.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	db.NewOrm().QueryTable("super_force_table").All(&s_f_t)
 	for _, v := range s_f_t {
 		if m[v.Level] == nil {
 			m[v.Level] = append(m[v.Level], v.Level)
@@ -720,7 +721,7 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 			Level: k_level,
 		}
 		o.Read(&s_f_t, "level")
-		tfor_some := models.NetIncome * s_f_t.BonusCalculation
+		tfor_some := db.NetIncome * s_f_t.BonusCalculation
 		for _, v := range vv {
 			acc := models.Account{UserId: v}
 			o.Read(&acc, "user_id")
@@ -760,7 +761,7 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 
 // 给失败的用户　添加失败的任务记录表
 func CreateErrUserTxList(users []models.User) {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	err_users := []models.User{}
 	for _, v := range users {
 		//任务表 USDD  铸币记录
@@ -818,7 +819,7 @@ func JintaiBuShiFang(o orm.Ormer, user_id string) error {
 		return nil
 	}
 
-	models.NetIncome += abonus
+	db.NetIncome += abonus
 	return nil
 }
 
@@ -860,7 +861,7 @@ func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 	if shouyi == 0 {
 		return nil
 	}
-	models.NetIncome += shouyi
+	db.NetIncome += shouyi
 	return nil
 }
 
@@ -945,6 +946,6 @@ func TeamWork(o orm.Ormer, coins []float64, user_id string) error {
 	if value == 0 {
 		return nil
 	}
-	models.NetIncome += value
+	db.NetIncome += value
 	return nil
 }

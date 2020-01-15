@@ -15,20 +15,6 @@ type BlockedDetail struct {
 	CoinType       string  `orm:"column(coin_type)" json:"coin_type"`             // 币种信息
 }
 
-func (this *BlockedDetail) TableName() string {
-	return "blocked_detail"
-}
-
-func (this *BlockedDetail) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *BlockedDetail) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}
-
 // user ecology information
 type UEOBJList struct {
 	Items []U_E_OBJ `json:"items"` //数据列表

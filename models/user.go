@@ -20,20 +20,6 @@ type User struct {
 	UserName string `orm:"column(user_name)"` //父亲id
 }
 
-func (this *User) TableName() string {
-	return "user"
-}
-
-func (this *User) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *User) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}
-
 type Response struct {
 	Code int                    `json:"code""`
 	Msg  string                 `json:"msg"`

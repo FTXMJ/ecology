@@ -1,6 +1,7 @@
 package actuator
 
 import (
+	db "ecology/db"
 	"ecology/models"
 	"errors"
 
@@ -9,7 +10,7 @@ import (
 
 // user
 func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, models.Page, error) {
-	o := models.NewOrm()
+	o := db.NewOrm()
 
 	var acc_list []models.AccountDetail
 	_, acc_read_err := o.QueryTable("account_detail").Filter("account", ecology_id).All(&acc_list)

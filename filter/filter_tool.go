@@ -1,6 +1,7 @@
 package filter
 
 import (
+	db "ecology/db"
 	"ecology/models"
 
 	"github.com/astaxie/beego/context"
@@ -43,7 +44,7 @@ func UserFilter(ctx *context.Context, api string) {
 		ctx.WriteString(`{"code": "401","msg": "数据格式不正确"}`)
 		return
 	}
-	o := models.NewOrm()
+	o := db.NewOrm()
 	u := models.User{
 		UserId: tockken.UserID,
 	}

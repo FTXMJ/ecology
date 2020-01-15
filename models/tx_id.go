@@ -13,20 +13,6 @@ type TxIdList struct {
 	InCome      float64 `orm:"column(in_come)"`     //任务id
 }
 
-func (this *TxIdList) TableName() string {
-	return "tx_id_list"
-}
-
-func (this *TxIdList) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *TxIdList) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}
-
 // peer a_bouns list
 type PeerListABouns struct {
 	Items []PeerAbouns `json:"items"` //数据列表

@@ -3,6 +3,7 @@ package controllers
 import (
 	"ecology/actuator"
 	"ecology/common"
+	db "ecology/db"
 	"ecology/models"
 
 	"github.com/astaxie/beego"
@@ -31,7 +32,7 @@ func (this *FirstController) Check() {
 
 // 计算团队收益
 func SumTeamProfit(user_id string) (float64, error) {
-	o := models.NewOrm()
+	o := db.NewOrm()
 	user_team := []models.User{}
 	_, err_raw := o.Raw("select * from user where father_id=?", user_id).QueryRows(&user_team)
 	if err_raw != nil {

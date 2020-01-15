@@ -14,17 +14,3 @@ type AccountDetail struct {
 	Account        int     `orm:"column(account)"`         //生态仓库id
 	CoinType       string  `orm:"column(coin_type)"`       // 币种信息
 }
-
-func (this *AccountDetail) TableName() string {
-	return "account_detail"
-}
-
-func (this *AccountDetail) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *AccountDetail) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}
