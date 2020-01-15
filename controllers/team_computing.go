@@ -44,7 +44,7 @@ type info struct {
 // @Accept  json
 // @Produce json
 // @Success 200
-// @router /test_mrsf [GET]
+// @router /admin/test_mrsf [GET]
 func (this *Test) DailyDividendAndReleaseTest() {
 	logs.Log.Info("开始")
 	o := models.NewOrm()
