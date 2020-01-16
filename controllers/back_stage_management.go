@@ -1264,6 +1264,10 @@ func (this *BackStageManagement) ShowGroupByType() {
 		}
 		values.Items = append(values.Items, a)
 	}
+	if len(values.Items) == 0 {
+		data = common.NewResponse(models.DappGroupList{})
+		return
+	}
 	data = common.NewResponse(values)
 	return
 }
