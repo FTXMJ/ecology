@@ -11,7 +11,7 @@ import (
 // 生成充值表的借贷记录
 func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
 	account_old := models.AccountDetail{}
-	o.Raw("select * from account_detail where user_id=? and account=? order by create_date desc limit 1").QueryRow(&account_old)
+	o.Raw("select * from account_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account_id).QueryRow(&account_old)
 	if account_old.Id == 0 {
 		account_old.CurrentBalance = 0
 	}
