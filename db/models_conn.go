@@ -6,8 +6,6 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-
-	"fmt"
 )
 
 // 数据库链接实例
@@ -37,8 +35,8 @@ func init() {
 		new(models.PeerHistory),
 		new(models.GlobalOperations),
 		new(models.MrsfStateTable),
+		new(models.DappTable),
 		new(models.User))
 	orm.Debug = true // 是否开启调试模式 调试模式下会打印出sql语句
-	er := orm.RegisterDataBase("default", "mysql", dsn, 100, 200)
-	fmt.Println(er)
+	orm.RegisterDataBase("default", "mysql", dsn, 100, 200)
 }

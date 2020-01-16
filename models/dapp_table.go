@@ -4,7 +4,7 @@ type DappTable struct {
 	Id              int    `orm:"column(id);pk;auto"  json:"id"`
 	Name            string `orm:"column(name)" json:"name"`                         //  名字
 	AgreementType   string `orm:"column(agreement_type)" json:"agreement_type"`     // DAPP类型
-	Start           bool   `orm:"column(start)" json:"start"`                       // 状态  禁用 -- 启用
+	State           bool   `orm:"column(state)" json:"state"`                       // 状态  禁用 -- 启用
 	TheLinkAddress  string `orm:"column(the_link_address)" json:"the_link_address"` //链接地址
 	ContractAddress string `orm:"column(contract_address)" json:"contract_address"` //链接地址
 	Image           string `orm:"column(image)" json:"image"`                       //图片链接

@@ -6,7 +6,6 @@ import (
 
 	"github.com/astaxie/beego/context"
 
-	"fmt"
 	"time"
 )
 
@@ -26,11 +25,7 @@ func ApiClassification(api string) string {
 func UserFilter(ctx *context.Context, api string) {
 	token := ctx.Request.Header.Get("Authorization")
 	if token == "" {
-		fmt.Println("拦截：", api)
 		ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
-		fmt.Println(GenerateToken(models.User{
-			UserId: "77e3732c1e4541bebf3782b43631b8b1",
-		}))
 		return
 	}
 	j := NewJWT()

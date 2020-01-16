@@ -15,7 +15,9 @@ import (
 func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos []interface{}, err error) {
 	err = errors.New("")
 	us := []models.User{}
-	blos = []interface{}{}
+	blo := []models.BlockedDetail{}
+	acc := []models.AccountDetail{}
+	ac := []models.Account{}
 
 	q_user := o.QueryTable("user")
 
@@ -36,7 +38,22 @@ func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos
 	if p.StartTime != "" && p.EndTime != "" {
 		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
 	}
-	q_blos.OrderBy("-create_date").All(&blos)
+	if table_name == "blocked_detail" {
+		q_blos.OrderBy("create_date").All(&blo)
+		for _, v := range blo {
+			blos = append(blos, v)
+		}
+	} else if table_name == "account_detail" {
+		q_blos.OrderBy("create_date").All(&acc)
+		for _, v := range acc {
+			blos = append(blos, v)
+		}
+	} else if table_name == "account" {
+		q_blos.OrderBy("create_date").All(&ac)
+		for _, v := range ac {
+			blos = append(blos, v)
+		}
+	}
 
 	return blos, nil
 }

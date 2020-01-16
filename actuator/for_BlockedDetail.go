@@ -223,6 +223,8 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 	}
 	q_blos.All(&blos)
 
+	QuickSortBlockedDetail(blos, 0, len(blos)-1)
+
 	start, end := InitPage(&page, len(blos))
 
 	value_list := []interface{}{}

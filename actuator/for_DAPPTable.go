@@ -17,7 +17,7 @@ func SelectDAPP(o orm.Ormer, dapp_name, dapp_id, dapp_type string, page *models.
 	if dapp_type != "" {
 		q = q.Filter("dapp_type", dapp_type)
 	}
-	q.All(&dapp_list)
+	_, err = q.All(&dapp_list)
 
 	start, end := InitPage(page, len(dapp_list))
 

@@ -171,6 +171,9 @@ func (this *BackStageManagement) OperationFormulaList() {
 		err = errors.New("未知操作!")
 	}
 	o.Commit()
+
+	data = common.NewResponse(nil)
+	return
 }
 
 // @Tags 超级节点算力表显示   后台操作　or 用户查看　都可
@@ -261,6 +264,9 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 		err = errors.New("未知操作!")
 	}
 	o.Commit()
+
+	data = common.NewResponse(nil)
+	return
 }
 
 // @Tags root-历史
@@ -1086,7 +1092,7 @@ func (this *BackStageManagement) InsertDAPP() {
 	dapp := models.DappTable{
 		Name:            dapp_name,
 		AgreementType:   dapp_type,
-		Start:           true,
+		State:           true,
 		TheLinkAddress:  dapp_link_address,
 		ContractAddress: dapp_contract_address,
 		Image:           image_url,
@@ -1172,7 +1178,7 @@ func (this *BackStageManagement) UpdateDAPPState() {
 		state = false
 	}
 	_, err := o.Raw(
-		"update dapp_table set agreement_type=?,update_time=? where id=?",
+		"update dapp_table set state=?,update_time=? where id=?",
 		state,
 		time.Now().Format("2006-01-02 15:04:05"),
 		dapp_id).Exec()
