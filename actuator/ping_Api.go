@@ -2,9 +2,12 @@ package actuator
 
 import (
 	"ecology/consul"
+	db "ecology/db"
 	"ecology/filter"
+	"ecology/logs"
 	"ecology/models"
 	"encoding/json"
+	"time"
 
 	"github.com/astaxie/beego"
 
@@ -20,6 +23,24 @@ type data_users struct {
 	Code int      `json:"code"`
 	Msg  string   `json:"msg"`
 	Data []string `json:"data"`
+}
+
+type data_r struct {
+	Code int    `json:"code"`
+	Date []ping `json:"data"`
+}
+
+type ping struct {
+	T  string `json:"t"`
+	S  string `json:"s"`
+	C  string `json:"c"`
+	H  string `json:"h"`
+	L  string `json:"l"`
+	O  string `json:"o"`
+	V  string `json:"v"`
+	Qv string `json:"qv"`
+	M  string `json:"m"`
+	E  int    `json:"e"`
 }
 
 // 调用远端接口
@@ -207,4 +228,64 @@ func GetTeams(user models.User) ([]string, error) {
 		users = append(users, v)
 	}
 	return users, nil
+}
+
+// 定时获取 交易行情
+func Second5s() {
+	client := &http.Client{}
+	//生成要访问的url
+	url := beego.AppConfig.String("api::real_time_price_api")
+	//提交请求
+	reqest, _ := http.NewRequest("GET", url, nil)
+
+	//处理返回结果
+	response, errdo := client.Do(reqest)
+	defer response.Body.Close()
+	if errdo != nil {
+		return
+	}
+
+	bys, err_read := ioutil.ReadAll(response.Body)
+	if err_read != nil {
+		return
+	}
+
+	value := data_r{}
+	err := json.Unmarshal(bys, &value)
+	if err != nil {
+		return
+	}
+	o := db.NewOrm()
+	r_t_p := models.RealTimePrice{
+		Id:        1,
+		TimeStamp: value.Date[0].T,
+		Symbol:    "TFOR-USDD" + value.Date[0].T,
+		Close:     value.Date[0].C,
+		High:      value.Date[0].H,
+		Low:       value.Date[0].L,
+		Open:      value.Date[0].O,
+		Volume:    value.Date[0].V,
+		Quantity:  value.Date[0].Qv,
+	}
+	_, err = o.Update(&r_t_p)
+	state := "成功"
+	if err != nil {
+		state = "失败"
+	}
+
+	r_h := models.RealTimePriceHistory{
+		Symbol:   "TFOR-USDD" + value.Date[0].T,
+		Close:    value.Date[0].C,
+		High:     value.Date[0].H,
+		Low:      value.Date[0].L,
+		Open:     value.Date[0].O,
+		Volume:   value.Date[0].V,
+		Quantity: value.Date[0].Qv,
+	}
+	t, _ := strconv.Atoi(value.Date[0].T)
+	r_h.TimeStamp = time.Unix(int64(t)/1000, 0).Format("2006-01-02 15:04:05")
+	_, err = o.Insert(&r_h)
+
+	logs.Log.Info("更新行情 时间: ", time.Now().Format("2006-01-02 15:04:05")+" 操作: "+state)
+	return
 }

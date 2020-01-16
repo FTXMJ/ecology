@@ -1089,6 +1089,13 @@ func (this *BackStageManagement) InsertDAPP() {
 		this.ServeJSON()
 	}()
 
+	o.Raw("select * from dapp_table where name=?", dapp_name)
+	i, _ := o.QueryTable("dapp_table").Filter("name", dapp_name).Count()
+	if i != 0 {
+		data = common.NewErrorResponse(500, "该名字已存在!", nil)
+		return
+	}
+
 	dapp := models.DappTable{
 		Name:            dapp_name,
 		AgreementType:   dapp_type,

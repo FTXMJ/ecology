@@ -931,6 +931,19 @@ paths:
       responses:
         200____升级生态仓库:
           description: ""
+  /quote/ticker:
+    get:
+      tags:
+      - quote
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        200____给定实时数据:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.RealTimePriceTest'
 definitions:
   models.DAPPListTest:
     title: DAPPListTest
@@ -1277,6 +1290,29 @@ definitions:
           $ref: '#/definitions/models.PeerAbouns_test'
       page_分页:
         $ref: '#/definitions/models.Page'
+  models.RealTimePriceTest:
+    title: RealTimePriceTest
+    type: object
+    properties:
+      Id:
+        type: integer
+        format: int64
+      close:
+        type: string
+      high:
+        type: string
+      low:
+        type: string
+      open:
+        type: string
+      quantity:
+        type: string
+      symbol:
+        type: string
+      time_stamp:
+        type: string
+      volume:
+        type: string
   models.SuperForceTable_test:
     title: SuperForceTable_test
     type: object

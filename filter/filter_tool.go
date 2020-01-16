@@ -11,6 +11,10 @@ import (
 
 // 接口用户身份认证
 func ApiClassification(api string) string {
+	if api == "/api/v1/quote/ticker" {
+		return "user"
+	}
+
 	// true=管理员
 	if api[16:21] == "admin" {
 		return "admin"

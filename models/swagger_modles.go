@@ -205,3 +205,15 @@ type DAPPTableTest struct {
 	CreateTime创建时间       string   `orm:"column(create_time)" json:"create_time"`
 	UpdateTime更新时间       string   `orm:"column(update_time)" json:"update_time"` //更新时间
 }
+
+type RealTimePriceTest struct {
+	Id           int    `orm:"column(id);pk;auto"`
+	TimeStamp时间戳 string `orm:"column(time_stamp)" json:"time_stamp"`
+	Symbol交易对ID  string `orm:"column(symbol)" json:"symbol"`
+	Close收盘价格    string `orm:"column(close)" json:"close"`
+	High最高价      string `orm:"column(high)" json:"high"`
+	Low最低价格      string `orm:"column(low)" json:"low"`
+	Open开盘价格     string `orm:"column(open)" json:"open"`
+	Volume交易量    string `orm:"column(volume)" json:"volume"`
+	Quantity交易额  string `orm:"column(quantity)" json:"quantity"`
+}

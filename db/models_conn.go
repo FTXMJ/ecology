@@ -35,6 +35,8 @@ func init() {
 		new(models.PeerHistory),
 		new(models.GlobalOperations),
 		new(models.MrsfStateTable),
+		new(models.RealTimePrice),
+		new(models.RealTimePriceHistory),
 		new(models.DappTable),
 		new(models.User))
 	orm.Debug = true // 是否开启调试模式 调试模式下会打印出sql语句
