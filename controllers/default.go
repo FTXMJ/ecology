@@ -39,15 +39,15 @@ func (this *FirstController) Check() {
 func (this *Ping) ShowRealTimePrice() {
 	var (
 		data *common.ResponseData
-		o    = db.NewOrm()
+		o    = db.NewEcologyOrm()
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	value := models.RealTimePrice{}
-	o.Raw("select * from real_time_price").QueryRow(&value)
+	value := []models.QuoteTicker{}
+	o.Raw("select * from quote_ticker").QueryRows(&value)
 
 	data = common.NewResponse(value)
 	return

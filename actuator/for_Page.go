@@ -10,7 +10,7 @@ import (
 
 // user
 func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, models.Page, error) {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 
 	var acc_list []models.AccountDetail
 	_, acc_read_err := o.QueryTable("account_detail").Filter("account", ecology_id).All(&acc_list)

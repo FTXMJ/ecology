@@ -31,7 +31,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 		account     = models.Account{}
 		indexValues = models.Ecology_index_obj{Ecological_poject_bool: true}
 		err         error
-		o           = db.NewOrm()
+		o           = db.NewEcologyOrm()
 
 		token   = filter.GetJwtValues(this.Ctx)
 		user_id = token.UserID
@@ -75,7 +75,7 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 func (this *EcologyIndexController) CreateNewWarehouse() {
 	var (
 		data            *common.ResponseData
-		o               = db.NewOrm()
+		o               = db.NewEcologyOrm()
 		coin_number_str = this.GetString("coin_number")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
 		levelstr        = this.GetString("levelstr")
@@ -163,7 +163,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	var (
 		data            *common.ResponseData
-		o               = db.NewOrm()
+		o               = db.NewEcologyOrm()
 		coin_number_str = this.GetString("coin_number")
 		order_id        = this.GetString("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
@@ -256,7 +256,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 func (this *EcologyIndexController) UpgradeWarehouse() {
 	var (
 		data            *common.ResponseData
-		o               = db.NewOrm()
+		o               = db.NewEcologyOrm()
 		coin_number_str = this.GetString("cion_number")
 		order_id        = this.GetString("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)

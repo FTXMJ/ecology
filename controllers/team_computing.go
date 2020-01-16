@@ -45,7 +45,7 @@ type info struct {
 // @Success 200
 // @router /admin/test_mrsf [GET]
 func (this *Test) DailyDividendAndReleaseTest() {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
 
@@ -84,7 +84,7 @@ func (this *Test) DailyDividendAndReleaseTest() {
 }
 
 func DailyDividendAndRelease() {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
 
@@ -121,7 +121,7 @@ func DailyDividendAndRelease() {
 }
 
 func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	users := []models.User{}
 	for _, v := range user {
 		u := models.User{UserId: v}
@@ -196,7 +196,7 @@ func ProducerEcology(users []models.User, order_id string) []models.User {
 
 //超级节点　的　释放
 func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
 	o.Read(&g_o, "operation")
 	if g_o.State == false && g_o.Id > 0 {
@@ -223,7 +223,7 @@ func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
 
 // 工作　函数
 func Worker(user models.User, order_id string) error {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	team_a_bouns := 0.0
 	ziyou_a_bouns := 0.0
 	zhitui_a_bouns := 0.0
@@ -497,7 +497,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 
 // 超级节点的分红
 func AddFormulaABonus(user_id string, abonus float64) {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	o.Begin()
 
 	//任务表 USDD  铸币记录
@@ -705,7 +705,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 // 创建用于超级节点　等级记录的　map 每个　values 第一个元素都是　等级标示
 func ReturnMap(m map[string][]string) {
 	s_f_t := []models.SuperForceTable{}
-	db.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	db.NewEcologyOrm().QueryTable("super_force_table").All(&s_f_t)
 	for _, v := range s_f_t {
 		if m[v.Level] == nil {
 			m[v.Level] = append(m[v.Level], v.Level)
@@ -761,7 +761,7 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 
 // 给失败的用户　添加失败的任务记录表
 func CreateErrUserTxList(users []models.User) {
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	err_users := []models.User{}
 	for _, v := range users {
 		//任务表 USDD  铸币记录

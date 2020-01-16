@@ -12,7 +12,7 @@ import (
 // 接口用户身份认证
 func ApiClassification(api string) string {
 	if api == "/api/v1/quote/ticker" {
-		return "user"
+		return "other"
 	}
 
 	// true=管理员
@@ -43,7 +43,7 @@ func UserFilter(ctx *context.Context, api string) {
 		ctx.WriteString(`{"code": "401","msg": "数据格式不正确"}`)
 		return
 	}
-	o := db.NewOrm()
+	o := db.NewEcologyOrm()
 	u := models.User{
 		UserId: tockken.UserID,
 	}

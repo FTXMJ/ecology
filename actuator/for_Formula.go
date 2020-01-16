@@ -13,7 +13,7 @@ import (
 func JudgeLevel(o orm.Ormer, user_id, level string, formula *models.Formula) error {
 	if PanDuanLevel(user_id, level) == true {
 		force := models.ForceTable{}
-		o := db.NewOrm()
+		o := db.NewEcologyOrm()
 		err := o.QueryTable("force_table").Filter("level", level).One(&force)
 		if err != nil {
 			return err
@@ -84,7 +84,7 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 		if _, err := o.QueryTable("account").Filter("user_id", father_account_id).Filter("bocked_balance__gte", force.LowHold).Update(orm.Params{"level": level}); err == nil {
 			account := models.Account{}
 			o.QueryTable("account").Filter("user_id", father_account_id).One(&account)
-			_, err := db.NewOrm().QueryTable("formula").Filter("ecology_id", account.Id).Update(
+			_, err := db.NewEcologyOrm().QueryTable("formula").Filter("ecology_id", account.Id).Update(
 				orm.Params{
 					"level":                 force.Level,
 					"low_hold":              force.LowHold,
@@ -106,7 +106,7 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 		if _, err := o.QueryTable("account").Filter("user_id", father_account_id).Filter("bocked_balance__gte", force.LowHold).Update(orm.Params{"level": level}); err == nil {
 			account := models.Account{}
 			o.QueryTable("account").Filter("user_id", father_account_id).One(&account)
-			_, err := db.NewOrm().QueryTable("formula").Filter("ecology_id", account.Id).Update(
+			_, err := db.NewEcologyOrm().QueryTable("formula").Filter("ecology_id", account.Id).Update(
 				orm.Params{
 					"level":                 force.Level,
 					"low_hold":              force.LowHold,
@@ -129,7 +129,7 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 // 如果升级等级是　？？　就需要判断是否　符合升级条件                 ------          每个人只有一改生态仓库
 func PanDuanLevel(user_id, level string) bool {
 	if level == "侯爵" || level == "公爵" {
-		o := db.NewOrm()
+		o := db.NewEcologyOrm()
 		sun_users := []models.User{}
 		sun_accounts := []models.Account{}
 		o.Raw("select * from user where father_id=?", user_id).QueryRows(&sun_users)
@@ -178,7 +178,7 @@ func PanDuanLevel(user_id, level string) bool {
 // 返回超级节点的等级
 func ReturnSuperPeerLevel(user_id string) (time, level string, tfor float64, err error) {
 	s_f_t := []models.SuperForceTable{}
-	db.NewOrm().QueryTable("super_force_table").All(&s_f_t)
+	db.NewEcologyOrm().QueryTable("super_force_table").All(&s_f_t)
 	up_time, tfor_number, err_tfor := PingSelectTforNumber(user_id)
 	if err_tfor != nil {
 		return "", "", 0.0, err_tfor

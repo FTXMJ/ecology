@@ -19,5 +19,6 @@ func CheckLogin(ctx *context.Context) {
 		AdminFilter(ctx, api)
 	case "user":
 		UserFilter(ctx, api)
+	default:
 	}
 }
