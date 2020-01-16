@@ -15,20 +15,6 @@ type Account struct {
 	UpdateDate     string  `orm:"column(update_date)"` //静态收益开关
 }
 
-func (this *Account) TableName() string {
-	return "account"
-}
-
-func (this *Account) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *Account) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}
-
 // 生态首页展示
 type Ecology_index_obj struct {
 	Usdd                   float64        `json:"usdd"`
@@ -72,14 +58,6 @@ type Data_wallet struct {
 	Msg  string                 `json:"msg"`
 	Data map[string]interface{} `json:"data"`
 }
-
-/*{    TFOR 数据返回体
-  "balance": 0,
-  "currency_id": 0,
-  "decimals": 0,
-  "name": "string",
-  "symbol": "string"
-}*/
 
 // 老罗的钱包数据结构
 type WalletInfo struct {

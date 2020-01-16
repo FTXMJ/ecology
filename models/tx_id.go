@@ -13,20 +13,6 @@ type TxIdList struct {
 	InCome      float64 `orm:"column(in_come)"`     //任务id
 }
 
-func (this *TxIdList) TableName() string {
-	return "tx_id_list"
-}
-
-func (this *TxIdList) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *TxIdList) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}
-
 // peer a_bouns list
 type PeerListABouns struct {
 	Items []PeerAbouns `json:"items"` //数据列表
@@ -39,36 +25,4 @@ type PeerAbouns struct {
 	Level    string  `json:"level"`
 	Tfors    float64 `json:"tfors"`
 	Time     string  `json:"time"`
-}
-
-// 快速排序
-func QuickSortPeerABouns(arr []TxIdList, start, end int) {
-	temp := arr[start]
-	index := start
-	i := start
-	j := end
-
-	for i <= j {
-		for j >= index && arr[j].CreateTime <= temp.CreateTime {
-			j--
-		}
-		if j > index {
-			arr[index] = arr[j]
-			index = j
-		}
-		for i <= index && arr[i].CreateTime >= temp.CreateTime {
-			i++
-		}
-		if i <= index {
-			arr[index] = arr[i]
-			index = i
-		}
-	}
-	arr[index] = temp
-	if index-start > 1 {
-		QuickSortPeerABouns(arr, start, index-1)
-	}
-	if end-index > 1 {
-		QuickSortPeerABouns(arr, index+1, end)
-	}
 }

@@ -8,17 +8,3 @@ type CalculationPower struct {
 	DirectCalculation    float64 `orm:"column(direct_calculation)"`    //直推算力
 	DynamicCalculation   float64 `orm:"column(dynamic_calculation)"`   //动态算力
 }
-
-func (this *CalculationPower) TableName() string {
-	return "calculation_power"
-}
-
-func (this *CalculationPower) Insert() error {
-	_, err := NewOrm().Insert(this)
-	return err
-}
-
-func (this *CalculationPower) Update() (err error) {
-	_, err = NewOrm().Update(this)
-	return err
-}

@@ -80,6 +80,33 @@
                 }
             }
         },
+        "/ecology/admin/delete_dapp": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "dapp_id",
+                        "description": "dapp id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____删除_DAPP": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/admin/ecological_income_control": {
             "get": {
                 "tags": [
@@ -265,6 +292,61 @@
                         "schema": {
                             "$ref": "#/definitions/models.HostryPageInfo_test"
                         }
+                    }
+                }
+            }
+        },
+        "/ecology/admin/insert_dapp": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "dapp_name",
+                        "description": "名字",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "image_url",
+                        "description": "图片_url",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_link_address",
+                        "description": "dapp的链接地址",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_contract_address",
+                        "description": "dapp的合约地址",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_type",
+                        "description": "类型",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____插入_DAPP": {
+                        "description": ""
                     }
                 }
             }
@@ -601,6 +683,64 @@
                 }
             }
         },
+        "/ecology/admin/show_dapp_list": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "description": "分页信息　－　当前页数",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageSize",
+                        "description": "分页信息　－　每页数据量",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_name",
+                        "description": "dapp的应用 名字",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_id",
+                        "description": "dapp的应用 id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_type",
+                        "description": "类型",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____展示_DAPP_列表": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.DAPPListTest"
+                        }
+                    }
+                }
+            }
+        },
         "/ecology/admin/show_global_operations": {
             "get": {
                 "tags": [
@@ -684,6 +824,24 @@
                 }
             }
         },
+        "/ecology/admin/test_mrsf": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/admin/the_release_of_err_users": {
             "post": {
                 "tags": [
@@ -711,6 +869,102 @@
                 }
             }
         },
+        "/ecology/admin/update_dapp": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "dapp_id",
+                        "description": "dapp id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_name",
+                        "description": "名字",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "image_url",
+                        "description": "图片_url",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_link_address",
+                        "description": "dapp的链接地址",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_contract_address",
+                        "description": "dapp的合约地址",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_type",
+                        "description": "类型",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____更新_DAPP": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/ecology/admin/update_dapp_state": {
+            "post": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "dapp_id",
+                        "description": "dapp id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "dapp_state",
+                        "description": "状态 1=true(开启)  2=false(失败)",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200____修改状态_DAPP": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/ecology/admin/update_global_operations": {
             "post": {
                 "tags": [
@@ -733,9 +987,6 @@
                 ],
                 "responses": {
                     "200__全局状态修改": {
-                        "description": ""
-                    },
-                    "200__全局状态显示": {
                         "description": ""
                     }
                 }
@@ -987,6 +1238,27 @@
                 }
             }
         },
+        "/ecology/show_group_by_type": {
+            "get": {
+                "tags": [
+                    "ecology"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200____分组_展示_DAPP_列表_to_the_app": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.DAPPListTest"
+                        }
+                    }
+                }
+            }
+        },
         "/ecology/show_super_formula_list": {
             "get": {
                 "tags": [
@@ -1031,24 +1303,6 @@
                         "schema": {
                             "$ref": "#/definitions/models.ForceTable_test"
                         }
-                    }
-                }
-            }
-        },
-        "/ecology/test_mrsf": {
-            "get": {
-                "tags": [
-                    "ecology"
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
                     }
                 }
             }
@@ -1151,9 +1405,79 @@
                     }
                 }
             }
+        },
+        "/quote/ticker": {
+            "get": {
+                "tags": [
+                    "quote"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200____给定实时数据": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.RealTimePriceTest"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "models.DAPPListTest": {
+            "title": "DAPPListTest",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.DAPPTableTest"
+                    }
+                },
+                "page": {
+                    "$ref": "#/definitions/models.Page"
+                }
+            }
+        },
+        "models.DAPPTableTest": {
+            "title": "DAPPTableTest",
+            "type": "object",
+            "properties": {
+                "agreement_type": {
+                    "type": "string"
+                },
+                "create_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "image": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "the_link_address": {
+                    "type": "string"
+                },
+                "update_time": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Ecology_index_ob_test": {
             "title": "Ecology_index_ob_test",
             "type": "object",
@@ -1591,6 +1915,40 @@
                 },
                 "page_分页": {
                     "$ref": "#/definitions/models.Page"
+                }
+            }
+        },
+        "models.RealTimePriceTest": {
+            "title": "RealTimePriceTest",
+            "type": "object",
+            "properties": {
+                "Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "close": {
+                    "type": "string"
+                },
+                "high": {
+                    "type": "string"
+                },
+                "low": {
+                    "type": "string"
+                },
+                "open": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "time_stamp": {
+                    "type": "string"
+                },
+                "volume": {
+                    "type": "string"
                 }
             }
         },

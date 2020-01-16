@@ -1,12 +1,16 @@
 package controllers
 
 import (
+	"ecology/actuator"
 	"ecology/common"
+	db "ecology/db"
+	"ecology/filter"
 	"ecology/logs"
 	"ecology/models"
-	"fmt"
+
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
+
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +29,7 @@ type BackStageManagement struct {
 func (this *BackStageManagement) ShowFormulaList() {
 	var (
 		data       *common.ResponseData
-		o          = models.NewOrm()
+		o          = db.NewEcologyOrm()
 		force_list []models.ForceTable
 	)
 	defer func() {
@@ -38,7 +42,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 		data = common.NewErrorResponse(500, "算力数据获取失败!", []models.ForceTable{})
 		return
 	}
-	models.QuickSortForce(force_list, 0, len(force_list)-1)
+	actuator.QuickSortForce(force_list, 0, len(force_list)-1)
 	data = common.NewResponse(force_list[1:])
 	return
 }
@@ -52,13 +56,13 @@ func (this *BackStageManagement) ShowFormulaList() {
 func (this *BackStageManagement) ShowUserFormula() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewEcologyOrm()
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	jwtValues := GetJwtValues(this.Ctx)
+	jwtValues := filter.GetJwtValues(this.Ctx)
 	user_id := jwtValues.UserID
 	account := models.Account{UserId: user_id}
 	o.Read(&account, "user_id")
@@ -68,8 +72,7 @@ func (this *BackStageManagement) ShowUserFormula() {
 	if for_mula.Level == "" {
 		for_mula_table.ReturnMultiple = 1
 	}
-	err := o.Read(&for_mula_table, "return_multiple")
-	fmt.Println(err)
+	o.Read(&for_mula_table, "return_multiple")
 	data = common.NewResponse(for_mula_table)
 	return
 }
@@ -91,8 +94,10 @@ func (this *BackStageManagement) ShowUserFormula() {
 // @router /admin/operation_formula_list [POST]
 func (this *BackStageManagement) OperationFormulaList() {
 	var (
-		data                      *common.ResponseData
-		o                         = models.NewOrm()
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+		err  error
+
 		force_id                  = this.GetString("force_id")
 		action                    = this.GetString("action")
 		levelstr                  = this.GetString("levelstr")
@@ -103,44 +108,50 @@ func (this *BackStageManagement) OperationFormulaList() {
 		recommend_return_rate_str = this.GetString("recommend_return_rate")
 		team_return_rate_str      = this.GetString("team_return_rate")
 		picture_url               = this.GetString("picture_url")
+
+		return_multiple, _       = strconv.ParseFloat(return_multiple_str, 64)
+		hold_return_rate, _      = strconv.ParseFloat(hold_return_rate_str, 64)
+		recommend_return_rate, _ = strconv.ParseFloat(recommend_return_rate_str, 64)
+		team_return_rate, _      = strconv.ParseFloat(team_return_rate_str, 64)
 	)
 	defer func() {
+		if err != nil {
+			o.Rollback()
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, err.Error(), nil)
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-
-	return_multiple, _ := strconv.ParseFloat(return_multiple_str, 64)
-	hold_return_rate, _ := strconv.ParseFloat(hold_return_rate_str, 64)
-	recommend_return_rate, _ := strconv.ParseFloat(recommend_return_rate_str, 64)
-	team_return_rate, _ := strconv.ParseFloat(team_return_rate_str, 64)
+	o.Begin()
 
 	switch action {
 	case "delete":
 		id_strs := strings.Split(force_id, ",")
 		for _, v := range id_strs {
 			id, _ := strconv.Atoi(v)
-			_, err := o.QueryTable("force_table").Filter("id", id).Delete()
-			if err != nil {
-				logs.Log.Error(err)
-				data = common.NewErrorResponse(500, "算力表　删除失败!", nil)
+			if _, err = o.Raw("delete from force_table where id=?", id).Exec(); err != nil {
+				err = errors.New("算力表　删除失败!")
 				return
 			}
-			data = common.NewResponse(nil)
-			return
 		}
 	case "update":
 		id, _ := strconv.Atoi(force_id)
-		_, err := o.QueryTable("force_table").
-			Filter("id", id).
-			Update(orm.
-				Params{"level": levelstr, "low_hold": low_hold, "high_hold": high_hold, "return_multiple": return_multiple, "hold_return_rate": hold_return_rate, "recommend_return_rate": recommend_return_rate, "team_return_rate": team_return_rate, "picture_url": picture_url})
-		if err != nil {
-			logs.Log.Error(err)
-			data = common.NewErrorResponse(500, "算力表　更新失败!", nil)
+		force_table := models.ForceTable{
+			Id:                  id,
+			Level:               levelstr,
+			LowHold:             low_hold,
+			HighHold:            high_hold,
+			ReturnMultiple:      return_multiple,
+			HoldReturnRate:      hold_return_rate,
+			RecommendReturnRate: recommend_return_rate,
+			TeamReturnRate:      team_return_rate,
+			PictureUrl:          picture_url,
+		}
+		if _, err = o.Update(&force_table); err != nil {
+			err = errors.New("算力表　更新失败!")
 			return
 		}
-		data = common.NewResponse(nil)
-		return
 	case "insert":
 		force := models.ForceTable{
 			Level:               levelstr,
@@ -152,19 +163,17 @@ func (this *BackStageManagement) OperationFormulaList() {
 			TeamReturnRate:      team_return_rate,
 			PictureUrl:          picture_url,
 		}
-		_, err := o.Insert(&force)
-		if err != nil {
-			logs.Log.Error(err)
-			data = common.NewErrorResponse(500, "算力表新增失败!", nil)
+		if _, err = o.Insert(&force); err != nil {
+			err = errors.New("算力表新增失败!")
 			return
 		}
-		data = common.NewResponse(nil)
-		return
 	default:
-		logs.Log.Error("未知操作!")
-		data = common.NewErrorResponse(500, "未知操作!", nil)
-		return
+		err = errors.New("未知操作!")
 	}
+	o.Commit()
+
+	data = common.NewResponse(nil)
+	return
 }
 
 // @Tags 超级节点算力表显示   后台操作　or 用户查看　都可
@@ -175,21 +184,15 @@ func (this *BackStageManagement) OperationFormulaList() {
 func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
-		o          = models.NewOrm()
+		o          = db.NewEcologyOrm()
 		force_list []models.SuperForceTable
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	_, err := o.QueryTable("super_force_table").All(&force_list)
-	if err != nil {
-		logs.Log.Error(err)
-		data = common.NewErrorResponse(500, "节点算力数据获取失败!", []models.SuperForceTable{})
-		return
-	}
-	models.QuickSortSuperForce(force_list, 0, len(force_list)-1)
-
+	o.Raw("select * from super_force_table").QueryRows(&force_list)
+	actuator.QuickSortSuperForce(force_list, 0, len(force_list)-1)
 	data = common.NewResponse(force_list)
 	return
 }
@@ -206,68 +209,64 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 // @router /admin/operation_super_formula_list [POST]
 func (this *BackStageManagement) OperationSuperFormulaList() {
 	var (
-		data            *common.ResponseData
-		o               = models.NewOrm()
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+		err  error
+
 		super_force_id  = this.GetString("super_force_id")
 		action          = this.GetString("action")
 		levelstr        = this.GetString("levelstr")
 		coin_number_str = this.GetString("coin_number")
 		force_str       = this.GetString("force")
+
+		force, _       = strconv.ParseFloat(force_str, 64)
+		coin_number, _ = strconv.ParseFloat(coin_number_str, 64)
 	)
 	defer func() {
+		if err != nil {
+			o.Rollback()
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, err.Error(), nil)
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	force, _ := strconv.ParseFloat(force_str, 64)
-	coin_number, _ := strconv.ParseFloat(coin_number_str, 64)
+	o.Begin()
 
 	switch action {
 	case "delete":
 		id_strs := strings.Split(super_force_id, ",")
 		for _, v := range id_strs {
 			id, _ := strconv.Atoi(v)
-			_, err := o.QueryTable("super_force_table").Filter("id", id).Delete()
-			if err != nil {
-				logs.Log.Error(err)
-				data = common.NewErrorResponse(500, "节点算力表 删除失败!", nil)
+			if _, err = o.Raw("delete from super_force_table where id=?", id).Exec(); err != nil {
+				err = errors.New("节点算力表 删除失败!")
 				return
 			}
-			data = common.NewResponse(nil)
-			return
 		}
 	case "update":
 		id, _ := strconv.Atoi(super_force_id)
-		_, err := o.QueryTable("super_force_table").
-			Filter("id", id).
-			Update(orm.
-				Params{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force})
-		if err != nil {
-			logs.Log.Error(err)
-			data = common.NewErrorResponse(500, "节点算力表 更新失败!", nil)
+		if _, err = o.Raw("update super_force_table set level=? , coin_number_rule=? , bonus_calculation=? where id=?", levelstr, coin_number, force, id).Exec(); err != nil {
+			err = errors.New("节点算力表 更新失败!")
 			return
 		}
-		data = common.NewResponse(nil)
-		return
 	case "insert":
 		super_force := models.SuperForceTable{
 			Level:            levelstr,
 			CoinNumberRule:   coin_number,
 			BonusCalculation: force,
 		}
-		_, err := o.Insert(&super_force)
-		if err != nil {
-			logs.Log.Error(err)
-			data = common.NewErrorResponse(500, "节点算力表 新增失败!", nil)
+		if _, err = o.Insert(&super_force); err != nil {
+			err = errors.New("节点算力表 新增失败!")
 			return
 		}
-		data = common.NewResponse(nil)
-		return
 	default:
-		logs.Log.Error("未知操作!")
-		data = common.NewErrorResponse(500, "未知操作!", nil)
-		return
+		err = errors.New("未知操作!")
 	}
+	o.Commit()
+
+	data = common.NewResponse(nil)
+	return
 }
 
 // @Tags root-历史
@@ -279,7 +278,9 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 // @router /admin/return_page_hostry_root [GET]
 func (this *BackStageManagement) ReturnPageHostryRoot() {
 	var (
-		data            *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 	)
@@ -291,7 +292,7 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 		CurrentPage: current_page,
 		PageSize:    page_size,
 	}
-	values, p, err := models.SelectHosteryRoot(page)
+	values, p, err := actuator.SelectHosteryRoot(o, page)
 	if err != nil {
 		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", models.HostryPageInfo{})
@@ -320,7 +321,9 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @router /admin/filter_history_info [GET]
 func (this *BackStageManagement) FilterHistoryInfo() {
 	var (
-		data              *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
 		table_name        = this.GetString("type")
@@ -329,13 +332,14 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		tx_id             = this.GetString("tx_id")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
+		start_time        = ""
+		end_time          = ""
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	start_time := ""
-	end_time := ""
+
 	if start_time_int == 0 || end_time_int == 0 {
 		start_time = "2006-01-02 15:04:05"
 		end_time = time.Now().Format("2006-01-02 15:04:05")
@@ -358,7 +362,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		Count:       0,
 	}
 
-	list, page, err := models.SelectPondMachinemsg(find_obj, p, table_name)
+	list, page, err := actuator.SelectPondMachinemsg(o, find_obj, p, table_name)
 	if err != nil {
 		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", []models.HostryFindInfo{})
@@ -384,7 +388,9 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 // @router /admin/user_ecology_list [GET]
 func (this *BackStageManagement) UserEcologyList() {
 	var (
-		data            *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 		user_id         = this.GetString("user_id")
@@ -401,39 +407,11 @@ func (this *BackStageManagement) UserEcologyList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	o := models.NewOrm()
-	u_e_obj_list, p := models.FindU_E_OBJ(o, page, user_id, user_name)
-	for i := 0; i < len(u_e_obj_list); i++ {
-		team, _ := IndexTeamABouns(o, u_e_obj_list[i].UserId)
-		acc := models.Account{UserId: u_e_obj_list[i].UserId}
-		o.Read(&acc, "user_id")
-		for_m := models.Formula{EcologyId: acc.Id}
-		o.Read(&for_m, "ecology_id")
-		u_e_obj_list[i].TeamReturnRate = team * for_m.TeamReturnRate
-	}
-	u_e_objs := []models.U_E_OBJ{}
-	for _, v := range u_e_obj_list {
-		u_e_obj := models.U_E_OBJ{}
-		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.HoldReturnRate), 64)
-		u_e_obj.HoldReturnRate = hold
-		reco, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.RecommendReturnRate), 64)
-		u_e_obj.RecommendReturnRate = reco
-		rele, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.Released), 64)
-		u_e_obj.Released = rele
-		team, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.TeamReturnRate), 64)
-		u_e_obj.TeamReturnRate = team
-		tobe, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.ToBeReleased), 64)
-		u_e_obj.ToBeReleased = tobe
-		coin, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.CoinAll), 64)
-		u_e_obj.CoinAll = coin
-		u_e_obj.Level = v.Level
-		u_e_obj.UserId = v.UserId
-		u_e_obj.UserName = v.UserName
-		u_e_obj.ReturnMultiple = v.ReturnMultiple
-		u_e_objs = append(u_e_objs, u_e_obj)
-	}
+
+	u_e_obj_list, p := actuator.FindU_E_OBJ(o, page, user_id, user_name)
+
 	list := models.UEOBJList{
-		Items: u_e_objs,
+		Items: u_e_obj_list,
 		Page:  p,
 	}
 	data = common.NewResponse(list)
@@ -451,7 +429,9 @@ func (this *BackStageManagement) UserEcologyList() {
 // @router /admin/user_ecology_false_list [GET]
 func (this *BackStageManagement) UserEcologyFalseList() {
 	var (
-		data            *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 		user_id         = this.GetString("user_id")
@@ -468,7 +448,7 @@ func (this *BackStageManagement) UserEcologyFalseList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	u_e_obj_list, p := models.FindFalseUser(page, user_id, user_name)
+	u_e_obj_list, p := actuator.FindFalseUser(o, page, user_id, user_name)
 	list := models.UserFalse{
 		Items: u_e_obj_list,
 		Page:  p,
@@ -491,20 +471,24 @@ func (this *BackStageManagement) UserEcologyFalseList() {
 // @router /admin/computational_flow [GET]
 func (this *BackStageManagement) ComputationalFlow() {
 	var (
-		data              *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
 		user_id           = this.GetString("user_id")
 		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
+
+		start_time = ""
+		end_time   = ""
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	start_time := ""
-	end_time := ""
+
 	if start_time_int == 0 || end_time_int == 0 {
 		start_time = ""
 		end_time = ""
@@ -527,30 +511,15 @@ func (this *BackStageManagement) ComputationalFlow() {
 		Count:       0,
 	}
 
-	flows, p, err := models.SelectFlows(find_obj, page, "blocked_detail")
+	flows, p, err := actuator.SelectFlows(o, find_obj, page, "blocked_detail")
 	if err != nil {
 		logs.Log.Error("    更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, err.Error(), models.FlowList{})
 		return
 	}
-	flowss := []models.Flow{}
-	for _, v := range flows {
-		flow := models.Flow{}
-		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.HoldReturnRate), 64)
-		flow.HoldReturnRate = hold
-		reco, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.RecommendReturnRate), 64)
-		flow.RecommendReturnRate = reco
-		rele, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.Released), 64)
-		flow.Released = rele
-		team, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.TeamReturnRate), 64)
-		flow.TeamReturnRate = team
-		flow.UserId = v.UserId
-		flow.UserName = v.UserName
-		flow.UpdateTime = v.UpdateTime
-		flowss = append(flowss, flow)
-	}
+
 	user_SF_information := models.FlowList{
-		Items: flowss,
+		Items: flows,
 		Page:  p,
 	}
 	data = common.NewResponse(user_SF_information)
@@ -571,7 +540,9 @@ func (this *BackStageManagement) ComputationalFlow() {
 // @router /admin/ecological_income_control [GET]
 func (this *BackStageManagement) EcologicalIncomeControl() {
 	var (
-		data              *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
 		user_id           = this.GetString("user_id")
@@ -579,14 +550,15 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
+
+		start_time = ""
+		end_time   = ""
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 
-	start_time := ""
-	end_time := ""
 	if start_time_int == 0 || end_time_int == 0 {
 		start_time = ""
 		end_time = ""
@@ -608,7 +580,7 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 		StartTime: start_time,
 		EndTime:   end_time,
 	}
-	account_off, page, err := models.FindUserAccountOFF(p, find_obj)
+	account_off, page, err := actuator.FindUserAccountOFF(o, p, find_obj)
 	if err != nil {
 		logs.Log.Error("    数据库错误,数据查询失败", err)
 		data = common.NewErrorResponse(500, "数据库错误", models.UserAccountOFF{})
@@ -632,7 +604,9 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 // @router /admin/ecological_income_control_update [POST]
 func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 	var (
-		data                *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		profit_type_int, _  = this.GetInt("profit_type")
 		profit_start_int, _ = this.GetInt("profit_start")
 		strs                = this.GetString("account_id")
@@ -648,7 +622,6 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 
 	str := strings.Split(strs, ",")
 
-	o := models.NewOrm()
 	err_user := ""
 	for _, v := range str {
 		id_int, _ := strconv.Atoi(v)
@@ -691,10 +664,15 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 // @router /admin/peer_user_list [GET]
 func (this *BackStageManagement) PeerUserList() {
 	var (
-		data            *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _ = this.GetInt("page")
 		page_size, _    = this.GetInt("pageSize")
 		user_name       = this.GetString("user_name")
+
+		p_u_s = []models.PeerUser{}
+		user  = []models.User{}
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -706,9 +684,7 @@ func (this *BackStageManagement) PeerUserList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	p_u_s := []models.PeerUser{}
-	user := []models.User{}
-	o := models.NewOrm()
+
 	switch user_name {
 	case "":
 		o.Raw("select * from user").QueryRows(&user)
@@ -720,7 +696,7 @@ func (this *BackStageManagement) PeerUserList() {
 
 	for _, v := range user {
 		p_u := models.PeerUser{}
-		update_date, level, tfor, _ := ReturnSuperPeerLevel(v.UserId)
+		update_date, level, tfor, _ := actuator.ReturnSuperPeerLevel(v.UserId)
 		if level != "" {
 			acc := models.Account{UserId: v.UserId}
 			o.Read(&acc, "user_id")
@@ -739,7 +715,7 @@ func (this *BackStageManagement) PeerUserList() {
 			p_u_s = append(p_u_s, p_u)
 		}
 	}
-	peer_users, p := models.PageS(p_u_s, page)
+	peer_users, p := actuator.PageS(p_u_s, page)
 	peer_user_list := models.PeerUserFalse{
 		Items: peer_users,
 		Page:  p,
@@ -759,11 +735,17 @@ func (this *BackStageManagement) PeerUserList() {
 // @router /admin/peer_a_bouns_list [GET]
 func (this *BackStageManagement) PeerABounsList() {
 	var (
-		data              *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
+
+		start_time   = ""
+		end_time     = ""
+		peer_history = []models.PeerHistory{}
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -775,8 +757,7 @@ func (this *BackStageManagement) PeerABounsList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	start_time := ""
-	end_time := ""
+
 	if start_time_int == 0 || end_time_int == 0 {
 		start_time = ""
 		end_time = ""
@@ -784,22 +765,22 @@ func (this *BackStageManagement) PeerABounsList() {
 		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
 		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
 	}
-	peer_history := []models.PeerHistory{}
+
 	switch start_time {
 	case "":
-		_, err := models.NewOrm().Raw("select * from peer_history order by time desc").QueryRows(&peer_history)
+		_, err := o.Raw("select * from peer_history order by time desc").QueryRows(&peer_history)
 		if err != nil {
 			data = common.NewResponse(models.PeerHistoryList{})
 			return
 		}
 	default:
-		_, err := models.NewOrm().Raw("select * from peer_history where time>=? and time<=? order by time desc", start_time, end_time).QueryRows(&peer_history)
+		_, err := o.Raw("select * from peer_history where time>=? and time<=? order by time desc", start_time, end_time).QueryRows(&peer_history)
 		if err != nil {
 			data = common.NewResponse(models.PeerHistoryList{})
 			return
 		}
 	}
-	peer_users, p := models.PageHistory(peer_history, page)
+	peer_users, p := actuator.PageHistory(peer_history, page)
 	peer_user_list := models.PeerHistoryList{
 		Items: peer_users,
 		Page:  p,
@@ -820,13 +801,18 @@ func (this *BackStageManagement) PeerABounsList() {
 // @router /admin/peer_a_bouns_history_list [GET]
 func (this *BackStageManagement) PeerABounsHistoryList() {
 	var (
-		data              *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
 		user_name         = this.GetString("user_name")
 		start_time_int, _ = this.GetInt64("start_time")
 		end_time_int, _   = this.GetInt64("end_time")
 		a                 = models.PeerListABouns{}
+
+		start_time = ""
+		end_time   = ""
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -838,8 +824,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	start_time := ""
-	end_time := ""
+
 	if start_time_int == 0 || end_time_int == 0 {
 		start_time = ""
 		end_time = ""
@@ -847,7 +832,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
 		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
 	}
-	list, p, err := SelectPeerABounsList(page, user_name, start_time, end_time)
+	list, p, err := actuator.SelectPeerABounsList(o, page, user_name, start_time, end_time)
 	if err != nil {
 		data = common.NewErrorResponse(500, "请重新尝试!", a)
 		return
@@ -868,7 +853,7 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 func (this *BackStageManagement) ShowGlobalOperations() {
 	var (
 		data *common.ResponseData
-		o    = models.NewOrm()
+		o    = db.NewEcologyOrm()
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -888,40 +873,46 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 // @Tags 全局状态修改
 // @Accept  json
 // @Produce json
-// @Success 200__全局状态显示
 // @Param operation_id query string true "操作_id"
 // @Success 200__全局状态修改
 // @router /admin/update_global_operations [POST]
 func (this *BackStageManagement) UpdateGlobalOperations() {
 	var (
-		data         *common.ResponseData
-		o            = models.NewOrm()
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		operation_id = this.GetString("operation_id")
+
+		err error
 	)
 	defer func() {
+		if err != nil {
+			o.Rollback()
+			logs.Log.Error(err)
+			data = common.NewErrorResponse(500, err.Error(), nil)
+		}
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
+
+	o.Begin()
 	ids := strings.Split(operation_id, ";")
 	for _, v := range ids {
 		id := strings.Split(v, "-")
 		switch id[1] {
 		case "1": //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
-			_, err := o.Raw("update global_operations set state=? where id=?", true, id[0]).Exec()
-			if err != nil {
-				logs.Log.Error(err)
-				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
+			if _, err = o.Raw("update global_operations set state=? where id=?", true, id[0]).Exec(); err != nil {
+				err = errors.New("全局控制信息更新失败!")
 				return
 			}
 		case "2":
-			_, err := o.Raw("update global_operations set state=? where id=?", false, id[0]).Exec()
-			if err != nil {
-				logs.Log.Error(err)
-				data = common.NewErrorResponse(500, "全局控制信息更新失败!", nil)
+			if _, err = o.Raw("update global_operations set state=? where id=?", false, id[0]).Exec(); err != nil {
+				err = errors.New("全局控制信息更新失败!")
 				return
 			}
 		}
 	}
+	o.Commit()
 	data = common.NewResponse(nil)
 	return
 }
@@ -939,13 +930,17 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 // @router /admin/show_one_day_mrsf [GET]
 func (this *BackStageManagement) ShowOneDayMrsf() {
 	var (
-		data             *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		current_page, _  = this.GetInt("page")
 		page_size, _     = this.GetInt("pageSize")
 		date_time_int, _ = this.GetInt64("date_time")
 		user_name        = this.GetString("user_name")
 		user_id          = this.GetString("user_id")
 		state_int, _     = this.GetInt("state")
+
+		date_time = ""
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -957,7 +952,7 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 		PageSize:    page_size,
 		Count:       0,
 	}
-	date_time := ""
+
 	if date_time_int == 0 {
 		date_time = ""
 	} else {
@@ -967,7 +962,7 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 	if state_int == 2 {
 		state = false
 	}
-	mrsf_list, p, err := models.ShowMrsfTable(page, user_name, user_id, date_time, state)
+	mrsf_list, p, err := actuator.ShowMrsfTable(o, page, user_name, user_id, date_time, state)
 	if err != nil {
 		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, "请尝试刷新!", []models.MrsfTable{})
@@ -989,17 +984,20 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 // @router /admin/the_release_of_err_users [POST]
 func (this *BackStageManagement) TheReleaseOfErrUsers() {
 	var (
-		data    *common.ResponseData
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
 		user_id = this.GetString("user_id")
+
+		order_id  = ""
+		user_mrsf = []string{}
 	)
 	defer func() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
 	users := strings.Split(user_id, ";")
-	o := models.NewOrm()
-	order_id := ""
-	user_mrsf := []string{}
+
 	for i, v := range users {
 		user := strings.Split(v, "_")
 		if i == 0 {
@@ -1016,5 +1014,253 @@ func (this *BackStageManagement) TheReleaseOfErrUsers() {
 	}
 	DailyDividendAndReleaseToSomeOne(users, order_id)
 	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 展示_DAPP_列表
+// @Accept  json
+// @Produce json
+// @Param page query string true "分页信息　－　当前页数"
+// @Param pageSize query string true "分页信息　－　每页数据量"
+// @Param dapp_name query string true "dapp的应用 名字"
+// @Param dapp_id query string true "dapp的应用 id"
+// @Param dapp_type query string true "类型"
+// @Success 200____展示_DAPP_列表 {object} models.DAPPListTest
+// @router /admin/show_dapp_list [GET]
+func (this *BackStageManagement) ShowDAPPList() {
+	var (
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
+		current_page, _ = this.GetInt("page")
+		page_size, _    = this.GetInt("pageSize")
+		dapp_name       = this.GetString("dapp_name")
+		dapp_id         = this.GetString("dapp_id")
+		dapp_type       = this.GetString("dapp_type")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	page := models.Page{
+		TotalPage:   0,
+		CurrentPage: current_page,
+		PageSize:    page_size,
+		Count:       0,
+	}
+	dapp_list, err := actuator.SelectDAPP(o, dapp_name, dapp_id, dapp_type, &page)
+	if err != nil {
+		data = common.NewErrorResponse(500, "出现错误,请再次刷新!", models.DappList{})
+		return
+	}
+
+	dapp := models.DappList{
+		Items: dapp_list,
+		Page:  page,
+	}
+	data = common.NewResponse(dapp)
+	return
+}
+
+// @Tags 插入_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_name query string true "名字"
+// @Param image_url query string true "图片_url"
+// @Param dapp_link_address query string true "dapp的链接地址"
+// @Param dapp_contract_address query string true "dapp的合约地址"
+// @Param dapp_type query string true "类型"
+// @Success 200____插入_DAPP
+// @router /admin/insert_dapp [POST]
+func (this *BackStageManagement) InsertDAPP() {
+	var (
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
+		dapp_name             = this.GetString("dapp_name")
+		image_url             = this.GetString("image_url")
+		dapp_type             = this.GetString("dapp_type")
+		dapp_link_address     = this.GetString("dapp_link_address")
+		dapp_contract_address = this.GetString("dapp_contract_address")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	o.Raw("select * from dapp_table where name=?", dapp_name)
+	i, _ := o.QueryTable("dapp_table").Filter("name", dapp_name).Count()
+	if i != 0 {
+		data = common.NewErrorResponse(500, "该名字已存在!", nil)
+		return
+	}
+
+	dapp := models.DappTable{
+		Name:            dapp_name,
+		AgreementType:   dapp_type,
+		State:           true,
+		TheLinkAddress:  dapp_link_address,
+		ContractAddress: dapp_contract_address,
+		Image:           image_url,
+		CreateTime:      time.Now().Format("2006-01-02 15:04:05"),
+	}
+	_, err := o.Insert(&dapp)
+	if err != nil {
+		data = common.NewErrorResponse(500, "新增失败,请重试!", nil)
+		return
+	}
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 更新_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_id query string true "dapp id"
+// @Param dapp_name query string true "名字"
+// @Param image_url query string true "图片_url"
+// @Param dapp_link_address query string true "dapp的链接地址"
+// @Param dapp_contract_address query string true "dapp的合约地址"
+// @Param dapp_type query string true "类型"
+// @Success 200____更新_DAPP
+// @router /admin/update_dapp [POST]
+func (this *BackStageManagement) UpdateDAPP() {
+	var (
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
+		dapp_id, _            = this.GetInt("dapp_id")
+		dapp_name             = this.GetString("dapp_name")
+		image_url             = this.GetString("image_url")
+		dapp_type             = this.GetString("dapp_type")
+		dapp_link_address     = this.GetString("dapp_link_address")
+		dapp_contract_address = this.GetString("dapp_contract_address")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	_, err := o.Raw(
+		"update dapp_table set name=?,agreement_type=?,the_link_address=?,contract_address=?,image=?,update_time=? where id=?",
+		dapp_name,
+		dapp_type,
+		dapp_link_address,
+		dapp_contract_address,
+		image_url,
+		time.Now().Format("2006-01-02 15:04:05"),
+		dapp_id).Exec()
+	if err != nil {
+		data = common.NewErrorResponse(500, "更新失败,请重试!", nil)
+		return
+	}
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 修改状态_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_id query string true "dapp id"
+// @Param dapp_state query string true "状态 1=true(开启)  2=false(失败)"
+// @Success 200____修改状态_DAPP
+// @router /admin/update_dapp_state [POST]
+func (this *BackStageManagement) UpdateDAPPState() {
+	var (
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
+		dapp_id, _    = this.GetInt("dapp_id")
+		dapp_state, _ = this.GetInt("dapp_state")
+
+		state = true
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	if dapp_state == 2 {
+		state = false
+	}
+	_, err := o.Raw(
+		"update dapp_table set state=?,update_time=? where id=?",
+		state,
+		time.Now().Format("2006-01-02 15:04:05"),
+		dapp_id).Exec()
+	if err != nil {
+		data = common.NewErrorResponse(500, "更改状态失败,请重试!", nil)
+		return
+	}
+
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 删除_DAPP
+// @Accept  json
+// @Produce json
+// @Param dapp_id query string true "dapp id"
+// @Success 200____删除_DAPP
+// @router /admin/delete_dapp [POST]
+func (this *BackStageManagement) DeleteDAPP() {
+	var (
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
+		dapp_id, _ = this.GetInt("dapp_id")
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	_, err := o.Raw("delete from dapp_table where id=?", dapp_id).Exec()
+	if err != nil {
+		data = common.NewErrorResponse(500, "删除应用失败,请重试!", nil)
+		return
+	}
+
+	data = common.NewResponse(nil)
+	return
+}
+
+// @Tags 分组_展示_DAPP_列表_to_the_app
+// @Accept  json
+// @Produce json
+// @Success 200____分组_展示_DAPP_列表_to_the_app {object} models.DAPPListTest
+// @router /show_group_by_type [GET]
+func (this *BackStageManagement) ShowGroupByType() {
+	var (
+		data *common.ResponseData
+		o    = db.NewEcologyOrm()
+
+		list = []models.DappTable{}
+	)
+	defer func() {
+		this.Data["json"] = data
+		this.ServeJSON()
+	}()
+
+	m := make(map[string][]models.DappTable)
+
+	o.Raw("select * from dapp_table").QueryRows(&list)
+
+	for _, v := range list {
+		m[v.AgreementType] = append(m[v.AgreementType], v)
+	}
+
+	values := models.DappGroupList{}
+	for i, v := range m {
+		a := models.List{
+			Title: i,
+		}
+		for _, vv := range v {
+			a.Values = append(a.Values, vv)
+		}
+		values.Items = append(values.Items, a)
+	}
+	data = common.NewResponse(values)
 	return
 }

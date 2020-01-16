@@ -13,7 +13,7 @@ var ErrCodeMap = map[int]string{
 func ErrCode(code int) *ResponseData {
 	return &ResponseData{
 		Code: code,
-		Msg:     ErrCodeMap[code],
+		Msg:  ErrCodeMap[code],
 	}
 }
 

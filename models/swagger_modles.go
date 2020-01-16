@@ -188,3 +188,32 @@ type MrsfStateTableTest struct {
 	TeamABouns团队算力收益   float64 `orm:"column(team_a_bouns)" json:"team_a_bouns"`
 	PeerABouns节点算力收益   float64 `orm:"column(peer_a_bouns)" json:"peer_a_bouns"`
 }
+
+// user ecology information
+type DAPPListTest struct {
+	Items []DAPPTableTest `json:"items"` //数据列表
+	Page  Page            `json:"page"`  //分页信息
+}
+
+type DAPPTableTest struct {
+	Id应用id               int      `orm:"column(id);pk;auto"  json:"id"`
+	Name应用名字             string   `orm:"column(name)" json:"name"`                         //  文章/问题  名字
+	AgreementType应用类型    string   `orm:"column(agreement_type)" json:"agreement_type"`     // DAPP类型
+	Start应用状态            string   `orm:"column(start)" json:"start"`                       // 状态  禁用 -- 启用
+	TheLinkAddress应用链接地址 string   `orm:"column(the_link_address)" json:"the_link_address"` //文章内容
+	Image应用图片            []string `orm:"column(image)" json:"image"`                       //图片链接
+	CreateTime创建时间       string   `orm:"column(create_time)" json:"create_time"`
+	UpdateTime更新时间       string   `orm:"column(update_time)" json:"update_time"` //更新时间
+}
+
+type RealTimePriceTest struct {
+	Id           int    `orm:"column(id);pk;auto"`
+	TimeStamp时间戳 string `orm:"column(time_stamp)" json:"time_stamp"`
+	Symbol交易对ID  string `orm:"column(symbol)" json:"symbol"`
+	Close收盘价格    string `orm:"column(close)" json:"close"`
+	High最高价      string `orm:"column(high)" json:"high"`
+	Low最低价格      string `orm:"column(low)" json:"low"`
+	Open开盘价格     string `orm:"column(open)" json:"open"`
+	Volume交易量    string `orm:"column(volume)" json:"volume"`
+	Quantity交易额  string `orm:"column(quantity)" json:"quantity"`
+}

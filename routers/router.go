@@ -24,6 +24,11 @@ func init() {
 				&controllers.Test{},
 			),
 		),
+		beego.NSNamespace("/quote",
+			beego.NSInclude(
+				&controllers.Ping{},
+			),
+		),
 	)
 	beego.AddNamespace(ns)
 
