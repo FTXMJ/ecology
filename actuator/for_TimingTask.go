@@ -174,6 +174,7 @@ func UpdateCoinsPrice(price float64) {
 	pp := price
 	var count float64 = 1
 	o.Raw("select * from wt_quote").QueryRows(&w_q)
+	o.Begin()
 	str_p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", count/pp), 64)
 	for _, v := range w_q {
 		switch v.Code {
@@ -185,4 +186,5 @@ func UpdateCoinsPrice(price float64) {
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), str_p, v.Id, v.Code)
 		}
 	}
+	o.Commit()
 }
