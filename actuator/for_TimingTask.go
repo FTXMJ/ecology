@@ -4,6 +4,7 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
+	"fmt"
 	"github.com/astaxie/beego/orm"
 	"github.com/shopspring/decimal"
 	"strconv"
@@ -178,11 +179,17 @@ func UpdateCoinsPrice(price float64) {
 	for _, v := range w_q {
 		switch v.Code {
 		case "USDD-TFOR":
+			fmt.Println(1)
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p, v.Id, v.Code)
+			break
 		case "TFOR-USDD":
+			fmt.Println(2)
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code)
+			break
 		case "USDT-TFOR":
+			fmt.Println(3)
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p, v.Id, v.Code)
+			break
 		}
 	}
 	o.Commit()
