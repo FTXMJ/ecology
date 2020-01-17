@@ -174,7 +174,8 @@ func SelectPondMachinemsg(o orm.Ormer, p models.FindObj, page models.Page, table
 
 	lists := []models.BlockedDetailIndex{}
 	for _, v := range listle {
-		value := v.(models.BlockedDetail)
+		value, ok := v.(models.AccountDetail)
+		fmt.Println(ok)
 		var u models.User
 		u.UserId = value.UserId
 		o.Read(&u, "user_id")
