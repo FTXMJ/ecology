@@ -153,7 +153,7 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 			Code:          symbol,
 			BaseCurrency:  baseCurrency,
 			QuoteCurrency: quoteCurrency,
-			Price:         fmt.Sprintf("%.6f", price),
+			Price:         price,
 		}
 		_, err = o.Insert(&w_q)
 		if err != nil {
@@ -170,23 +170,51 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 
 func UpdateCoinsPrice(price float64) {
 	o := db.NewWalletOrm()
-	w_q := []models.WtQuote{}
-	pp := price
+	w_q := make([]models.WtQuote, 0)
 	var count float64 = 1
-	o.Raw("select * from wt_quote").QueryRows(&w_q)
-	o.Begin()
-	p := div(count, pp)
-	for _, v := range w_q {
-		switch v.Code {
-		case "USDD-TFOR":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p.String(), v.Id, v.Code).Exec()
-		case "TFOR-USDD":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code).Exec()
-		case "USDT-TFOR":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p.String(), v.Id, v.Code).Exec()
+	len, _ := o.Raw("select * from wt_quote").QueryRows(&w_q)
+	fmt.Println(count, w_q)
+	if len > 0 {
+		items := make([]models.WtQuote, 0)
+		p := div(count, price)
+		for _, v := range w_q {
+			switch v.Code {
+			case "USDD-TFOR":
+				v.Price, _ = p.Float64()
+			case "TFOR-USDD":
+				v.Price = price
+			case "USDT-TFOR":
+				v.Price, _ = p.Float64()
+			default:
+				continue
+			}
+			items = append(items, v)
 		}
+
+		//if len(items) > 0{
+		timer := time.Now()
+		quote := &models.WtQuote{}
+		for _, v := range items {
+			quote.Id, quote.Price, quote.UpdatedAt = v.Id, v.Price, timer
+			num, err := o.Update(quote, "price", "updated_at")
+			fmt.Println(num, err)
+		}
+		//}
+		//for _, v := range w_q {
+		//	pp := price
+		//	if v.Code == "USDD-TFOR"{
+		//		o.QueryTable("wt_quote").Filter("code","USDD-TFOR").Update(orm.Params{"updated_at":time.Now(),"price":count/pp})
+		//		//o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p.String(), v.Id, v.Code).Exec()
+		//	}else if v.Code == "TFOR-USDD"{
+		//		o.QueryTable("wt_quote").Filter("code","TFOR-USDD").Update(orm.Params{"updated_at":time.Now(),"price":price})
+		//		//o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code).Exec()
+		//	}else if v.Code == "USDT-TFOR" {
+		//		o.QueryTable("wt_quote").Filter("code","USDT-TFOR").Update(orm.Params{"updated_at":time.Now(),"price":count/pp})
+		//		//o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p.String(), v.Id, v.Code).Exec()
+		//	}
+		//}
 	}
-	o.Commit()
+
 }
 
 // 除法
