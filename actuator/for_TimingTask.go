@@ -38,7 +38,9 @@ func Second5s() {
 			price = p
 		}
 	}
-	UpdateCoinsPrice(price)
+	if price > 0 {
+		UpdateCoinsPrice(price)
+	}
 }
 
 func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
@@ -130,7 +132,11 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 	r_h.TimeStamp = time.Unix(int64(t)/1000, 0).Format("2006-01-02 15:04:05")
 	_, err = o.Insert(&r_h)
 	if err != nil {
-		return err
+		if err.Error() == "Error 1062: Duplicate entry '"+r_h.SymbolId+"' for key 'symbol_id'" {
+			o.Update(&r_h)
+		} else {
+			return err
+		}
 	}
 	return nil
 }
@@ -166,18 +172,23 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 func UpdateCoinsPrice(price float64) {
 	o := db.NewWalletOrm()
 	w_q := []models.WtQuote{}
+	pp := price
 	o.Raw("select * from wt_quote").QueryRows(&w_q)
+	p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
 	for _, v := range w_q {
-		pp := price
 		switch v.Code {
 		case "USDD-TFOR":
-			p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
-			o.Raw("update wt_quote set price=? where id=?", p, v.Id).Exec()
+			v.UpdatedAt = time.Now()
+			v.Price = p
+			o.Update(&v, "updated_at", "price")
 		case "TFOR-USDD":
-			o.Raw("update wt_quote set price=? where id=?", pp, v.Id).Exec()
+			v.UpdatedAt = time.Now()
+			v.Price = pp
+			o.Update(&v, "updated_at", "price")
 		case "USDT-TFOR":
-			p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
-			o.Raw("update wt_quote set price=? where id=?", p, v.Id).Exec()
+			v.UpdatedAt = time.Now()
+			v.Price = p
+			o.Update(&v, "updated_at", "price")
 		}
 	}
 }
