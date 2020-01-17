@@ -80,7 +80,16 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 			return err
 		}
 	} else {
-		_, err = o.Update(&r_t_p, "symbol")
+		_, err = o.Raw("update quote_ticker set close=?,high=?,low=?,open=?,volume=?,quantity=?,time_stamp=? where symbol=?",
+			r_t_p.Close,
+			r_t_p.High,
+			r_t_p.Low,
+			r_t_p.Open,
+			r_t_p.Volume,
+			r_t_p.Quantity,
+			r_t_p.TimeStamp,
+			r_t_p.Symbol,
+		).Exec()
 		if err != nil {
 			return err
 		}
