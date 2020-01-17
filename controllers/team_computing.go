@@ -452,7 +452,7 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 
 	//找最近的数据记录表
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
 
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
@@ -542,7 +542,7 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 		}
 	}
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
 	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
@@ -633,7 +633,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	}
 
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
 		shouyia = 0
@@ -850,7 +850,7 @@ func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 	}
 
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1").QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
 
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
