@@ -5,7 +5,6 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"ecology/utils"
-
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 
@@ -320,7 +319,7 @@ func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_ta
 			UserName:     user.UserName,
 			State:        s_tate,
 			Time:         time.Now().Format("2006-01-02 15:04:05"),
-			OrderId:      strconv.Itoa(account.Id) + time.Now().Format("2006-01-02"),
+			OrderId:      strconv.Itoa(account.Id) + time.Now().AddDate(0, 0, -1).Format("2006-01-02"),
 			Date:         time.Now().Format("2006-01-02"),
 			ZiYouABouns:  ziyou,
 			ZhiTuiABouns: zhitui,
@@ -736,11 +735,15 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 						if order_id != "" {
 							o.Raw("update mrsf_state_table set peer_a_bouns=? where order_id=? and user_id=?", tfor_some/float64(len(vv)), order_id, v).Exec()
 						} else {
-							o.Raw(
-								"update mrsf_state_table set peer_a_bouns=? where order_id=? and user_id=?",
-								tfor_some/float64(len(vv)),
-								time.Now().AddDate(0, 0, -1).Format("2006-01-02"),
-								v).Exec()
+							mrsf := models.MrsfStateTable{}
+							o.Raw("select * from mrsf_state_table where user_id=? and order_id=? order by id desc limit 1",
+								v, strconv.Itoa(acc.Id)+time.Now().AddDate(0, 0, -1).Format("2006-01-02")).QueryRow(&mrsf)
+							mrsf.Time = time.Now().Format("2006-01-02 15:04:05")
+							mrsf.PeerABouns = tfor_some / float64(len(vv))
+							o.Raw("update mrsf_state_table set time=?,peer_a_bouns=? where id=?",
+								mrsf.Time,
+								mrsf.PeerABouns,
+								mrsf.Id).Exec()
 						}
 					}
 					if k_level == "钻石节点" {
