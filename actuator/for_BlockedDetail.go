@@ -222,7 +222,7 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 	if p.StartTime != "" && p.EndTime != "" {
 		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
 	}
-	q_blos.All(&blos)
+	q_blos.OrderBy("-create_date").All(&blos)
 
 	QuickSortBlockedDetail(blos, 0, len(blos)-1)
 
