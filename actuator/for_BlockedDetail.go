@@ -162,7 +162,7 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 }
 
 //条件查询对象包含的则视为条件
-func SelectPondMachinemsg(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
+func SelectPondMachinemsgForAcc(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
 	list, err := SqlCreateValues(o, p, table_name)
 	if err != nil {
 		return []models.BlockedDetailIndex{}, models.Page{}, err
@@ -175,6 +175,42 @@ func SelectPondMachinemsg(o orm.Ormer, p models.FindObj, page models.Page, table
 	lists := []models.BlockedDetailIndex{}
 	for _, v := range listle {
 		value, ok := v.(models.AccountDetail)
+		fmt.Println(ok)
+		var u models.User
+		u.UserId = value.UserId
+		o.Read(&u, "user_id")
+		blo := models.BlockedDetailIndex{
+			Id:             value.Id,
+			UserId:         value.UserId,
+			UserName:       u.UserName,
+			CurrentRevenue: value.CurrentRevenue,
+			CurrentOutlay:  value.CurrentOutlay,
+			OpeningBalance: value.OpeningBalance,
+			CurrentBalance: value.CurrentBalance,
+			CreateDate:     value.CreateDate,
+			Comment:        value.Comment,
+			TxId:           value.TxId,
+			Account:        value.Account,
+			CoinType:       value.CoinType,
+		}
+		lists = append(lists, blo)
+	}
+	return lists, page, nil
+}
+
+func SelectPondMachinemsgForBlo(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
+	list, err := SqlCreateValues(o, p, table_name)
+	if err != nil {
+		return []models.BlockedDetailIndex{}, models.Page{}, err
+	}
+
+	start, end := InitPage(&page, len(list))
+
+	listle := ListLimit(list, start, end)
+
+	lists := []models.BlockedDetailIndex{}
+	for _, v := range listle {
+		value, ok := v.(models.BlockedDetail)
 		fmt.Println(ok)
 		var u models.User
 		u.UserId = value.UserId
@@ -484,7 +520,7 @@ func ShowMrsfTable(o orm.Ormer, page models.Page, user_name, user_id, date strin
 		q = q.Filter("user_id", user_id)
 	}
 	if date != "" {
-		q = q.Filter("time", date)
+		q = q.Filter("date", date)
 	}
 	q.Filter("state", state).OrderBy("-time").All(&list)
 

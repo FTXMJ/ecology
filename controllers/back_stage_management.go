@@ -362,7 +362,14 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		Count:       0,
 	}
 
-	list, page, err := actuator.SelectPondMachinemsg(o, find_obj, p, table_name)
+	list := []models.BlockedDetailIndex{}
+	page := models.Page{}
+	var err error
+	if table_name == "account_detail" {
+		list, page, err = actuator.SelectPondMachinemsgForAcc(o, find_obj, p, table_name)
+	} else if table_name == "blocked_detail" {
+		list, page, err = actuator.SelectPondMachinemsgForBlo(o, find_obj, p, table_name)
+	}
 	if err != nil {
 		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", []models.HostryFindInfo{})
