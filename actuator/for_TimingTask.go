@@ -4,7 +4,6 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
-	"fmt"
 	"github.com/astaxie/beego/orm"
 	"github.com/shopspring/decimal"
 	"strconv"
@@ -173,7 +172,6 @@ func UpdateCoinsPrice(price float64) {
 	w_q := make([]models.WtQuote, 0)
 	var count float64 = 1
 	num, _ := o.Raw("select * from wt_quote").QueryRows(&w_q)
-	fmt.Println(count, w_q)
 	if num > 0 {
 		items := make([]models.WtQuote, 0)
 		p := div(count, price)
@@ -190,32 +188,15 @@ func UpdateCoinsPrice(price float64) {
 			}
 			items = append(items, v)
 		}
-
 		if len(items) > 0 {
 			timer := time.Now()
-			quote := &models.WtQuote{}
+			q, _ := o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?").Prepare()
 			for _, v := range items {
-				quote.Id, quote.Price, quote.UpdatedAt = v.Id, v.Price, timer
-				num, err := o.Update(quote, "price", "updated_at")
-				fmt.Println(num, err)
+				_, _ = q.Exec(timer, v.Price, v.Id)
 			}
+			_ = q.Close()
 		}
-
-		//for _, v := range w_q {
-		//	pp := price
-		//	if v.Code == "USDD-TFOR"{
-		//		o.QueryTable("wt_quote").Filter("code","USDD-TFOR").Update(orm.Params{"updated_at":time.Now(),"price":count/pp})
-		//		//o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p.String(), v.Id, v.Code).Exec()
-		//	}else if v.Code == "TFOR-USDD"{
-		//		o.QueryTable("wt_quote").Filter("code","TFOR-USDD").Update(orm.Params{"updated_at":time.Now(),"price":price})
-		//		//o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code).Exec()
-		//	}else if v.Code == "USDT-TFOR" {
-		//		o.QueryTable("wt_quote").Filter("code","USDT-TFOR").Update(orm.Params{"updated_at":time.Now(),"price":count/pp})
-		//		//o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p.String(), v.Id, v.Code).Exec()
-		//	}
-		//}
 	}
-
 }
 
 // 除法
