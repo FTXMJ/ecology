@@ -483,7 +483,7 @@ func ShowMrsfTable(o orm.Ormer, page models.Page, user_name, user_id, date strin
 		q = q.Filter("user_id", user_id)
 	}
 	if date != "" {
-		q = q.Filter("date", date)
+		q = q.Filter("time", date)
 	}
 	q.Filter("state", state).OrderBy("-time").All(&list)
 

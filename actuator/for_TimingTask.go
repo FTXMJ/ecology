@@ -14,11 +14,21 @@ import (
 // 定时获取 交易行情
 func Second5s() {
 	symbols := []Symbol{}
-	s := Symbol{
+	s1 := Symbol{
 		BaseCurrency:  "TFOR",
 		QuoteCurrency: "USDT",
 	}
-	symbols = append(symbols, s)
+	symbols = append(symbols, s1)
+	s2 := Symbol{
+		BaseCurrency:  "BTC",
+		QuoteCurrency: "USDT",
+	}
+	symbols = append(symbols, s2)
+	s3 := Symbol{
+		BaseCurrency:  "ETH",
+		QuoteCurrency: "USDT",
+	}
+	symbols = append(symbols, s3)
 
 	for _, v := range symbols {
 		UpdateOrInsert(v.BaseCurrency, v.QuoteCurrency)
