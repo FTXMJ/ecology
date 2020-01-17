@@ -170,7 +170,7 @@ func UpdateCoinsPrice(price float64) {
 	for _, v := range w_q {
 		pp := price
 		switch v.Code {
-		case "USDD-TROF":
+		case "USDD-TROR":
 			p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
 			o.Raw("update wt_quote set price=? where id=?", p, v.Id).Exec()
 		case "TFOR-USDD":
