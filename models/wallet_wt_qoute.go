@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type WtQuote struct {
 	Id            int       `orm:"column(id);pk;auto"`
