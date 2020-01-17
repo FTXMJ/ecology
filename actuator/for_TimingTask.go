@@ -173,8 +173,9 @@ func UpdateCoinsPrice(price float64) {
 	o := db.NewWalletOrm()
 	w_q := []models.WtQuote{}
 	pp := price
+	var count float64 = 1
 	o.Raw("select * from wt_quote").QueryRows(&w_q)
-	p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
+	p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", count/pp), 64)
 	for _, v := range w_q {
 		switch v.Code {
 		case "USDD-TFOR":
