@@ -5,8 +5,7 @@ import (
 	"ecology/logs"
 	"ecology/models"
 	"github.com/astaxie/beego/orm"
-
-	"fmt"
+	"github.com/shopspring/decimal"
 	"strconv"
 	"time"
 )
@@ -175,16 +174,23 @@ func UpdateCoinsPrice(price float64) {
 	var count float64 = 1
 	o.Raw("select * from wt_quote").QueryRows(&w_q)
 	o.Begin()
-	str_p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", count/pp), 64)
+	p := div(count, pp)
 	for _, v := range w_q {
 		switch v.Code {
 		case "USDD-TFOR":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), str_p, v.Id, v.Code)
+			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p, v.Id, v.Code)
 		case "TFOR-USDD":
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code)
 		case "USDT-TFOR":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), str_p, v.Id, v.Code)
+			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), p, v.Id, v.Code)
 		}
 	}
 	o.Commit()
+}
+
+// 除法
+func div(d1, d2 float64) decimal.Decimal {
+	d11 := decimal.NewFromFloat(d1)
+	d22 := decimal.NewFromFloat(d2)
+	return d11.Div(d22)
 }
