@@ -320,7 +320,7 @@ func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_ta
 			State:        s_tate,
 			Time:         time.Now().Format("2006-01-02 15:04:05"),
 			OrderId:      strconv.Itoa(account.Id) + time.Now().AddDate(0, 0, -1).Format("2006-01-02"),
-			Date:         time.Now().Format("2006-01-02"),
+			Date:         time.Now().AddDate(0, 0, -1).Format("2006-01-02"),
 			ZiYouABouns:  ziyou,
 			ZhiTuiABouns: zhitui,
 			TeamABouns:   team,
