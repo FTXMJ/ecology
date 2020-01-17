@@ -7,6 +7,7 @@ import (
 
 	"github.com/astaxie/beego/orm"
 
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -170,11 +171,13 @@ func UpdateCoinsPrice(price float64) {
 		pp := price
 		switch v.Code {
 		case "USDD-TROF":
-			o.Raw("update wt_quote set price=? where id=?", float64(1)/pp, v.Id).Exec()
+			p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
+			o.Raw("update wt_quote set price=? where id=?", p, v.Id).Exec()
 		case "TFOR-USDD":
-			o.Raw("update wt_quote set price=? where id=?", price, v.Id).Exec()
+			o.Raw("update wt_quote set price=? where id=?", pp, v.Id).Exec()
 		case "USDT-TFOR":
-			o.Raw("update wt_quote set price=? where id=?", float64(1)/pp, v.Id).Exec()
+			p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", 1.0/pp), 64)
+			o.Raw("update wt_quote set price=? where id=?", p, v.Id).Exec()
 		}
 	}
 }
