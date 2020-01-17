@@ -534,8 +534,8 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 	o.Read(&formula, "ecology_id")
 	blocked_yestoday := models.AccountDetail{}
 	date_time := time.Now().AddDate(0, 0, -1).Format("2006-01-02 ") + "23:59:59"
-	_, err_raw := o.Raw(
-		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1", user_id, date_time).QueryRows(&blocked_yestoday)
+	err_raw := o.Raw(
+		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1", user_id, date_time).QueryRow(&blocked_yestoday)
 	if err_raw != nil {
 		if err_raw.Error() != "<QuerySeter> no row found" {
 			return 0, err_raw
@@ -797,11 +797,11 @@ func JintaiBuShiFang(o orm.Ormer, user_id string) error {
 	}
 	o.Read(&formula, "ecology_id")
 	blocked_yestoday := models.AccountDetail{}
-	_, err_raw := o.Raw(
+	err_raw := o.Raw(
 		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1",
 		user_id,
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
-		QueryRows(&blocked_yestoday)
+		QueryRow(&blocked_yestoday)
 	if err_raw != nil {
 		if err_raw.Error() != "<QuerySeter> no row found" {
 			return err_raw
