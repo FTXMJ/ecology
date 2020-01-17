@@ -2,7 +2,6 @@ package actuator
 
 import (
 	"ecology/models"
-	"errors"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -34,5 +33,5 @@ func SelectDAPP(o orm.Ormer, dapp_name, dapp_id, dapp_type string, page *models.
 		return dapp_list[start:end], nil
 
 	}
-	return dapp_list, errors.New("err")
+	return dapp_list, nil
 }
