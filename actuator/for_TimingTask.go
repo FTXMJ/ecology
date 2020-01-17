@@ -167,13 +167,14 @@ func UpdateCoinsPrice(price float64) {
 	w_q := []models.WtQuote{}
 	o.Raw("select * from wt_quote").QueryRows(&w_q)
 	for _, v := range w_q {
+		pp := price
 		switch v.Code {
 		case "USDD-TROF":
-			o.Raw("update wt_quote set price=? where id=?", float64(1)/price, v.Id).Exec()
+			o.Raw("update wt_quote set price=? where id=?", float64(1)/pp, v.Id).Exec()
 		case "TFOR-USDD":
 			o.Raw("update wt_quote set price=? where id=?", price, v.Id).Exec()
 		case "USDT-TFOR":
-			o.Raw("update wt_quote set price=? where id=?", float64(1)/price, v.Id).Exec()
+			o.Raw("update wt_quote set price=? where id=?", float64(1)/pp, v.Id).Exec()
 		}
 	}
 }
