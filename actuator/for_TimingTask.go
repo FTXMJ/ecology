@@ -4,7 +4,6 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
-
 	"github.com/astaxie/beego/orm"
 
 	"fmt"
@@ -30,7 +29,7 @@ func Second5s() {
 		QuoteCurrency: "USDT",
 	}
 	symbols = append(symbols, s3)
-	price := 0.0
+	var price float64 = 0
 
 	for _, v := range symbols {
 		p := UpdateOrInsert(v.BaseCurrency, v.QuoteCurrency)
@@ -175,7 +174,7 @@ func UpdateCoinsPrice(price float64) {
 	pp := price
 	var count float64 = 1
 	o.Raw("select * from wt_quote").QueryRows(&w_q)
-	str_p := fmt.Sprintf("%.6f", count/pp)
+	str_p, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", count/pp), 64)
 	for _, v := range w_q {
 		switch v.Code {
 		case "USDD-TFOR":
