@@ -181,7 +181,7 @@ func UpdateCoinsPrice(price float64) {
 		case "USDD-TFOR":
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), str_p, v.Id, v.Code)
 		case "TFOR-USDD":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), pp, v.Id, v.Code)
+			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code)
 		case "USDT-TFOR":
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), str_p, v.Id, v.Code)
 		}
