@@ -29,13 +29,18 @@ func Second5s() {
 		QuoteCurrency: "USDT",
 	}
 	symbols = append(symbols, s3)
+	price := 0.0
 
 	for _, v := range symbols {
-		UpdateOrInsert(v.BaseCurrency, v.QuoteCurrency)
+		p := UpdateOrInsert(v.BaseCurrency, v.QuoteCurrency)
+		if p != 0 {
+			price = p
+		}
 	}
+	UpdateCoinsPrice(price)
 }
 
-func UpdateOrInsert(baseCurrency, quoteCurrency string) {
+func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
 	value, err := GetQuote(baseCurrency, quoteCurrency)
 
 	//   更新 本地 数据
@@ -55,18 +60,22 @@ func UpdateOrInsert(baseCurrency, quoteCurrency string) {
 		return
 	}
 
-	err = WalletH(o_wa, symbol, baseCurrency, quoteCurrency, value)
-	if err != nil {
-		o_ec.Rollback()
-		o_wa.Rollback()
-		state = "失败"
-		logs.Log.Info("更新"+symbol+" 时间: ", time.Now().Format("2006-01-02 15:04:05")+" 操作: "+state)
-		return
+	if symbol == "TFOR-USDT" {
+		err = WalletH(o_wa, symbol, baseCurrency, quoteCurrency, value)
+		if err != nil {
+			o_ec.Rollback()
+			o_wa.Rollback()
+			state = "失败"
+			logs.Log.Info("更新"+symbol+" 时间: ", time.Now().Format("2006-01-02 15:04:05")+" 操作: "+state)
+			return
+		}
+		price, _ = strconv.ParseFloat(value.Date[0].C, 64)
 	}
 
 	o_ec.Commit()
 	o_wa.Commit()
 	logs.Log.Info("更新"+symbol+" 时间: ", time.Now().Format("2006-01-02 15:04:05")+" 操作: "+state)
+
 	return
 }
 
@@ -151,4 +160,20 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 		}
 	}
 	return nil
+}
+
+func UpdateCoinsPrice(price float64) {
+	o := db.NewWalletOrm()
+	w_q := []models.WtQuote{}
+	o.Raw("select * from wt_quote").QueryRows(&w_q)
+	for _, v := range w_q {
+		switch v.Code {
+		case "USDD-TROF":
+			o.Raw("update wt_quote set price=? where id=?", float64(1)/price, v.Id).Exec()
+		case "TFOR-USDD":
+			o.Raw("update wt_quote set price=? where id=?", price, v.Id).Exec()
+		case "USDT-TFOR":
+			o.Raw("update wt_quote set price=? where id=?", float64(1)/price, v.Id).Exec()
+		}
+	}
 }
