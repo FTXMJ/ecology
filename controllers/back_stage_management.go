@@ -1061,7 +1061,8 @@ func (this *BackStageManagement) ShowDAPPList() {
 		data = common.NewErrorResponse(500, "出现错误,请再次刷新!", models.DappList{})
 		return
 	} else if len(dapp_list) == 0 {
-		data = common.NewResponse(models.DappList{Page: page})
+		l := []models.DappTable{}
+		data = common.NewResponse(models.DappList{Items: l, Page: page})
 		return
 	}
 
