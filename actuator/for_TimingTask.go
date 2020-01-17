@@ -172,9 +172,9 @@ func UpdateCoinsPrice(price float64) {
 	o := db.NewWalletOrm()
 	w_q := make([]models.WtQuote, 0)
 	var count float64 = 1
-	len, _ := o.Raw("select * from wt_quote").QueryRows(&w_q)
+	num, _ := o.Raw("select * from wt_quote").QueryRows(&w_q)
 	fmt.Println(count, w_q)
-	if len > 0 {
+	if num > 0 {
 		items := make([]models.WtQuote, 0)
 		p := div(count, price)
 		for _, v := range w_q {
@@ -191,15 +191,16 @@ func UpdateCoinsPrice(price float64) {
 			items = append(items, v)
 		}
 
-		//if len(items) > 0{
-		timer := time.Now()
-		quote := &models.WtQuote{}
-		for _, v := range items {
-			quote.Id, quote.Price, quote.UpdatedAt = v.Id, v.Price, timer
-			num, err := o.Update(quote, "price", "updated_at")
-			fmt.Println(num, err)
+		if len(items) > 0 {
+			timer := time.Now()
+			quote := &models.WtQuote{}
+			for _, v := range items {
+				quote.Id, quote.Price, quote.UpdatedAt = v.Id, v.Price, timer
+				num, err := o.Update(quote, "price", "updated_at")
+				fmt.Println(num, err)
+			}
 		}
-		//}
+
 		//for _, v := range w_q {
 		//	pp := price
 		//	if v.Code == "USDD-TFOR"{
