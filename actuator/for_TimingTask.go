@@ -4,6 +4,7 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
+	"fmt"
 	"github.com/astaxie/beego/orm"
 	"github.com/shopspring/decimal"
 	"strconv"
@@ -152,7 +153,7 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 			Code:          symbol,
 			BaseCurrency:  baseCurrency,
 			QuoteCurrency: quoteCurrency,
-			Price:         price,
+			Price:         fmt.Sprintf("%.6f", price),
 		}
 		_, err = o.Insert(&w_q)
 		if err != nil {
@@ -176,14 +177,15 @@ func UpdateCoinsPrice(price float64) {
 	o.Begin()
 	p := div(count, pp)
 	po, _ := p.Float64()
+	po_str := fmt.Sprintf("%.6f", po)
 	for _, v := range w_q {
 		switch v.Code {
 		case "USDD-TFOR":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), po, v.Id, v.Code).Exec()
+			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), po_str, v.Id, v.Code).Exec()
 		case "TFOR-USDD":
 			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), price, v.Id, v.Code).Exec()
 		case "USDT-TFOR":
-			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), po, v.Id, v.Code).Exec()
+			o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?", time.Now(), po_str, v.Id, v.Code).Exec()
 		}
 	}
 	o.Commit()

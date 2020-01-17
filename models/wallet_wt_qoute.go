@@ -12,5 +12,5 @@ type WtQuote struct {
 	Code          string    `orm:"column(code)"`
 	BaseCurrency  string    `orm:"column(base_currency)"`
 	QuoteCurrency string    `orm:"column(quote_currency)"`
-	Price         float64   `orm:"column(price)"`
+	Price         string    `orm:"column(price)"`
 }
