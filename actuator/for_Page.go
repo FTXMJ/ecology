@@ -82,7 +82,7 @@ func SelectHosteryRoot(o orm.Ormer, page models.Page) ([]models.HostryValues, mo
 
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
-	listle := []models.HostryValues{}
+	listle := make([]models.HostryValues, 0)
 
 	if end > len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:] {

@@ -4,6 +4,7 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
+	"fmt"
 	"github.com/astaxie/beego/orm"
 	"github.com/shopspring/decimal"
 	"strconv"
@@ -190,9 +191,10 @@ func UpdateCoinsPrice(price float64) {
 		}
 		if len(items) > 0 {
 			timer := time.Now()
-			q, _ := o.Raw("update wt_quote set updated_at=?,price=? where id=? and code=?").Prepare()
+			q, _ := o.Raw("update wt_quote set updated_at=?,price=? where id=?").Prepare()
 			for _, v := range items {
-				_, _ = q.Exec(timer, v.Price, v.Id)
+				_, err := q.Exec(timer, v.Price, v.Id)
+				fmt.Println(err)
 			}
 			_ = q.Close()
 		}

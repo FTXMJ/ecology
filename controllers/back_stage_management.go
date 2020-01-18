@@ -7,7 +7,6 @@ import (
 	"ecology/filter"
 	"ecology/logs"
 	"ecology/models"
-
 	"github.com/astaxie/beego"
 
 	"errors"
@@ -30,7 +29,7 @@ func (this *BackStageManagement) ShowFormulaList() {
 	var (
 		data       *common.ResponseData
 		o          = db.NewEcologyOrm()
-		force_list []models.ForceTable
+		force_list = make([]models.ForceTable, 0)
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -185,7 +184,7 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 	var (
 		data       *common.ResponseData
 		o          = db.NewEcologyOrm()
-		force_list []models.SuperForceTable
+		force_list = make([]models.SuperForceTable, 0)
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -362,7 +361,7 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 		Count:       0,
 	}
 
-	list := []models.BlockedDetailIndex{}
+	list := make([]models.BlockedDetailIndex, 0)
 	page := models.Page{}
 	var err error
 	if table_name == "account_detail" {
@@ -727,6 +726,9 @@ func (this *BackStageManagement) PeerUserList() {
 		Items: peer_users,
 		Page:  p,
 	}
+	if len(peer_users) == 0 {
+		peer_user_list.Items = []models.PeerUser{}
+	}
 	data = common.NewResponse(peer_user_list)
 	return
 }
@@ -752,7 +754,7 @@ func (this *BackStageManagement) PeerABounsList() {
 
 		start_time   = ""
 		end_time     = ""
-		peer_history = []models.PeerHistory{}
+		peer_history = make([]models.PeerHistory, 0)
 	)
 	defer func() {
 		this.Data["json"] = data
@@ -866,7 +868,7 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 		this.Data["json"] = data
 		this.ServeJSON()
 	}()
-	operation_list := []models.GlobalOperations{}
+	operation_list := make([]models.GlobalOperations, 0)
 	_, err := o.Raw("select * from global_operations").QueryRows(&operation_list)
 	if err != nil {
 		logs.Log.Error(err)

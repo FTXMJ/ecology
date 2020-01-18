@@ -271,7 +271,7 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 
 	list := ListLimit(value_list, start, end)
 
-	flows := []models.Flow{}
+	flows := make([]models.Flow, 0)
 	for _, value := range list {
 		v := value.(models.BlockedDetail)
 		flow := models.Flow{}
@@ -369,7 +369,7 @@ func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]mo
 		o.Read(&for_m, "ecology_id")
 		list[i].TeamReturnRate = team * for_m.TeamReturnRate
 	}
-	u_e_objs := []models.U_E_OBJ{}
+	u_e_objs := make([]models.U_E_OBJ, 0)
 	for _, v := range list {
 		u_e_obj := models.U_E_OBJ{}
 		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.HoldReturnRate), 64)
@@ -428,7 +428,7 @@ func FindFalseUser(o orm.Ormer, page models.Page, user_id, user_name string) ([]
 		return []models.FalseUser{}, page
 	}
 
-	last_list := []models.FalseUser{}
+	last_list := make([]models.FalseUser, 0)
 	for _, v := range list {
 		last_list = append(last_list, v.(models.FalseUser))
 	}
@@ -443,7 +443,7 @@ func FindUserAccountOFF(o orm.Ormer, page models.Page, obj models.FindObj) ([]mo
 		return []models.AccountOFF{}, models.Page{}, err
 	}
 
-	user_accounts := []models.AccountOFF{}
+	user_accounts := make([]models.AccountOFF, 0)
 	g := []models.GlobalOperations{}
 	o.Raw("select * from global_operations").QueryRows(&g)
 	m := make(map[string]bool)
@@ -507,8 +507,7 @@ func SqlCreateValues(o orm.Ormer, p models.FindObj, table_name string) ([]interf
 }
 
 func ShowMrsfTable(o orm.Ormer, page models.Page, user_name, user_id, date string, state bool) ([]models.MrsfStateTable, models.Page, error) {
-	list := []models.MrsfStateTable{}
-
+	list := make([]models.MrsfStateTable, 0)
 	acc := models.Account{UserId: user_id}
 	o.Read(&acc, "user_id")
 
