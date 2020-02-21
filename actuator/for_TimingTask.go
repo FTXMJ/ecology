@@ -88,7 +88,8 @@ func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
 func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data_r) error {
 	var err error
 	r_t_p := models.QuoteTicker{
-		TimeStamp:     value.Date[0].T,
+		//TimeStamp:     value.Date[0].T,
+		TimeStamp:     strconv.Itoa(value.Date[0].T),
 		Symbol:        symbol,
 		Close:         value.Date[0].C,
 		High:          value.Date[0].H,
@@ -129,9 +130,11 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 		Quantity:      value.Date[0].Qv,
 		BaseCurrency:  baseCurrency,
 		QuoteCurrency: quoteCurrency,
-		SymbolId:      symbol + "-" + value.Date[0].T,
+		//SymbolId:      symbol + "-" + value.Date[0].T,
+		SymbolId: symbol + "-" + strconv.Itoa(value.Date[0].T),
 	}
-	t, _ := strconv.Atoi(value.Date[0].T)
+	//t, _ := strconv.Atoi(value.Date[0].T)
+	t := value.Date[0].T
 	r_h.TimeStamp = time.Unix(int64(t)/1000, 0).Format("2006-01-02 15:04:05")
 	_, err = o.Insert(&r_h)
 	if err != nil {

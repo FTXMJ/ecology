@@ -19,6 +19,7 @@ func main() {
 	//http://localhost:8080/swagger/
 	//bee run -gendoc=true -downdoc=true
 	//bee pack -be GOOS=linux
+	//	"github.com/shopspring/decv"
 	if beego.DEV == "dev" {
 		beego.SetStaticPath("/api/v1/ecology/swagger", "swagger")
 	}

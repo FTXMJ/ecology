@@ -32,7 +32,7 @@ type Symbol struct {
 }
 
 type ping struct {
-	T  string `json:"t"`
+	T  int    `json:"t"`
 	S  string `json:"s"`
 	C  string `json:"c"`
 	H  string `json:"h"`
