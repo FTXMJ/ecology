@@ -40,10 +40,14 @@ func Second5s() {
 	if price > 0 {
 		UpdateCoinsPrice(price)
 	}
+
 }
 
 func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
 	value, err := GetQuote(baseCurrency, quoteCurrency)
+	if value.Code == 0 || len(value.Date) == 0 {
+		return 0
+	}
 
 	//   更新 本地 数据
 	o_ec := db.NewEcologyOrm()
