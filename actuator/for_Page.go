@@ -12,21 +12,21 @@ import (
 func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, models.Page, error) {
 	o := db.NewEcologyOrm()
 
-	var acc_list []models.AccountDetail
+	acc_list := make([]models.AccountDetail, 0)
 	_, acc_read_err := o.QueryTable("account_detail").Filter("account", ecology_id).All(&acc_list)
 	index_values := append_acc_to_public(acc_list)
 	if acc_read_err != nil {
 		return nil, page, acc_read_err
 	}
 
-	var blo_list []models.BlockedDetail
+	blo_list := make([]models.BlockedDetail, 0)
 	_, blo_read_err := o.QueryTable("blocked_detail").Filter("account", ecology_id).All(&blo_list)
 	if blo_read_err != nil {
 		return nil, page, blo_read_err
 	}
 	last_values := append_blo_to_public(blo_list, index_values)
 	if len(last_values) == 0 {
-		return []models.HostryValues{}, page, errors.New("没有历史交易记录!")
+		return make([]models.HostryValues, 0), page, errors.New("没有历史交易记录!")
 	}
 	QuickSortAgreement(last_values, 0, len(last_values)-1)
 	page.Count = len(last_values)
@@ -38,7 +38,7 @@ func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, mod
 	}
 	start := (page.CurrentPage - 1) * page.PageSize
 	end := start + page.PageSize
-	listle := []models.HostryValues{}
+	listle := make([]models.HostryValues, 0)
 	if end > len(last_values) && start < len(last_values) {
 		for _, v := range last_values[start:] {
 			listle = append(listle, v)
@@ -59,16 +59,17 @@ func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, mod
 
 //root
 func SelectHosteryRoot(o orm.Ormer, page models.Page) ([]models.HostryValues, models.Page, error) {
-	var acc_list []models.AccountDetail
+	acc_list := make([]models.AccountDetail, 0)
+
 	o.Raw("select * from account_detail").QueryRows(&acc_list)
 	index_values := append_acc_to_public(acc_list)
 
-	var blo_list []models.BlockedDetail
+	blo_list := make([]models.BlockedDetail, 0)
 	o.Raw("select * from blocked_detail").QueryRows(&blo_list)
 	last_values := append_blo_to_public(blo_list, index_values)
 
 	if len(last_values) == 0 {
-		return []models.HostryValues{}, page, errors.New("没有历史交易记录!")
+		return make([]models.HostryValues, 0), page, errors.New("没有历史交易记录!")
 	}
 
 	QuickSortAgreement(last_values, 0, len(last_values)-1)
@@ -103,7 +104,7 @@ func SelectHosteryRoot(o orm.Ormer, page models.Page) ([]models.HostryValues, mo
 }
 
 func append_acc_to_public(acc []models.AccountDetail) []models.HostryValues {
-	var hostry_values []models.HostryValues
+	hostry_values := make([]models.HostryValues, 0)
 	for _, v := range acc {
 		hos_va := models.HostryValues{
 			Id:             v.Id,
@@ -163,7 +164,7 @@ func PageS(peer_user_list []models.PeerUser, page models.Page) ([]models.PeerUse
 
 	} else if start > len(peer_user_list) {
 
-		return []models.PeerUser{}, page
+		return make([]models.PeerUser, 0), page
 
 	} else if end < len(peer_user_list) && start < len(peer_user_list) {
 
@@ -195,12 +196,12 @@ func PageHistory(peer_user_list []models.PeerHistory, page models.Page) ([]model
 
 	} else if start > len(peer_user_list) {
 
-		return []models.PeerHistory{}, page
+		return make([]models.PeerHistory, 0), page
 
 	} else if end < len(peer_user_list) && start < len(peer_user_list) {
 
 		return peer_user_list[start:end], page
 
 	}
-	return []models.PeerHistory{}, page
+	return make([]models.PeerHistory, 0), page
 }

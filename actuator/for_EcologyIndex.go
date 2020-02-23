@@ -47,8 +47,8 @@ func TheWheel(o orm.Ormer, user_id string, acc models.Account, index *models.Eco
 
 // 查看用户团队收益 首页查看
 func IndexTeamABouns(o orm.Ormer, user_id string) (float64, error) {
-	coins := []float64{}
-	user_current_layer := []models.User{}
+	coins := make([]float64, 0)
+	user_current_layer := make([]models.User, 0)
 	// 团队收益　开始
 	o.QueryTable("user").Filter("father_id", user_id).All(&user_current_layer)
 	if len(user_current_layer) > 0 {

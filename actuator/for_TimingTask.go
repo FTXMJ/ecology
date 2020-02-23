@@ -13,7 +13,7 @@ import (
 
 // 定时获取 交易行情
 func Second5s() {
-	symbols := []Symbol{}
+	symbols := make([]Symbol, 0)
 	s1 := Symbol{
 		BaseCurrency:  "TFOR",
 		QuoteCurrency: "USDT",
@@ -150,7 +150,7 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data_r) error {
 	var err error
 	price, _ := strconv.ParseFloat(value.Date[0].C, 64)
-	a := []models.WtQuote{}
+	a := make([]models.WtQuote, 0)
 	b := models.WtQuote{}
 	o.Raw("select * from wt_quote where code=?", symbol).QueryRow(&b)
 	o.Raw("select * from wt_quote", symbol).QueryRows(&a)
