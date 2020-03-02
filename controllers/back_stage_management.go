@@ -1259,7 +1259,7 @@ func (this *BackStageManagement) ShowGroupByType() {
 
 	m := make(map[string][]models.DappTable)
 
-	o.Raw("select * from dapp_table").QueryRows(&list)
+	o.Raw("select * from dapp_table where state = ?", true).QueryRows(&list)
 
 	for _, v := range list {
 		m[v.AgreementType] = append(m[v.AgreementType], v)
