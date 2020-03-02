@@ -32,7 +32,7 @@ type Symbol struct {
 }
 
 type ping struct {
-	T  string `json:"t"`
+	T  int    `json:"t"`
 	S  string `json:"s"`
 	C  string `json:"c"`
 	H  string `json:"h"`
@@ -224,7 +224,7 @@ func GetTeams(user models.User) ([]string, error) {
 	} else if values.Code != 200 {
 		return values.Data, errors.New(values.Msg)
 	}
-	users := []string{}
+	users := make([]string, 0)
 	for _, v := range values.Data {
 		users = append(users, v)
 	}

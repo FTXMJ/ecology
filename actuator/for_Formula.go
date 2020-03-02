@@ -3,7 +3,6 @@ package actuator
 import (
 	db "ecology/db"
 	"ecology/models"
-
 	"github.com/astaxie/beego/orm"
 
 	"errors"
@@ -35,7 +34,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 	if level == "代言人" {
 		var u_ser models.User
 		o.QueryTable("user").Filter("user_id", user_id).One(&u_ser)
-		var u_sers []models.User
+		var u_sers = make([]models.User, 0)
 		o.QueryTable("user").Filter("father_id", u_ser.FatherId).All(&u_sers)
 		count := 0
 		if len(u_sers) < 1 {
@@ -55,7 +54,7 @@ func JudgeLevelFor_wh_mx(o orm.Ormer, user_id, level string) error {
 	} else if level == "网红" {
 		var u_ser models.User
 		o.QueryTable("user").Filter("user_id", user_id).One(&u_ser)
-		var u_sers []models.User
+		var u_sers = make([]models.User, 0)
 		o.QueryTable("user").Filter("father_id", u_ser.FatherId).All(&u_sers)
 		count := 0
 		if len(u_sers) < 1 {
@@ -130,8 +129,8 @@ func UpdateLevel(o orm.Ormer, father_account_id, level string) error {
 func PanDuanLevel(user_id, level string) bool {
 	if level == "侯爵" || level == "公爵" {
 		o := db.NewEcologyOrm()
-		sun_users := []models.User{}
-		sun_accounts := []models.Account{}
+		sun_users := make([]models.User, 0)
+		sun_accounts := make([]models.Account, 0)
 		o.Raw("select * from user where father_id=?", user_id).QueryRows(&sun_users)
 		for _, v := range sun_users {
 			sun_account := models.Account{}
@@ -177,7 +176,7 @@ func PanDuanLevel(user_id, level string) bool {
 
 // 返回超级节点的等级
 func ReturnSuperPeerLevel(user_id string) (time, level string, tfor float64, err error) {
-	s_f_t := []models.SuperForceTable{}
+	s_f_t := make([]models.SuperForceTable, 0)
 	db.NewEcologyOrm().QueryTable("super_force_table").All(&s_f_t)
 	up_time, tfor_number, err_tfor := PingSelectTforNumber(user_id)
 	if err_tfor != nil {
@@ -191,7 +190,7 @@ func ReturnSuperPeerLevel(user_id string) (time, level string, tfor float64, err
 			}
 		}
 	}
-	index := []int{}
+	index := make([]int, 0)
 	for i, v := range s_f_t {
 		if tfor_number >= float64(v.CoinNumberRule) {
 			index = append(index, i)

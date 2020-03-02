@@ -26,7 +26,7 @@ func SelectDAPP(o orm.Ormer, dapp_name, dapp_id, dapp_type string, page *models.
 
 	} else if start > len(dapp_list) {
 
-		return []models.DappTable{}, nil
+		return make([]models.DappTable, 0), nil
 
 	} else if end < len(dapp_list) && start < len(dapp_list) {
 
