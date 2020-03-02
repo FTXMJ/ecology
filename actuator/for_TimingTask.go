@@ -42,6 +42,23 @@ func Second5s() {
 
 }
 
+type TimingOrm struct {
+	EcologyConn orm.Ormer
+	WalletConn  orm.Ormer
+	UpdateTime  int64
+}
+
+var timing_orm TimingOrm
+
+func UpdateTimingOrm() {
+	o_ec := db.NewEcologyOrm()
+	o_wa := db.NewWalletOrm()
+	u_t := time.Now().Unix()
+	timing_orm.UpdateTime = u_t
+	timing_orm.EcologyConn = o_ec
+	timing_orm.WalletConn = o_wa
+}
+
 func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
 	value, err := GetQuote(baseCurrency, quoteCurrency)
 	if value.Code == 0 || len(value.Date) == 0 {
@@ -49,8 +66,11 @@ func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
 	}
 
 	//   更新 本地 数据
-	o_ec := db.NewEcologyOrm()
-	o_wa := db.NewWalletOrm()
+	if timing_orm.UpdateTime+3600 <= time.Now().Unix() || timing_orm.UpdateTime < 1 || timing_orm.EcologyConn == nil || timing_orm.WalletConn == nil {
+		UpdateTimingOrm()
+	}
+	o_ec := timing_orm.EcologyConn
+	o_wa := timing_orm.WalletConn
 	o_ec.Begin()
 	o_wa.Begin()
 	state := "成功"
