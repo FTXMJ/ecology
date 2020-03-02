@@ -14,10 +14,10 @@ import (
 
 //用户表
 type User struct {
-	Id       int    `orm:"column(id);pk;auto"`
-	UserId   string `orm:"column(user_id)"`   //对应 monggodb 的user_id
-	FatherId string `orm:"column(father_id)"` //父亲id
-	UserName string `orm:"column(user_name)"` //父亲id
+	Id       int    `gorm:"column:id;primary_key" json:"id"`
+	UserId   string `gorm:"column:user_id" json:"user_id"`     //对应 monggodb 的user_id
+	FatherId string `gorm:"column:father_id" json:"father_id"` //父亲id
+	UserName string `gorm:"column:user_name" json:"user_name"` //父亲id
 }
 
 type Response struct {

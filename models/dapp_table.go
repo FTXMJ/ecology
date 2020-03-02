@@ -1,15 +1,15 @@
 package models
 
 type DappTable struct {
-	Id              int    `orm:"column(id);pk;auto"  json:"id"`
-	Name            string `orm:"column(name)" json:"name"`                         //  名字
-	AgreementType   string `orm:"column(agreement_type)" json:"agreement_type"`     // DAPP类型
-	State           bool   `orm:"column(state)" json:"state"`                       // 状态  禁用 -- 启用
-	TheLinkAddress  string `orm:"column(the_link_address)" json:"the_link_address"` //链接地址
-	ContractAddress string `orm:"column(contract_address)" json:"contract_address"` //链接地址
-	Image           string `orm:"column(image)" json:"image"`                       //图片链接
-	CreateTime      string `orm:"column(create_time)" json:"create_time"`           //创建时间
-	UpdateTime      string `orm:"column(update_time)" json:"update_time"`           //更新时间
+	Id              int    `gorm:"column:id;primary_key" json:"id"`
+	Name            string `gorm:"column:name" json:"name"`                         //  名字
+	AgreementType   string `gorm:"column:agreement_type" json:"agreement_type"`     // DAPP类型
+	State           bool   `gorm:"column:state" json:"state"`                       // 状态  禁用 -- 启用
+	TheLinkAddress  string `gorm:"column:the_link_address" json:"the_link_address"` //链接地址
+	ContractAddress string `gorm:"column:contract_address" json:"contract_address"` //链接地址
+	Image           string `gorm:"column:image" json:"image"`                       //图片链接
+	CreateTime      string `gorm:"column:create_time" json:"create_time"`           //创建时间
+	UpdateTime      string `gorm:"column:update_time" json:"update_time"`           //更新时间
 }
 
 // user ecology information

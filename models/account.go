@@ -2,17 +2,17 @@ package models
 
 //生态钱包
 type Account struct {
-	Id             int     `orm:"column(id);pk;auto"`
-	UserId         string  `orm:"column(user_id)"`         //用户 Id
-	Balance        float64 `orm:"column(balance)"`         //充值交易结余
-	Currency       string  `orm:"column(currency)"`        //货币  USDD
-	BockedBalance  float64 `orm:"column(bocked_balance)"`  //铸币交易结余
-	Level          string  `orm:"column(level)"`           //等级
-	CreateDate     string  `orm:"column(create_date)"`     // 创建时间
-	DynamicRevenue bool    `orm:"column(dynamic_revenue)"` //动态收益开关
-	StaticReturn   bool    `orm:"column(static_return)"`   //静态收益开关
-	PeerState      bool    `orm:"column(peer_state)"`
-	UpdateDate     string  `orm:"column(update_date)"` //静态收益开关
+	Id             int     `gorm:"column:id;primary_key"`
+	UserId         string  `gorm:"column:user_id"`         //用户 Id
+	Balance        float64 `gorm:"column:balance"`         //充值交易结余
+	Currency       string  `gorm:"column:currency"`        //货币  USDD
+	BockedBalance  float64 `gorm:"column:bocked_balance"`  //铸币交易结余
+	Level          string  `gorm:"column:level"`           //等级
+	CreateDate     string  `gorm:"column:create_date"`     // 创建时间
+	DynamicRevenue bool    `gorm:"column:dynamic_revenue"` //动态收益开关
+	StaticReturn   bool    `gorm:"column:static_return"`   //静态收益开关
+	PeerState      bool    `gorm:"column:peer_state"`
+	UpdateDate     string  `gorm:"column:update_date"` //静态收益开关
 }
 
 // 生态首页展示

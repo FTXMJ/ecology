@@ -5,12 +5,12 @@ import (
 )
 
 type WtQuote struct {
-	Id            int       `orm:"column(id);pk;auto"`
-	CreatedAt     time.Time `orm:"column(created_at)"`
-	UpdatedAt     time.Time `orm:"column(updated_at)"`
-	DeletedAt     time.Time `orm:"column(deleted_at)"`
-	Code          string    `orm:"column(code)"`
-	BaseCurrency  string    `orm:"column(base_currency)"`
-	QuoteCurrency string    `orm:"column(quote_currency)"`
-	Price         float64   `orm:"column(price)"`
+	Id            int       `gorm:"column:id;primary_key" json:"id"`
+	CreatedAt     time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"column:updated_at" json:"updated_at"`
+	DeletedAt     time.Time `gorm:"column:deleted_at" json:"deleted_at"`
+	Code          string    `gorm:"column:code" json:"code"`
+	BaseCurrency  string    `gorm:"column:base_currency" json:"base_currency"`
+	QuoteCurrency string    `gorm:"column:quote_currency" json:"quote_currency"`
+	Price         float64   `gorm:"column:price" json:"price"`
 }
