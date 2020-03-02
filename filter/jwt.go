@@ -2,8 +2,8 @@ package filter
 
 import (
 	"ecology/models"
+	"github.com/gin-gonic/gin"
 
-	"github.com/astaxie/beego/context"
 	"github.com/dgrijalva/jwt-go"
 
 	"errors"
@@ -36,7 +36,7 @@ type JWT struct {
 }
 
 // 获取jst里面的value
-func GetJwtValues(ctx *context.Context) *CustomClaims {
+func GetJwtValues(ctx *gin.Context) *CustomClaims {
 	token := ctx.Request.Header.Get("Authorization")
 	j := NewJWT()
 	// parseToken 解析token包含的信息

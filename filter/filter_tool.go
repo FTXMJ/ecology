@@ -3,8 +3,7 @@ package filter
 import (
 	db "ecology/db"
 	"ecology/models"
-
-	"github.com/astaxie/beego/context"
+	"github.com/gin-gonic/gin"
 
 	"time"
 )
@@ -26,22 +25,19 @@ func ApiClassification(api string) string {
 }
 
 // 普通用户的 过滤器处理规则
-func UserFilter(ctx *context.Context, api string) {
+func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomClaims) {
 	token := ctx.Request.Header.Get("Authorization")
 	if token == "" {
-		ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
-		return
+		return 401, "未经允许的访问，已拦截！", nil
 	}
 	j := NewJWT()
 	// parseToken 解析token包含的信息
 	tockken, err := j.ParseToken(token)
 	if err != nil {
 		if err == TokenExpired {
-			ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截R！"}`)
-			return
+			return 401, "未经允许的访问，已拦截！", tockken
 		}
-		ctx.WriteString(`{"code": "401","msg": "数据格式不正确"}`)
-		return
+		return 401, "数据格式不正确", tockken
 	}
 	o := db.NewEcologyOrm()
 	u := models.User{
@@ -49,16 +45,14 @@ func UserFilter(ctx *context.Context, api string) {
 	}
 	_, nicke_name, err_ping_user := models.PingUserAdmin(token, tockken.UserID)
 	if err_ping_user != nil {
-		ctx.WriteString(`{"code": "500","msg": "` + err_ping_user.Error() + `"}`)
-		return
+		return 500, err_ping_user.Error(), tockken
 	}
 	err_read := o.Read(&u, "user_id")
 	if err_read != nil && err_read.Error() == "<QuerySeter> no row found" && tockken.NameSpace == "" {
 		o.Begin()
 		f, _, err_get_user := models.PingUser(token, tockken.UserID)
 		if err_get_user != nil {
-			ctx.WriteString(`{"code": "500","msg": "用户不存在!"}`)
-			return
+			return 500, "用户不存在!", tockken
 		}
 		user := models.User{}
 		if f.(string) != "" {
@@ -73,8 +67,7 @@ func UserFilter(ctx *context.Context, api string) {
 		_, erruser := o.Insert(&user)
 		if erruser != nil {
 			o.Rollback()
-			ctx.WriteString(`{"code": "500","msg": "创建用户失败!"}`)
-			return
+			return 500, "创建用户失败!", tockken
 		}
 		account_def := models.Account{
 			UserId:         tockken.UserID,
@@ -86,8 +79,7 @@ func UserFilter(ctx *context.Context, api string) {
 		_, account_def_err := o.Insert(&account_def)
 		if account_def_err != nil {
 			o.Rollback()
-			ctx.WriteString(`{"code": "500","msg": "创建生态仓库失败!"}`)
-			return
+			return 500, "创建生态仓库失败!", tockken
 		}
 		formula := models.Formula{
 			EcologyId:      account_def.Id,
@@ -96,8 +88,7 @@ func UserFilter(ctx *context.Context, api string) {
 		_, err_for := o.Insert(&formula)
 		if err_for != nil {
 			o.Rollback()
-			ctx.WriteString(`{"code": "500","msg": "创建算力表失败"}`)
-			return
+			return 500, "创建算力表失败!", tockken
 		}
 		o.Commit()
 	} else if err_read == nil && u.UserName != nicke_name.(string) && tockken.NameSpace == "" {
@@ -106,18 +97,17 @@ func UserFilter(ctx *context.Context, api string) {
 		o.Update(&u, "user_name")
 		o.Commit()
 	} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
-		ctx.WriteString(`{"code": "500","msg": "后端服务期错误"}`)
-		return
+		return 500, "后端服务期错误!", tockken
 	}
+	return 0, "", tockken
 }
 
 // 管理员用户的 过滤器处理规则
-func AdminFilter(ctx *context.Context, api string) {
+func AdminFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomClaims) {
 	token := ctx.Request.Header.Get("Authorization")
 
 	if token == "" {
-		ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
-		return
+		return 401, "未经允许的访问，已拦截！", nil
 	}
 
 	j := NewJWT()
@@ -125,18 +115,15 @@ func AdminFilter(ctx *context.Context, api string) {
 	tockken, err := j.ParseToken(token)
 	if err != nil {
 		if err == TokenExpired {
-			ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
-			return
+			return 401, "未经允许的访问，已拦截！", tockken
 		}
-		ctx.WriteString(`{"code": "401","msg": "数据格式不正确"}`)
-		return
+		return 401, "数据格式不正确", tockken
 	} else if tockken.NameSpace != "admin" {
-		ctx.WriteString(`{"code": "401","msg": "未经允许的访问，已拦截！"}`)
-		return
+		return 401, "未经允许的访问，已拦截！", tockken
 	}
 	_, _, err_ping_user := models.PingUserAdmin(token, tockken.UserID)
 	if err_ping_user != nil {
-		ctx.WriteString(`{"code": "500","msg": "` + err_ping_user.Error() + `"}`)
-		return
+		return 500, err_ping_user.Error(), tockken
 	}
+	return 0, "", tockken
 }

@@ -1,24 +1,32 @@
 package filter
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
+	"github.com/gin-gonic/gin"
 )
 
-func init() {
-	//拦截器验证登录
-	beego.InsertFilter("/*", beego.BeforeExec, CheckLogin)
-}
+//拦截器
+func HTTPInterceptor() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		api := c.Request.URL.Path
+		identity := ApiClassification(api)
+		var (
+			code   int
+			msg    string
+			claims *CustomClaims
+		)
+		switch identity {
+		case "admin":
+			code, msg, claims = AdminFilter(c, api)
+		case "user":
+			code, msg, claims = UserFilter(c, api)
+		}
 
-//验证登录
-func CheckLogin(ctx *context.Context) {
-	api := ctx.Request.URL.Path
-	identity := ApiClassification(api)
-	switch identity {
-	case "admin":
-		AdminFilter(ctx, api)
-	case "user":
-		UserFilter(ctx, api)
-	default:
+		if code != 0 {
+			c.JSON(code, msg)
+			c.Abort()
+			return
+		}
+		// 继续交由下一个路由处理,并将解析出的信息传递下去
+		c.Set("claims", claims)
 	}
 }

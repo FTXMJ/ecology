@@ -9,22 +9,22 @@ import (
 )
 
 // 数据库链接实例
-var Db_ecology orm.Ormer
-var Db_wallet orm.Ormer
+var Db_ecology1 orm.Ormer
+var Db_wallet1 orm.Ormer
 
 // 全网收入参数
-var NetIncome float64
+var NetIncome1 float64
 
 func NewEcologyOrm() orm.Ormer {
-	Db_ecology = orm.NewOrm()
-	Db_ecology.Using("default")
-	return Db_ecology
+	Db_ecology1 = orm.NewOrm()
+	Db_ecology1.Using("default")
+	return Db_ecology1
 }
 
 func NewWalletOrm() orm.Ormer {
-	Db_wallet = orm.NewOrm()
-	Db_wallet.Using("wallet")
-	return Db_wallet
+	Db_wallet1 = orm.NewOrm()
+	Db_wallet1.Using("wallet")
+	return Db_wallet1
 }
 
 func init() {
@@ -55,12 +55,12 @@ func init() {
 	if err := orm.RegisterDataBase("default", "mysql", ds_ecology, 100, 200); err != nil {
 		beego.Emergency("Can't register db, err :", err)
 	}
-	Db_ecology = orm.NewOrm()
-	Db_ecology.Using("default")
+	Db_ecology1 = orm.NewOrm()
+	Db_ecology1.Using("default")
 
 	if err := orm.RegisterDataBase("wallet", "mysql", ds_wallet, 60, 100); err != nil {
 		beego.Emergency("Can't register db, err :", err)
 	}
-	Db_wallet = orm.NewOrm()
-	Db_wallet.Using("wallet")
+	Db_wallet1 = orm.NewOrm()
+	Db_wallet1.Using("wallet")
 }

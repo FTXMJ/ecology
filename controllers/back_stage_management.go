@@ -7,7 +7,7 @@ import (
 	"ecology/filter"
 	"ecology/logs"
 	"ecology/models"
-	"github.com/astaxie/beego"
+	"github.com/gin-gonic/gin"
 
 	"errors"
 	"strconv"
@@ -16,24 +16,20 @@ import (
 )
 
 // 后台管理
-type BackStageManagement struct {
-	beego.Controller
-}
 
 // @Tags 算力表显示   后台操作　or 用户查看　都可
 // @Accept  json
 // @Produce json
 // @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
 // @router /show_formula_list [GET]
-func (this *BackStageManagement) ShowFormulaList() {
+func ShowFormulaList(c *gin.Context) {
 	var (
 		data       *common.ResponseData
 		o          = db.NewEcologyOrm()
 		force_list = make([]models.ForceTable, 0)
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	_, err := o.QueryTable("force_table").All(&force_list)
 	if err != nil {
@@ -52,16 +48,15 @@ func (this *BackStageManagement) ShowFormulaList() {
 // @Success 200__算力表显示后台操or用户查_都可 {object} models.ForceTable_test
 // @Success 200____算力等级详情 {object} models.ForceTable_test_yq
 // @router /show_user_formula [GET]
-func (this *BackStageManagement) ShowUserFormula() {
+func ShowUserFormula(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
-	jwtValues := filter.GetJwtValues(this.Ctx)
+	jwtValues := filter.GetJwtValues(c)
 	user_id := jwtValues.UserID
 	account := models.Account{UserId: user_id}
 	o.Read(&account, "user_id")
@@ -91,22 +86,22 @@ func (this *BackStageManagement) ShowUserFormula() {
 // @Param picture_url query string true "图片url"
 // @Success 200___算力表信息修改
 // @router /admin/operation_formula_list [POST]
-func (this *BackStageManagement) OperationFormulaList() {
+func OperationFormulaList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 		err  error
 
-		force_id                  = this.GetString("force_id")
-		action                    = this.GetString("action")
-		levelstr                  = this.GetString("levelstr")
-		low_hold, _               = this.GetInt("low_hold")
-		high_hold, _              = this.GetInt("high_hold")
-		return_multiple_str       = this.GetString("return_multiple")
-		hold_return_rate_str      = this.GetString("hold_return_rate")
-		recommend_return_rate_str = this.GetString("recommend_return_rate")
-		team_return_rate_str      = this.GetString("team_return_rate")
-		picture_url               = this.GetString("picture_url")
+		force_id                  = c.GetString("force_id")
+		action                    = c.GetString("action")
+		levelstr                  = c.GetString("levelstr")
+		low_hold                  = c.GetInt("low_hold")
+		high_hold                 = c.GetInt("high_hold")
+		return_multiple_str       = c.GetString("return_multiple")
+		hold_return_rate_str      = c.GetString("hold_return_rate")
+		recommend_return_rate_str = c.GetString("recommend_return_rate")
+		team_return_rate_str      = c.GetString("team_return_rate")
+		picture_url               = c.GetString("picture_url")
 
 		return_multiple, _       = strconv.ParseFloat(return_multiple_str, 64)
 		hold_return_rate, _      = strconv.ParseFloat(hold_return_rate_str, 64)
@@ -118,9 +113,9 @@ func (this *BackStageManagement) OperationFormulaList() {
 			o.Rollback()
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	o.Begin()
 
@@ -180,15 +175,14 @@ func (this *BackStageManagement) OperationFormulaList() {
 // @Produce json
 // @Success 200__超级节点算力表显示后台操作or用户查看都可以  {object} models.SuperForceTable_test
 // @router /show_super_formula_list [GET]
-func (this *BackStageManagement) ShowSuperFormulaList() {
+func ShowSuperFormulaList(c *gin.Context) {
 	var (
 		data       *common.ResponseData
 		o          = db.NewEcologyOrm()
 		force_list = make([]models.SuperForceTable, 0)
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	o.Raw("select * from super_force_table").QueryRows(&force_list)
 	actuator.QuickSortSuperForce(force_list, 0, len(force_list)-1)
@@ -206,17 +200,17 @@ func (this *BackStageManagement) ShowSuperFormulaList() {
 // @Param force query string true "算力　　要以小数的格式返回　　如 : 15% = 0.15 "
 // @Success 200___超级节点算力表信息修改
 // @router /admin/operation_super_formula_list [POST]
-func (this *BackStageManagement) OperationSuperFormulaList() {
+func OperationSuperFormulaList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 		err  error
 
-		super_force_id  = this.GetString("super_force_id")
-		action          = this.GetString("action")
-		levelstr        = this.GetString("levelstr")
-		coin_number_str = this.GetString("coin_number")
-		force_str       = this.GetString("force")
+		super_force_id  = c.GetString("super_force_id")
+		action          = c.GetString("action")
+		levelstr        = c.GetString("levelstr")
+		coin_number_str = c.GetString("coin_number")
+		force_str       = c.GetString("force")
 
 		force, _       = strconv.ParseFloat(force_str, 64)
 		coin_number, _ = strconv.ParseFloat(coin_number_str, 64)
@@ -226,9 +220,9 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 			o.Rollback()
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -275,17 +269,16 @@ func (this *BackStageManagement) OperationSuperFormulaList() {
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
 // @router /admin/return_page_hostry_root [GET]
-func (this *BackStageManagement) ReturnPageHostryRoot() {
+func ReturnPageHostryRoot(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
+		current_page = c.GetInt("page")
+		page_size    = c.GetInt("pageSize")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	page := models.Page{
 		CurrentPage: current_page,
@@ -318,25 +311,24 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
 // @router /admin/filter_history_info [GET]
-func (this *BackStageManagement) FilterHistoryInfo() {
+func FilterHistoryInfo(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _   = this.GetInt("page")
-		page_size, _      = this.GetInt("pageSize")
-		table_name        = this.GetString("type")
-		user_id           = this.GetString("user_id")
-		user_name         = this.GetString("user_name")
-		tx_id             = this.GetString("tx_id")
-		start_time_int, _ = this.GetInt64("start_time")
-		end_time_int, _   = this.GetInt64("end_time")
-		start_time        = ""
-		end_time          = ""
+		current_page   = c.GetInt("page")
+		page_size      = c.GetInt("pageSize")
+		table_name     = c.GetString("type")
+		user_id        = c.GetString("user_id")
+		user_name      = c.GetString("user_name")
+		tx_id          = c.GetString("tx_id")
+		start_time_int = c.GetInt64("start_time")
+		end_time_int   = c.GetInt64("end_time")
+		start_time     = ""
+		end_time       = ""
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	if start_time_int == 0 || end_time_int == 0 {
@@ -392,19 +384,18 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____用户生态列表 {object} models.UEOBJList_test
 // @router /admin/user_ecology_list [GET]
-func (this *BackStageManagement) UserEcologyList() {
+func UserEcologyList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
-		user_id         = this.GetString("user_id")
-		user_name       = this.GetString("user_name")
+		current_page = c.GetInt("page")
+		page_size    = c.GetInt("pageSize")
+		user_id      = c.GetString("user_id")
+		user_name    = c.GetString("user_name")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	page := models.Page{
@@ -433,19 +424,18 @@ func (this *BackStageManagement) UserEcologyList() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____用户生态列表 {object} models.UEOBJList_test
 // @router /admin/user_ecology_false_list [GET]
-func (this *BackStageManagement) UserEcologyFalseList() {
+func UserEcologyFalseList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
-		user_id         = this.GetString("user_id")
-		user_name       = this.GetString("user_name")
+		current_page = c.GetInt("page")
+		page_size    = c.GetInt("pageSize")
+		user_id      = c.GetString("user_id")
+		user_name    = c.GetString("user_name")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	page := models.Page{
@@ -475,24 +465,23 @@ func (this *BackStageManagement) UserEcologyFalseList() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____算力流水表 {object} models.FlowList_test
 // @router /admin/computational_flow [GET]
-func (this *BackStageManagement) ComputationalFlow() {
+func ComputationalFlow(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _   = this.GetInt("page")
-		page_size, _      = this.GetInt("pageSize")
-		user_id           = this.GetString("user_id")
-		user_name         = this.GetString("user_name")
-		start_time_int, _ = this.GetInt64("start_time")
-		end_time_int, _   = this.GetInt64("end_time")
+		current_page   = c.GetInt("page")
+		page_size      = c.GetInt("pageSize")
+		user_id        = c.GetString("user_id")
+		user_name      = c.GetString("user_name")
+		start_time_int = c.GetInt64("start_time")
+		end_time_int   = c.GetInt64("end_time")
 
 		start_time = ""
 		end_time   = ""
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	if start_time_int == 0 || end_time_int == 0 {
@@ -544,25 +533,24 @@ func (this *BackStageManagement) ComputationalFlow() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____用户收益控制＿＿展示
 // @router /admin/ecological_income_control [GET]
-func (this *BackStageManagement) EcologicalIncomeControl() {
+func EcologicalIncomeControl(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _   = this.GetInt("page")
-		page_size, _      = this.GetInt("pageSize")
-		user_id           = this.GetString("user_id")
-		account_id        = this.GetString("account_id")
-		user_name         = this.GetString("user_name")
-		start_time_int, _ = this.GetInt64("start_time")
-		end_time_int, _   = this.GetInt64("end_time")
+		current_page   = c.GetInt("page")
+		page_size      = c.GetInt("pageSize")
+		user_id        = c.GetString("user_id")
+		account_id     = c.GetString("account_id")
+		user_name      = c.GetString("user_name")
+		start_time_int = c.GetInt64("start_time")
+		end_time_int   = c.GetInt64("end_time")
 
 		start_time = ""
 		end_time   = ""
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	if start_time_int == 0 || end_time_int == 0 {
@@ -608,18 +596,17 @@ func (this *BackStageManagement) EcologicalIncomeControl() {
 // @Param profit_start query string true "启用=1  禁用=2"
 // @Success 200____用户收益控制＿＿修改
 // @router /admin/ecological_income_control_update [POST]
-func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
+func EcologicalIncomeControlUpdate(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		profit_type_int, _  = this.GetInt("profit_type")
-		profit_start_int, _ = this.GetInt("profit_start")
-		strs                = this.GetString("account_id")
+		profit_type_int  = c.GetInt("profit_type")
+		profit_start_int = c.GetInt("profit_start")
+		strs             = c.GetString("account_id")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	profit_start := false
 	if profit_start_int == 1 {
@@ -668,21 +655,20 @@ func (this *BackStageManagement) EcologicalIncomeControlUpdate() {
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____节点用户列表
 // @router /admin/peer_user_list [GET]
-func (this *BackStageManagement) PeerUserList() {
+func PeerUserList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
-		user_name       = this.GetString("user_name")
+		current_page = c.GetInt("page")
+		page_size    = c.GetInt("pageSize")
+		user_name    = c.GetString("user_name")
 
 		p_u_s = []models.PeerUser{}
 		user  = []models.User{}
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	page := models.Page{
 		TotalPage:   0,
@@ -742,23 +728,22 @@ func (this *BackStageManagement) PeerUserList() {
 // @Param end_time query string true "结束时间"
 // @Success 200____节点历史记录  {object} models.PeerHistoryList_test
 // @router /admin/peer_a_bouns_list [GET]
-func (this *BackStageManagement) PeerABounsList() {
+func PeerABounsList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _   = this.GetInt("page")
-		page_size, _      = this.GetInt("pageSize")
-		start_time_int, _ = this.GetInt64("start_time")
-		end_time_int, _   = this.GetInt64("end_time")
+		current_page   = c.GetInt("page")
+		page_size      = c.GetInt("pageSize")
+		start_time_int = c.GetInt64("start_time")
+		end_time_int   = c.GetInt64("end_time")
 
 		start_time   = ""
 		end_time     = ""
 		peer_history = make([]models.PeerHistory, 0)
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	page := models.Page{
 		TotalPage:   0,
@@ -808,24 +793,23 @@ func (this *BackStageManagement) PeerABounsList() {
 // @Param end_time query string true "结束时间"
 // @Success 200____节点收益记录流水 {object} models.PeerListABouns_test
 // @router /admin/peer_a_bouns_history_list [GET]
-func (this *BackStageManagement) PeerABounsHistoryList() {
+func PeerABounsHistoryList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _   = this.GetInt("page")
-		page_size, _      = this.GetInt("pageSize")
-		user_name         = this.GetString("user_name")
-		start_time_int, _ = this.GetInt64("start_time")
-		end_time_int, _   = this.GetInt64("end_time")
-		a                 = models.PeerListABouns{}
+		current_page   = c.GetInt("page")
+		page_size      = c.GetInt("pageSize")
+		user_name      = c.GetString("user_name")
+		start_time_int = c.GetInt64("start_time")
+		end_time_int   = c.GetInt64("end_time")
+		a              = models.PeerListABouns{}
 
 		start_time = ""
 		end_time   = ""
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	page := models.Page{
 		TotalPage:   0,
@@ -859,14 +843,13 @@ func (this *BackStageManagement) PeerABounsHistoryList() {
 // @Produce json
 // @Success 200__全局状态显示
 // @router /admin/show_global_operations [GET]
-func (this *BackStageManagement) ShowGlobalOperations() {
+func ShowGlobalOperations(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	operation_list := make([]models.GlobalOperations, 0)
 	_, err := o.Raw("select * from global_operations").QueryRows(&operation_list)
@@ -885,12 +868,12 @@ func (this *BackStageManagement) ShowGlobalOperations() {
 // @Param operation_id query string true "操作_id"
 // @Success 200__全局状态修改
 // @router /admin/update_global_operations [POST]
-func (this *BackStageManagement) UpdateGlobalOperations() {
+func UpdateGlobalOperations(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		operation_id = this.GetString("operation_id")
+		operation_id = c.GetString("operation_id")
 
 		err error
 	)
@@ -899,9 +882,9 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 			o.Rollback()
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -937,23 +920,22 @@ func (this *BackStageManagement) UpdateGlobalOperations() {
 // @Param state query string true "状态　1=完成的 2=未完成的"
 // @Success 200__每日释放任务表 {object} models.MrsfTable_test
 // @router /admin/show_one_day_mrsf [GET]
-func (this *BackStageManagement) ShowOneDayMrsf() {
+func ShowOneDayMrsf(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _  = this.GetInt("page")
-		page_size, _     = this.GetInt("pageSize")
-		date_time_int, _ = this.GetInt64("date_time")
-		user_name        = this.GetString("user_name")
-		user_id          = this.GetString("user_id")
-		state_int, _     = this.GetInt("state")
+		current_page  = c.GetInt("page")
+		page_size     = c.GetInt("pageSize")
+		date_time_int = c.GetInt64("date_time")
+		user_name     = c.GetString("user_name")
+		user_id       = c.GetString("user_id")
+		state_int     = c.GetInt("state")
 
 		date_time = ""
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	page := models.Page{
 		TotalPage:   0,
@@ -991,19 +973,18 @@ func (this *BackStageManagement) ShowOneDayMrsf() {
 // @Param user_id query string true "用户id+order_id   格式－   user_id-order_id;user_id-order_id;....."
 // @Success 200__每日释放任务表
 // @router /admin/the_release_of_err_users [POST]
-func (this *BackStageManagement) TheReleaseOfErrUsers() {
+func TheReleaseOfErrUsers(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		user_id = this.GetString("user_id")
+		user_id = c.GetString("user_id")
 
 		order_id  = ""
 		user_mrsf = []string{}
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	users := strings.Split(user_id, ";")
 
@@ -1036,20 +1017,19 @@ func (this *BackStageManagement) TheReleaseOfErrUsers() {
 // @Param dapp_type query string true "类型"
 // @Success 200____展示_DAPP_列表 {object} models.DAPPListTest
 // @router /admin/show_dapp_list [GET]
-func (this *BackStageManagement) ShowDAPPList() {
+func ShowDAPPList(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
-		dapp_name       = this.GetString("dapp_name")
-		dapp_id         = this.GetString("dapp_id")
-		dapp_type       = this.GetString("dapp_type")
+		current_page = c.GetInt("page")
+		page_size    = c.GetInt("pageSize")
+		dapp_name    = c.GetString("dapp_name")
+		dapp_id      = c.GetString("dapp_id")
+		dapp_type    = c.GetString("dapp_type")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	page := models.Page{
@@ -1087,20 +1067,19 @@ func (this *BackStageManagement) ShowDAPPList() {
 // @Param dapp_type query string true "类型"
 // @Success 200____插入_DAPP
 // @router /admin/insert_dapp [POST]
-func (this *BackStageManagement) InsertDAPP() {
+func InsertDAPP(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_name             = this.GetString("dapp_name")
-		image_url             = this.GetString("image_url")
-		dapp_type             = this.GetString("dapp_type")
-		dapp_link_address     = this.GetString("dapp_link_address")
-		dapp_contract_address = this.GetString("dapp_contract_address")
+		dapp_name             = c.GetString("dapp_name")
+		image_url             = c.GetString("image_url")
+		dapp_type             = c.GetString("dapp_type")
+		dapp_link_address     = c.GetString("dapp_link_address")
+		dapp_contract_address = c.GetString("dapp_contract_address")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	o.Raw("select * from dapp_table where name=?", dapp_name)
@@ -1139,21 +1118,20 @@ func (this *BackStageManagement) InsertDAPP() {
 // @Param dapp_type query string true "类型"
 // @Success 200____更新_DAPP
 // @router /admin/update_dapp [POST]
-func (this *BackStageManagement) UpdateDAPP() {
+func UpdateDAPP(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_id, _            = this.GetInt("dapp_id")
-		dapp_name             = this.GetString("dapp_name")
-		image_url             = this.GetString("image_url")
-		dapp_type             = this.GetString("dapp_type")
-		dapp_link_address     = this.GetString("dapp_link_address")
-		dapp_contract_address = this.GetString("dapp_contract_address")
+		dapp_id               = c.GetInt("dapp_id")
+		dapp_name             = c.GetString("dapp_name")
+		image_url             = c.GetString("image_url")
+		dapp_type             = c.GetString("dapp_type")
+		dapp_link_address     = c.GetString("dapp_link_address")
+		dapp_contract_address = c.GetString("dapp_contract_address")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	_, err := o.Raw(
@@ -1180,19 +1158,18 @@ func (this *BackStageManagement) UpdateDAPP() {
 // @Param dapp_state query string true "状态 1=true(开启)  2=false(失败)"
 // @Success 200____修改状态_DAPP
 // @router /admin/update_dapp_state [POST]
-func (this *BackStageManagement) UpdateDAPPState() {
+func UpdateDAPPState(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_id, _    = this.GetInt("dapp_id")
-		dapp_state, _ = this.GetInt("dapp_state")
+		dapp_id    = c.GetInt("dapp_id")
+		dapp_state = c.GetInt("dapp_state")
 
 		state = true
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	if dapp_state == 2 {
@@ -1218,16 +1195,15 @@ func (this *BackStageManagement) UpdateDAPPState() {
 // @Param dapp_id query string true "dapp id"
 // @Success 200____删除_DAPP
 // @router /admin/delete_dapp [POST]
-func (this *BackStageManagement) DeleteDAPP() {
+func DeleteDAPP(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_id, _ = this.GetInt("dapp_id")
+		dapp_id = c.GetInt("dapp_id")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	_, err := o.Raw("delete from dapp_table where id=?", dapp_id).Exec()
@@ -1245,7 +1221,7 @@ func (this *BackStageManagement) DeleteDAPP() {
 // @Produce json
 // @Success 200____分组_展示_DAPP_列表_to_the_app {object} models.DAPPListTest
 // @router /show_group_by_type [GET]
-func (this *BackStageManagement) ShowGroupByType() {
+func ShowGroupByType(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
@@ -1253,8 +1229,7 @@ func (this *BackStageManagement) ShowGroupByType() {
 		list = []models.DappTable{}
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	m := make(map[string][]models.DappTable)

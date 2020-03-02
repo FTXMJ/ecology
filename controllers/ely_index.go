@@ -8,24 +8,19 @@ import (
 	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
-
-	"github.com/astaxie/beego"
+	"github.com/gin-gonic/gin"
 
 	"errors"
 	"strconv"
 	"time"
 )
 
-type EcologyIndexController struct {
-	beego.Controller
-}
-
 // @Tags 生态首页展示
 // @Accept  json
 // @Produce json
 // @Success 200___生态首页展示 {object} models.Ecology_index_ob_test
 // @router /show_ecology_index [GET]
-func (this *EcologyIndexController) ShowEcologyIndex() {
+func ShowEcologyIndex(c *gin.Context) {
 	var (
 		data        *common.ResponseData
 		account     = models.Account{}
@@ -33,16 +28,16 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 		err         error
 		o           = db.NewEcologyOrm()
 
-		token   = filter.GetJwtValues(this.Ctx)
+		token   = filter.GetJwtValues(c)
 		user_id = token.UserID
 	)
 	defer func() {
 		if err != nil {
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	if err = o.Raw("select * from account where user_id=?", user_id).QueryRow(&account); err != nil {
@@ -72,14 +67,14 @@ func (this *EcologyIndexController) ShowEcologyIndex() {
 // @Param levelstr query string true "等级数据"
 // @Success 200____新增生态仓库
 // @router /create_new_warehouse [POST]
-func (this *EcologyIndexController) CreateNewWarehouse() {
+func CreateNewWarehouse(c *gin.Context) {
 	var (
 		data            *common.ResponseData
 		o               = db.NewEcologyOrm()
-		coin_number_str = this.GetString("coin_number")
+		coin_number_str = c.GetString("coin_number")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
-		levelstr        = this.GetString("levelstr")
-		jwtValues       = filter.GetJwtValues(this.Ctx)
+		levelstr        = c.GetString("levelstr")
+		jwtValues       = filter.GetJwtValues(c)
 		user_id         = jwtValues.UserID
 		err             error
 	)
@@ -89,9 +84,9 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 			o.Rollback()
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "数据库操作失败!", nil)
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -131,7 +126,7 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 	}
 	o.Commit()
 
-	token := this.Ctx.Request.Header.Get("Authorization")
+	token := c.Request.Header.Get("Authorization")
 	if err = actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
@@ -160,15 +155,15 @@ func (this *EcologyIndexController) CreateNewWarehouse() {
 // @Param coin_number query string true "铸(发)币的数量"
 // @Success 200___转USDD到生态仓库
 // @router /to_change_into_USDD [POST]
-func (this *EcologyIndexController) ToChangeIntoUSDD() {
+func ToChangeIntoUSDD(c *gin.Context) {
 	var (
 		data            *common.ResponseData
 		o               = db.NewEcologyOrm()
-		coin_number_str = this.GetString("coin_number")
-		order_id        = this.GetString("order_id")
+		coin_number_str = c.GetString("coin_number")
+		order_id        = c.GetString("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
-		ecology_id, _   = this.GetInt("ecology_id")
-		jwtValues       = filter.GetJwtValues(this.Ctx)
+		ecology_id      = c.GetInt("ecology_id")
+		jwtValues       = filter.GetJwtValues(c)
 		user_id         = jwtValues.UserID
 		err             error
 	)
@@ -177,9 +172,9 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 			o.Rollback()
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -215,7 +210,7 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 	}
 	o.Commit()
 
-	token := this.Ctx.Request.Header.Get("Authorization")
+	token := c.Request.Header.Get("Authorization")
 	if err = actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
@@ -253,16 +248,16 @@ func (this *EcologyIndexController) ToChangeIntoUSDD() {
 // @Param levelstr query string true "升级后的等级"
 // @Success 200____升级生态仓库
 // @router /upgrade_warehouse [POST]
-func (this *EcologyIndexController) UpgradeWarehouse() {
+func UpgradeWarehouse(c *gin.Context) {
 	var (
 		data            *common.ResponseData
 		o               = db.NewEcologyOrm()
-		coin_number_str = this.GetString("cion_number")
-		order_id        = this.GetString("order_id")
+		coin_number_str = c.GetString("cion_number")
+		order_id        = c.GetString("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
-		ecology_id, _   = this.GetInt("ecology_id")
-		levelstr        = this.GetString("levelstr")
-		jwtValues       = filter.GetJwtValues(this.Ctx)
+		ecology_id      = c.GetInt("ecology_id")
+		levelstr        = c.GetString("levelstr")
+		jwtValues       = filter.GetJwtValues(c)
 		user_id         = jwtValues.UserID
 		err             error
 	)
@@ -272,9 +267,9 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 			o.Rollback()
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
+			c.JSON(200, data)
 		}
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -323,7 +318,7 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 	o.Commit()
 
 	//钱包操作
-	token := this.Ctx.Request.Header.Get("Authorization")
+	token := c.Request.Header.Get("Authorization")
 	if err := actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
@@ -369,16 +364,15 @@ func (this *EcologyIndexController) UpgradeWarehouse() {
 // @Param pageSize query string true "分页信息　－　每页数据量"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
 // @router /return_page_list_hostry [GET]
-func (this *EcologyIndexController) ReturnPageListHostry() {
+func ReturnPageListHostry(c *gin.Context) {
 	var (
-		data            *common.ResponseData
-		ecology_id, _   = this.GetInt("ecology_id")
-		current_page, _ = this.GetInt("page")
-		page_size, _    = this.GetInt("pageSize")
+		data         *common.ResponseData
+		ecology_id   = c.GetInt("ecology_id")
+		current_page = c.GetInt("page")
+		page_size    = c.GetInt("pageSize")
 	)
 	defer func() {
-		this.Data["json"] = data
-		this.ServeJSON()
+		c.JSON(200, data)
 	}()
 	page := models.Page{
 		CurrentPage: current_page,

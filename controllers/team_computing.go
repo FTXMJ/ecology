@@ -5,17 +5,13 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"ecology/utils"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"github.com/gin-gonic/gin"
 
 	"errors"
 	"strconv"
 	"time"
 )
-
-type Test struct {
-	beego.Controller
-}
 
 // 用户每日任务数值列表
 type UserDayTx struct {
@@ -43,7 +39,7 @@ type info struct {
 // @Produce json
 // @Success 200
 // @router /admin/test_mrsf [GET]
-func (this *Test) DailyDividendAndReleaseTest() {
+func DailyDividendAndReleaseTest(c *gin.Context) {
 	o := db.NewEcologyOrm()
 	user := []models.User{}
 	o.QueryTable("user").All(&user)
