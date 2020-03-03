@@ -4,6 +4,7 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"errors"
+	"github.com/jinzhu/gorm"
 
 	"github.com/astaxie/beego/orm"
 
@@ -128,13 +129,14 @@ func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64,
 }
 
 // 查看用户有史以来所有的收益
-func AddAllSum(o orm.Ormer, user_id string) float64 {
-	var blos orm.ParamsList
-	o.Raw("select sum(current_outlay) from blocked_detail where user_id=? and comment!=?", user_id, "直推收益").ValuesFlat(&blos)
+func AddAllSum(o *gorm.DB, user_id string) float64 {
+	var blos []models.BlockedDetail
+	o.Raw("select * from blocked_detail where user_id=? and comment!=?", user_id, "直推收益").Find(&blos)
 	var zhitui float64
-	if len(blos) > 0 && blos[0] != nil {
-		z, _ := strconv.ParseFloat(blos[0].(string), 64)
-		zhitui = z
+	if len(blos) > 0 {
+		for _, v := range blos {
+			zhitui += v.CurrentRevenue
+		}
 	}
 	return zhitui
 }

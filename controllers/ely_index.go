@@ -41,7 +41,8 @@ func ShowEcologyIndex(c *gin.Context) {
 		}
 	}()
 
-	if err = o.Raw("select * from account where user_id=?", user_id).QueryRow(&account); err != nil {
+	if er := o.Raw("select * from account where user_id=?", user_id).Find(&account); er.Error != nil {
+		err = er.Error
 		return
 	}
 
@@ -107,7 +108,8 @@ func CreateNewWarehouse(c *gin.Context) {
 		return
 	}
 	formula.EcologyId = account.Id
-	if _, err = o.Insert(&formula.EcologyId); err != nil {
+	if er := o.Create(&formula); er.Error != nil {
+		err = er.Error
 		return
 	}
 
@@ -122,7 +124,8 @@ func CreateNewWarehouse(c *gin.Context) {
 		Expenditure: 0,
 		InCome:      coin_number,
 	}
-	if _, err = o.Insert(&acc_txid_dcmt); err != nil {
+	if er := o.Create(&acc_txid_dcmt); er.Error != nil {
+		err = er.Error
 		return
 	}
 	o.Commit()

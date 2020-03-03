@@ -2,6 +2,7 @@ package actuator
 
 import (
 	"ecology/models"
+	"github.com/jinzhu/gorm"
 
 	"github.com/astaxie/beego/orm"
 
@@ -47,7 +48,7 @@ func FindLimitOneAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money
 }
 
 // 创建第一条充值表的借贷记录
-func NewCreateAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
+func NewCreateAndSaveAcc_d(o *gorm.DB, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
 	account_new := models.AccountDetail{
 		UserId:         user_id,
 		CurrentRevenue: money_in,
@@ -61,14 +62,14 @@ func NewCreateAndSaveAcc_d(o orm.Ormer, user_id, comment, tx_id string, money_ou
 		CoinType:       "USDD",
 	}
 
-	_, err_acc := o.Insert(&account_new)
-	if err_acc != nil {
-		return err_acc
+	err_acc := o.Create(&account_new)
+	if err_acc.Error != nil {
+		return err_acc.Error
 	}
 
-	_, err_up := o.Raw("update account set balance=? where id=?", account_new.CurrentBalance, account_id).Exec()
-	if err_up != nil {
-		return err_acc
+	err_up := o.Model(&models.Account{}).Where("id = ?", account_id).Update("balance", account_new.CurrentBalance)
+	if err_up.Error != nil {
+		return err_acc.Error
 	}
 	return nil
 }

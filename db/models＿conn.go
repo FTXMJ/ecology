@@ -18,11 +18,11 @@ var (
 	NetIncome float64
 )
 
-func NewEcologyOrm1() *gorm.DB {
+func NewEcologyOrm() *gorm.DB {
 	return db_ecology.New()
 }
 
-func NewWalletOrm1() *gorm.DB {
+func NewWalletOrm() *gorm.DB {
 	return db_wallet.New()
 }
 

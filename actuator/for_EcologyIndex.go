@@ -3,13 +3,14 @@ package actuator
 import (
 	"ecology/logs"
 	"ecology/models"
+	"github.com/jinzhu/gorm"
 
 	"github.com/astaxie/beego/orm"
 
 	"time"
 )
 
-func TheWheel(o orm.Ormer, user_id string, acc models.Account, index *models.Ecology_index_obj) error {
+func TheWheel(o *gorm.DB, user_id string, acc models.Account, index *models.Ecology_index_obj) error {
 	formula_index := models.Formula{EcologyId: acc.Id}
 	errfor := o.Read(&formula_index, "ecology_id")
 	if errfor != nil {

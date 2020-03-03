@@ -4,6 +4,7 @@ import (
 	"ecology/logs"
 	"ecology/models"
 	"ecology/utils"
+	"github.com/jinzhu/gorm"
 
 	"github.com/astaxie/beego/orm"
 
@@ -62,9 +63,9 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 }
 
 // 创建第一条借贷记录
-func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
-	for_mula := models.Formula{EcologyId: account_id}
-	o.Read(&for_mula, "ecology_id")
+func NewCreateAndSaveBlo_d(o *gorm.DB, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
+	for_mula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account_id).First(&for_mula)
 
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
@@ -78,26 +79,26 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 		Account:        account_id,
 		CoinType:       "USDD",
 	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
-		return err
+	err := o.Create(&blocked_new)
+	if err.Error != nil {
+		return err.Error
 	}
 
 	// 更新任务完成状态
-	_, err_txid := o.Raw("update tx_id_list set order_state=? where tx_id=?", true, tx_id).Exec()
-	if err_txid != nil {
-		return err_txid
+	err_txid := o.Model(&models.TxIdList{}).Where("tx_id = ?", tx_id).Update("order_state", true)
+	if err_txid.Error != nil {
+		return err_txid.Error
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account_id).Exec()
-	if err_up != nil {
-		return err_up
+	err_up := o.Model(&models.Account{}).Where("id = ?", account_id).Update("bocked_balance", blocked_new.CurrentBalance)
+	if err_up.Error != nil {
+		return err_up.Error
 	}
 
 	//  直推收益
 	user := models.User{UserId: user_id}
-	o.Read(&user, "user_id")
+	o.Table("user").Where("user_id = ?", user_id).First(&user)
 	if user.FatherId != "" && coin_in > 10 {
 		errrr := ForAddCoin(o, user.FatherId, coin_in, 0.1)
 		if errrr != nil {
@@ -108,12 +109,12 @@ func NewCreateAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out
 }
 
 //　把所有算力的值加起来  -- 更新静态｀动态的验证          bo 是是否调过　钱包的增加接口
-func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64) error {
-	user := models.User{UserId: father_id}
-	o.Read(&user, "user_id")
+func ForAddCoin(o *gorm.DB, father_id string, coin float64, proportion float64) error {
+	user := models.User{}
+	o.Table("user").Where("user_id = ?", father_id).First(&user)
 
-	account := models.Account{UserId: father_id}
-	o.Read(&account, "user_id")
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", father_id).First(&account)
 
 	//任务表 USDD  铸币记录
 	order_id := utils.TimeUUID()
@@ -127,14 +128,14 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 		Expenditure: (coin * proportion),
 		InCome:      0,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		logs.Log.Error("直推算力累加错误", errtxid_blo)
-		return errtxid_blo
+	errtxid_blo := o.Create(&blo_txid_dcmt)
+	if errtxid_blo.Error != nil {
+		logs.Log.Error("直推算力累加错误", errtxid_blo.Error)
+		return errtxid_blo.Error
 	}
 
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user.UserId, account.Id).QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user.UserId, account.Id).First(&blocked_old)
 
 	blocked_new := models.BlockedDetail{
 		UserId:         father_id,
@@ -152,8 +153,8 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
+	err := o.Create(&blocked_new)
+	if err.Error != nil {
 		ForAddCoin(o, father_id, coin, proportion)
 	} else if coin*proportion*proportion >= 1 && user.FatherId != "" {
 		ForAddCoin(o, user.FatherId, (coin * proportion), proportion)

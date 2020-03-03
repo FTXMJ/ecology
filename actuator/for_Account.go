@@ -3,8 +3,7 @@ package actuator
 import (
 	"ecology/common"
 	"ecology/models"
-
-	"github.com/astaxie/beego/orm"
+	"github.com/jinzhu/gorm"
 
 	"encoding/json"
 	"errors"
@@ -48,9 +47,9 @@ func SendHttpPost(urls string, api string, data map[string]string, token string)
 }
 
 // 判断是否达到超级节点的要求 --- 页面显示
-func SuperLevelSet(o orm.Ormer, user_id string, ec_obj *models.Ecology_index_obj, tfor float64) {
+func SuperLevelSet(o *gorm.DB, user_id string, ec_obj *models.Ecology_index_obj, tfor float64) {
 	s_f_t := make([]models.SuperForceTable, 0)
-	o.QueryTable("super_force_table").All(&s_f_t)
+	o.Table("super_force_table").Find(&s_f_t)
 
 	for i := 0; i < len(s_f_t); i++ {
 		for j := 1; j < len(s_f_t)-i-1; j++ {
@@ -68,7 +67,7 @@ func SuperLevelSet(o orm.Ormer, user_id string, ec_obj *models.Ecology_index_obj
 	blo := models.TxIdList{}
 	start_time := time.Now().Format("2006-01-02") + " 00:00:00"
 	end_time := time.Now().Format("2006-01-02") + " 59:59:59"
-	o.Raw("select * from tx_id_list where user_id=? and comment=? and create_time>=? and create_time<=? order by create_time desc limit 1", user_id, "节点分红", start_time, end_time).QueryRow(&blo)
+	o.Raw("select * from tx_id_list where user_id=? and comment=? and create_time>=? and create_time<=? order by create_time desc limit 1", user_id, "节点分红", start_time, end_time).Find(&blo)
 	if blo.Id < 1 {
 		blo.Expenditure = 0
 	}

@@ -4,18 +4,18 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"github.com/astaxie/beego/orm"
+	"github.com/jinzhu/gorm"
 
 	"errors"
 )
 
 // 根据等级 进行算力的更新
-func JudgeLevel(o orm.Ormer, user_id, level string, formula *models.Formula) error {
+func JudgeLevel(o *gorm.DB, user_id, level string, formula *models.Formula) error {
 	if PanDuanLevel(user_id, level) == true {
 		force := models.ForceTable{}
-		o := db.NewEcologyOrm()
-		err := o.QueryTable("force_table").Filter("level", level).One(&force)
-		if err != nil {
-			return err
+		err := o.Table("force_table").Where("level = ?", level).Find(&force)
+		if err.Error != nil {
+			return err.Error
 		}
 		formula.Level = force.Level
 		formula.LowHold = force.LowHold
