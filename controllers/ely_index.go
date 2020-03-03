@@ -36,8 +36,9 @@ func ShowEcologyIndex(c *gin.Context) {
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, "数据库操作失败!", models.Ecology_index_obj{})
 			c.JSON(200, data)
+		} else {
+			c.JSON(200, data)
 		}
-		c.JSON(200, data)
 	}()
 
 	if err = o.Raw("select * from account where user_id=?", user_id).QueryRow(&account); err != nil {
@@ -159,10 +160,11 @@ func ToChangeIntoUSDD(c *gin.Context) {
 	var (
 		data            *common.ResponseData
 		o               = db.NewEcologyOrm()
-		coin_number_str = c.GetString("coin_number")
-		order_id        = c.GetString("order_id")
+		coin_number_str = c.PostForm("coin_number")
+		order_id        = c.PostForm("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
-		ecology_id      = c.GetInt("ecology_id")
+		ecology_id_str  = c.PostForm("ecology_id")
+		ecology_id, _   = strconv.Atoi(ecology_id_str)
 		jwtValues       = filter.GetJwtValues(c)
 		user_id         = jwtValues.UserID
 		err             error
@@ -173,8 +175,9 @@ func ToChangeIntoUSDD(c *gin.Context) {
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
 			c.JSON(200, data)
+		} else {
+			c.JSON(200, data)
 		}
-		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -268,8 +271,9 @@ func UpgradeWarehouse(c *gin.Context) {
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
 			c.JSON(200, data)
+		} else {
+			c.JSON(200, data)
 		}
-		c.JSON(200, data)
 	}()
 
 	o.Begin()
