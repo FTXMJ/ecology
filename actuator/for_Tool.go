@@ -13,20 +13,20 @@ import (
 )
 
 // 根据条件  进行数据查询
-func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos []interface{}, err error) {
+func GeneratedSQLAndExec(o *gorm.DB, table_name string, p models.FindObj) (blos []interface{}, err error) {
 	err = errors.New("")
 	us := []models.User{}
 	blo := []models.BlockedDetail{}
 	acc := []models.AccountDetail{}
 	ac := []models.Account{}
 
-	q_user := o.QueryTable("user")
+	q_user := o.Table("user")
 
 	if p.UserName != "" {
-		q_user = q_user.Filter("user_name", p.UserName)
+		q_user = q_user.Where("user_name = ?", p.UserName)
 	}
 	if p.UserId != "" {
-		q_user = q_user.Filter("user_id", p.UserId)
+		q_user = q_user.Where("user_id = ?", p.UserId)
 	}
 	q_user.All(&us)
 	user_ids := []string{}
@@ -34,23 +34,23 @@ func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos
 		user_ids = append(user_ids, v.UserId)
 	}
 
-	q_blos := o.QueryTable(table_name).Filter("user_id__in", user_ids)
+	q_blos := o.Table(table_name).Where("user_id in (?)", user_ids)
 
 	if p.StartTime != "" && p.EndTime != "" {
-		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
+		q_blos = q_blos.Where("create_date >= ?", p.StartTime).Where("create_date <= ?", p.EndTime)
 	}
 	if table_name == "blocked_detail" {
-		q_blos.OrderBy("-create_date").All(&blo)
+		q_blos.Order("create_date desc").Find(&blo)
 		for _, v := range blo {
 			blos = append(blos, v)
 		}
 	} else if table_name == "account_detail" {
-		q_blos.OrderBy("-create_date").All(&acc)
+		q_blos.Order("create_date desc").Find(&acc)
 		for _, v := range acc {
 			blos = append(blos, v)
 		}
 	} else if table_name == "account" {
-		q_blos.OrderBy("-create_date").All(&ac)
+		q_blos.Order("create_date desc").Find(&ac)
 		for _, v := range ac {
 			blos = append(blos, v)
 		}

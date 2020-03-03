@@ -31,8 +31,8 @@ func ShowFormulaList(c *gin.Context) {
 	defer func() {
 		c.JSON(200, data)
 	}()
-	_, err := o.QueryTable("force_table").All(&force_list)
-	if err != nil {
+	err := o.Table("force_table").Find(&force_list)
+	if err.Error != nil {
 		logs.Log.Error(err)
 		data = common.NewErrorResponse(500, "算力数据获取失败!", []models.ForceTable{})
 		return
@@ -58,15 +58,15 @@ func ShowUserFormula(c *gin.Context) {
 	}()
 	jwtValues := filter.GetJwtValues(c)
 	user_id := jwtValues.UserID
-	account := models.Account{UserId: user_id}
-	o.Read(&account, "user_id")
-	for_mula := models.Formula{EcologyId: account.Id}
-	o.Read(&for_mula, "ecology_id")
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&account)
+	for_mula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account.Id).First(&for_mula)
 	for_mula_table := models.ForceTable{Level: for_mula.Level, ReturnMultiple: for_mula.ReturnMultiple}
 	if for_mula.Level == "" {
 		for_mula_table.ReturnMultiple = 1
 	}
-	o.Read(&for_mula_table, "return_multiple")
+	o.Table("formula_table").Where("return_multiple = ?", for_mula_table.ReturnMultiple)
 	data = common.NewResponse(for_mula_table)
 	return
 }
@@ -92,16 +92,18 @@ func OperationFormulaList(c *gin.Context) {
 		o    = db.NewEcologyOrm()
 		err  error
 
-		force_id                  = c.GetString("force_id")
-		action                    = c.GetString("action")
-		levelstr                  = c.GetString("levelstr")
-		low_hold                  = c.GetInt("low_hold")
-		high_hold                 = c.GetInt("high_hold")
-		return_multiple_str       = c.GetString("return_multiple")
-		hold_return_rate_str      = c.GetString("hold_return_rate")
-		recommend_return_rate_str = c.GetString("recommend_return_rate")
-		team_return_rate_str      = c.GetString("team_return_rate")
-		picture_url               = c.GetString("picture_url")
+		force_id                  = c.PostForm("force_id")
+		action                    = c.PostForm("action")
+		levelstr                  = c.PostForm("levelstr")
+		low_hold_int              = c.PostForm("low_hold")
+		low_hold, _               = strconv.Atoi(low_hold_int)
+		high_hold_int             = c.PostForm("high_hold")
+		high_hold, _              = strconv.Atoi(high_hold_int)
+		return_multiple_str       = c.PostForm("return_multiple")
+		hold_return_rate_str      = c.PostForm("hold_return_rate")
+		recommend_return_rate_str = c.PostForm("recommend_return_rate")
+		team_return_rate_str      = c.PostForm("team_return_rate")
+		picture_url               = c.PostForm("picture_url")
 
 		return_multiple, _       = strconv.ParseFloat(return_multiple_str, 64)
 		hold_return_rate, _      = strconv.ParseFloat(hold_return_rate_str, 64)
@@ -114,8 +116,9 @@ func OperationFormulaList(c *gin.Context) {
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
 			c.JSON(200, data)
+		} else {
+			c.JSON(200, data)
 		}
-		c.JSON(200, data)
 	}()
 	o.Begin()
 
@@ -124,25 +127,26 @@ func OperationFormulaList(c *gin.Context) {
 		id_strs := strings.Split(force_id, ",")
 		for _, v := range id_strs {
 			id, _ := strconv.Atoi(v)
-			if _, err = o.Raw("delete from force_table where id=?", id).Exec(); err != nil {
+			if er := o.Delete(&models.ForceTable{}, "id = ?", strconv.Itoa(id)); er.Error != nil {
 				err = errors.New("算力表　删除失败!")
 				return
 			}
 		}
 	case "update":
 		id, _ := strconv.Atoi(force_id)
-		force_table := models.ForceTable{
-			Id:                  id,
-			Level:               levelstr,
-			LowHold:             low_hold,
-			HighHold:            high_hold,
-			ReturnMultiple:      return_multiple,
-			HoldReturnRate:      hold_return_rate,
-			RecommendReturnRate: recommend_return_rate,
-			TeamReturnRate:      team_return_rate,
-			PictureUrl:          picture_url,
-		}
-		if _, err = o.Update(&force_table); err != nil {
+		force_table := models.ForceTable{}
+		o.Table("force_tale").Where("id = ?", id).First(&force_table)
+		force_table.Id = id
+		force_table.Level = levelstr
+		force_table.LowHold = low_hold
+		force_table.HighHold = high_hold
+		force_table.ReturnMultiple = return_multiple
+		force_table.HoldReturnRate = hold_return_rate
+		force_table.RecommendReturnRate = recommend_return_rate
+		force_table.TeamReturnRate = team_return_rate
+		force_table.PictureUrl = picture_url
+		o.Update(&force_table)
+		if er := o.Update(&force_table); er.Error != nil {
 			err = errors.New("算力表　更新失败!")
 			return
 		}
@@ -157,7 +161,7 @@ func OperationFormulaList(c *gin.Context) {
 			TeamReturnRate:      team_return_rate,
 			PictureUrl:          picture_url,
 		}
-		if _, err = o.Insert(&force); err != nil {
+		if er := o.Create(&force); er.Error != nil {
 			err = errors.New("算力表新增失败!")
 			return
 		}
@@ -184,7 +188,7 @@ func ShowSuperFormulaList(c *gin.Context) {
 	defer func() {
 		c.JSON(200, data)
 	}()
-	o.Raw("select * from super_force_table").QueryRows(&force_list)
+	o.Raw("select * from super_force_table").Find(&force_list)
 	actuator.QuickSortSuperForce(force_list, 0, len(force_list)-1)
 	data = common.NewResponse(force_list)
 	return
@@ -206,11 +210,11 @@ func OperationSuperFormulaList(c *gin.Context) {
 		o    = db.NewEcologyOrm()
 		err  error
 
-		super_force_id  = c.GetString("super_force_id")
-		action          = c.GetString("action")
-		levelstr        = c.GetString("levelstr")
-		coin_number_str = c.GetString("coin_number")
-		force_str       = c.GetString("force")
+		super_force_id  = c.PostForm("super_force_id")
+		action          = c.PostForm("action")
+		levelstr        = c.PostForm("levelstr")
+		coin_number_str = c.PostForm("coin_number")
+		force_str       = c.PostForm("force")
 
 		force, _       = strconv.ParseFloat(force_str, 64)
 		coin_number, _ = strconv.ParseFloat(coin_number_str, 64)
@@ -221,8 +225,9 @@ func OperationSuperFormulaList(c *gin.Context) {
 			logs.Log.Error(err)
 			data = common.NewErrorResponse(500, err.Error(), nil)
 			c.JSON(200, data)
+		} else {
+			c.JSON(200, data)
 		}
-		c.JSON(200, data)
 	}()
 
 	o.Begin()
@@ -232,14 +237,15 @@ func OperationSuperFormulaList(c *gin.Context) {
 		id_strs := strings.Split(super_force_id, ",")
 		for _, v := range id_strs {
 			id, _ := strconv.Atoi(v)
-			if _, err = o.Raw("delete from super_force_table where id=?", id).Exec(); err != nil {
+			o.Delete(&models.SuperForceTable{}, "id = ?", id)
+			if er := o.Delete(&models.SuperForceTable{}, "id = ?", id); er.Error != nil {
 				err = errors.New("节点算力表 删除失败!")
 				return
 			}
 		}
 	case "update":
 		id, _ := strconv.Atoi(super_force_id)
-		if _, err = o.Raw("update super_force_table set level=? , coin_number_rule=? , bonus_calculation=? where id=?", levelstr, coin_number, force, id).Exec(); err != nil {
+		if er := o.Model(&models.SuperForceTable{}).Where("id = ?", id).Update(map[string]interface{}{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force}); er.Error != nil {
 			err = errors.New("节点算力表 更新失败!")
 			return
 		}
@@ -249,7 +255,7 @@ func OperationSuperFormulaList(c *gin.Context) {
 			CoinNumberRule:   coin_number,
 			BonusCalculation: force,
 		}
-		if _, err = o.Insert(&super_force); err != nil {
+		if er := o.Create(&super_force); er.Error != nil {
 			err = errors.New("节点算力表 新增失败!")
 			return
 		}
@@ -274,8 +280,10 @@ func ReturnPageHostryRoot(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page = c.GetInt("page")
-		page_size    = c.GetInt("pageSize")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
 	)
 	defer func() {
 		c.JSON(200, data)
@@ -310,22 +318,26 @@ func ReturnPageHostryRoot(c *gin.Context) {
 // @Param end_time query string true "结束时间"
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /admin/filter_history_info [GET]
-func FilterHistoryInfo(c *gin.Context) {
+// @router /admin/where_history_info [GET]
+func whereHistoryInfo(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page   = c.GetInt("page")
-		page_size      = c.GetInt("pageSize")
-		table_name     = c.GetString("type")
-		user_id        = c.GetString("user_id")
-		user_name      = c.GetString("user_name")
-		tx_id          = c.GetString("tx_id")
-		start_time_int = c.GetInt64("start_time")
-		end_time_int   = c.GetInt64("end_time")
-		start_time     = ""
-		end_time       = ""
+		current_page_str   = c.PostForm("page")
+		current_page, _    = strconv.Atoi(current_page_str)
+		page_size_str      = c.PostForm("pageSize")
+		page_size, _       = strconv.Atoi(page_size_str)
+		table_name         = c.PostForm("type")
+		user_id            = c.PostForm("user_id")
+		user_name          = c.PostForm("user_name")
+		tx_id              = c.PostForm("tx_id")
+		start_time_int_str = c.PostForm("start_time")
+		start_time_int, _  = strconv.Atoi(start_time_int_str)
+		end_time_int_str   = c.PostForm("end_time")
+		end_time_int, _    = strconv.Atoi(end_time_int_str)
+		start_time         = ""
+		end_time           = ""
 	)
 	defer func() {
 		c.JSON(200, data)
@@ -335,8 +347,8 @@ func FilterHistoryInfo(c *gin.Context) {
 		start_time = "2006-01-02 15:04:05"
 		end_time = time.Now().Format("2006-01-02 15:04:05")
 	} else {
-		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
-		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+		start_time = time.Unix(int64(start_time_int), 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(int64(end_time_int), 0).Format("2006-01-02 15:04:05")
 	}
 
 	find_obj := models.FindObj{
@@ -389,10 +401,12 @@ func UserEcologyList(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page = c.GetInt("page")
-		page_size    = c.GetInt("pageSize")
-		user_id      = c.GetString("user_id")
-		user_name    = c.GetString("user_name")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+		user_id          = c.PostForm("user_id")
+		user_name        = c.PostForm("user_name")
 	)
 	defer func() {
 		c.JSON(200, data)
@@ -429,10 +443,13 @@ func UserEcologyFalseList(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page = c.GetInt("page")
-		page_size    = c.GetInt("pageSize")
-		user_id      = c.GetString("user_id")
-		user_name    = c.GetString("user_name")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+
+		user_id   = c.PostForm("user_id")
+		user_name = c.PostForm("user_name")
 	)
 	defer func() {
 		c.JSON(200, data)
@@ -470,12 +487,18 @@ func ComputationalFlow(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page   = c.GetInt("page")
-		page_size      = c.GetInt("pageSize")
-		user_id        = c.GetString("user_id")
-		user_name      = c.GetString("user_name")
-		start_time_int = c.GetInt64("start_time")
-		end_time_int   = c.GetInt64("end_time")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+
+		user_id   = c.PostForm("user_id")
+		user_name = c.PostForm("user_name")
+
+		start_time_int_str = c.PostForm("start_time")
+		start_time_int, _  = strconv.Atoi(start_time_int_str)
+		end_time_int_str   = c.PostForm("end_time")
+		end_time_int, _    = strconv.Atoi(end_time_int_str)
 
 		start_time = ""
 		end_time   = ""
@@ -488,8 +511,8 @@ func ComputationalFlow(c *gin.Context) {
 		start_time = ""
 		end_time = ""
 	} else {
-		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
-		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+		start_time = time.Unix(int64(start_time_int), 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(int64(end_time_int), 0).Format("2006-01-02 15:04:05")
 	}
 
 	find_obj := models.FindObj{
@@ -538,13 +561,19 @@ func EcologicalIncomeControl(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page   = c.GetInt("page")
-		page_size      = c.GetInt("pageSize")
-		user_id        = c.GetString("user_id")
-		account_id     = c.GetString("account_id")
-		user_name      = c.GetString("user_name")
-		start_time_int = c.GetInt64("start_time")
-		end_time_int   = c.GetInt64("end_time")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+
+		user_id    = c.PostForm("user_id")
+		account_id = c.PostForm("account_id")
+		user_name  = c.PostForm("user_name")
+
+		start_time_int_str = c.PostForm("start_time")
+		start_time_int, _  = strconv.Atoi(start_time_int_str)
+		end_time_int_str   = c.PostForm("end_time")
+		end_time_int, _    = strconv.Atoi(end_time_int_str)
 
 		start_time = ""
 		end_time   = ""
@@ -557,8 +586,8 @@ func EcologicalIncomeControl(c *gin.Context) {
 		start_time = ""
 		end_time = ""
 	} else {
-		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
-		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+		start_time = time.Unix(int64(start_time_int), 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(int64(end_time_int), 0).Format("2006-01-02 15:04:05")
 	}
 
 	p := models.Page{
@@ -601,9 +630,12 @@ func EcologicalIncomeControlUpdate(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		profit_type_int  = c.GetInt("profit_type")
-		profit_start_int = c.GetInt("profit_start")
-		strs             = c.GetString("account_id")
+		profit_type_int_str  = c.PostForm("profit_type")
+		profit_type_int, _   = strconv.Atoi(profit_type_int_str)
+		profit_start_int_str = c.PostForm("profit_start")
+		profit_start_int, _  = strconv.Atoi(profit_start_int_str)
+
+		strs = c.PostForm("account_id")
 	)
 	defer func() {
 		c.JSON(200, data)
@@ -618,10 +650,8 @@ func EcologicalIncomeControlUpdate(c *gin.Context) {
 	err_user := ""
 	for _, v := range str {
 		id_int, _ := strconv.Atoi(v)
-		acc := models.Account{
-			Id: id_int,
-		}
-		o.Read(&acc)
+		acc := models.Account{}
+		o.Table("account").Where("id = ?", id_int).First(&acc)
 		switch profit_type_int {
 		case 2:
 			acc.DynamicRevenue = profit_start
@@ -631,8 +661,9 @@ func EcologicalIncomeControlUpdate(c *gin.Context) {
 			acc.PeerState = profit_start
 		}
 		acc.UpdateDate = time.Now().Format("2006-01-02 15:04:05")
-		_, err := o.Update(&acc)
-		if err != nil {
+		o.Update(&acc)
+		er := o.Update(&acc)
+		if er.Error != nil {
 			if len(err_user) == 0 {
 				err_user += v
 			}
@@ -660,9 +691,12 @@ func PeerUserList(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page = c.GetInt("page")
-		page_size    = c.GetInt("pageSize")
-		user_name    = c.GetString("user_name")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+
+		user_name = c.PostForm("user_name")
 
 		p_u_s = []models.PeerUser{}
 		user  = []models.User{}
@@ -679,12 +713,12 @@ func PeerUserList(c *gin.Context) {
 
 	switch user_name {
 	case "":
-		o.Raw("select * from user").QueryRows(&user)
+		o.Raw("select * from user").Find(&user)
 	default:
-		o.Raw("select * from user where user_name=?", user_name).QueryRows(&user)
+		o.Raw("select * from user where user_name=?", user_name).Find(&user)
 	}
 	g := models.GlobalOperations{}
-	o.Raw("select * from global_operations where operation=?", "全局节点分红控制").QueryRow(&g)
+	o.Raw("select * from global_operations where operation=?", "全局节点分红控制").First(&g)
 
 	for _, v := range user {
 		p_u := models.PeerUser{}
@@ -733,10 +767,15 @@ func PeerABounsList(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page   = c.GetInt("page")
-		page_size      = c.GetInt("pageSize")
-		start_time_int = c.GetInt64("start_time")
-		end_time_int   = c.GetInt64("end_time")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+
+		start_time_int_str = c.PostForm("start_time")
+		start_time_int, _  = strconv.Atoi(start_time_int_str)
+		end_time_int_str   = c.PostForm("end_time")
+		end_time_int, _    = strconv.Atoi(end_time_int_str)
 
 		start_time   = ""
 		end_time     = ""
@@ -756,20 +795,20 @@ func PeerABounsList(c *gin.Context) {
 		start_time = ""
 		end_time = ""
 	} else {
-		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
-		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+		start_time = time.Unix(int64(start_time_int), 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(int64(end_time_int), 0).Format("2006-01-02 15:04:05")
 	}
 
 	switch start_time {
 	case "":
-		_, err := o.Raw("select * from peer_history order by time desc").QueryRows(&peer_history)
-		if err != nil {
+		er := o.Raw("select * from peer_history order by time desc").Find(&peer_history)
+		if er.Error != nil {
 			data = common.NewResponse(models.PeerHistoryList{})
 			return
 		}
 	default:
-		_, err := o.Raw("select * from peer_history where time>=? and time<=? order by time desc", start_time, end_time).QueryRows(&peer_history)
-		if err != nil {
+		er := o.Raw("select * from peer_history where time>=? and time<=? order by time desc", start_time, end_time).Find(&peer_history)
+		if er.Error != nil {
 			data = common.NewResponse(models.PeerHistoryList{})
 			return
 		}
@@ -798,13 +837,19 @@ func PeerABounsHistoryList(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page   = c.GetInt("page")
-		page_size      = c.GetInt("pageSize")
-		user_name      = c.GetString("user_name")
-		start_time_int = c.GetInt64("start_time")
-		end_time_int   = c.GetInt64("end_time")
-		a              = models.PeerListABouns{}
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
 
+		start_time_int_str = c.PostForm("start_time")
+		start_time_int, _  = strconv.Atoi(start_time_int_str)
+		end_time_int_str   = c.PostForm("end_time")
+		end_time_int, _    = strconv.Atoi(end_time_int_str)
+
+		user_name = c.PostForm("user_name")
+
+		a          = models.PeerListABouns{}
 		start_time = ""
 		end_time   = ""
 	)
@@ -822,8 +867,8 @@ func PeerABounsHistoryList(c *gin.Context) {
 		start_time = ""
 		end_time = ""
 	} else {
-		start_time = time.Unix(start_time_int, 0).Format("2006-01-02 15:04:05")
-		end_time = time.Unix(end_time_int, 0).Format("2006-01-02 15:04:05")
+		start_time = time.Unix(int64(start_time_int), 0).Format("2006-01-02 15:04:05")
+		end_time = time.Unix(int64(end_time_int), 0).Format("2006-01-02 15:04:05")
 	}
 	list, p, err := actuator.SelectPeerABounsList(o, page, user_name, start_time, end_time)
 	if err != nil {
@@ -852,9 +897,9 @@ func ShowGlobalOperations(c *gin.Context) {
 		c.JSON(200, data)
 	}()
 	operation_list := make([]models.GlobalOperations, 0)
-	_, err := o.Raw("select * from global_operations").QueryRows(&operation_list)
-	if err != nil {
-		logs.Log.Error(err)
+	er := o.Raw("select * from global_operations").Find(&operation_list)
+	if er.Error != nil {
+		logs.Log.Error(er.Error.Error())
 		data = common.NewErrorResponse(500, "全局控制信息获取失败!", []models.GlobalOperations{})
 		return
 	}
@@ -873,7 +918,7 @@ func UpdateGlobalOperations(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		operation_id = c.GetString("operation_id")
+		operation_id = c.PostForm("operation_id")
 
 		err error
 	)
@@ -893,12 +938,13 @@ func UpdateGlobalOperations(c *gin.Context) {
 		id := strings.Split(v, "-")
 		switch id[1] {
 		case "1": //UPDATE 表名称 SET 列名称 = 新值 WHERE 列名称 = 某值
-			if _, err = o.Raw("update global_operations set state=? where id=?", true, id[0]).Exec(); err != nil {
+			if er := o.Model(&models.GlobalOperations{}).Where("id = ?", id[0]).Update("state", true); er.Error != nil {
 				err = errors.New("全局控制信息更新失败!")
 				return
 			}
 		case "2":
-			if _, err = o.Raw("update global_operations set state=? where id=?", false, id[0]).Exec(); err != nil {
+			o.Model(&models.GlobalOperations{}).Where("id = ?", id[0]).Update("state", false)
+			if er := o.Model(&models.GlobalOperations{}).Where("id = ?", id[0]).Update("state", false); er.Error != nil {
 				err = errors.New("全局控制信息更新失败!")
 				return
 			}
@@ -925,12 +971,18 @@ func ShowOneDayMrsf(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page  = c.GetInt("page")
-		page_size     = c.GetInt("pageSize")
-		date_time_int = c.GetInt64("date_time")
-		user_name     = c.GetString("user_name")
-		user_id       = c.GetString("user_id")
-		state_int     = c.GetInt("state")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+		state_int_str    = c.PostForm("state")
+		state_int, _     = strconv.Atoi(state_int_str)
+
+		date_time_int_str = c.PostForm("date_time")
+		date_time_int, _  = strconv.Atoi(date_time_int_str)
+
+		user_name = c.PostForm("user_name")
+		user_id   = c.PostForm("user_id")
 
 		date_time = ""
 	)
@@ -947,7 +999,7 @@ func ShowOneDayMrsf(c *gin.Context) {
 	if date_time_int == 0 {
 		date_time = ""
 	} else {
-		date_time = time.Unix(date_time_int, 0).Format("2006-01-02")
+		date_time = time.Unix(int64(date_time_int), 0).Format("2006-01-02")
 	}
 	state := true //1578412800
 	if state_int == 2 {
@@ -978,7 +1030,7 @@ func TheReleaseOfErrUsers(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		user_id = c.GetString("user_id")
+		user_id = c.PostForm("user_id")
 
 		order_id  = ""
 		user_mrsf = []string{}
@@ -993,8 +1045,8 @@ func TheReleaseOfErrUsers(c *gin.Context) {
 		if i == 0 {
 			order_id = user[1]
 		}
-		m_s_t := models.MrsfStateTable{OrderId: user[1]}
-		o.Read(&m_s_t, "order_id")
+		m_s_t := models.MrsfStateTable{}
+		o.Table("mrsf_state_table").Where("order_id = ?", user[1]).First(&m_s_t)
 		if m_s_t.State == false && order_id == user[1] {
 			user_mrsf = append(user_mrsf, user[0])
 		} else {
@@ -1022,11 +1074,14 @@ func ShowDAPPList(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		current_page = c.GetInt("page")
-		page_size    = c.GetInt("pageSize")
-		dapp_name    = c.GetString("dapp_name")
-		dapp_id      = c.GetString("dapp_id")
-		dapp_type    = c.GetString("dapp_type")
+		current_page_str = c.PostForm("page")
+		current_page, _  = strconv.Atoi(current_page_str)
+		page_size_str    = c.PostForm("pageSize")
+		page_size, _     = strconv.Atoi(page_size_str)
+
+		dapp_name = c.PostForm("dapp_name")
+		dapp_id   = c.PostForm("dapp_id")
+		dapp_type = c.PostForm("dapp_type")
 	)
 	defer func() {
 		c.JSON(200, data)
@@ -1072,19 +1127,20 @@ func InsertDAPP(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_name             = c.GetString("dapp_name")
-		image_url             = c.GetString("image_url")
-		dapp_type             = c.GetString("dapp_type")
-		dapp_link_address     = c.GetString("dapp_link_address")
-		dapp_contract_address = c.GetString("dapp_contract_address")
+		dapp_name             = c.PostForm("dapp_name")
+		image_url             = c.PostForm("image_url")
+		dapp_type             = c.PostForm("dapp_type")
+		dapp_link_address     = c.PostForm("dapp_link_address")
+		dapp_contract_address = c.PostForm("dapp_contract_address")
 	)
 	defer func() {
 		c.JSON(200, data)
 	}()
 
 	o.Raw("select * from dapp_table where name=?", dapp_name)
-	i, _ := o.QueryTable("dapp_table").Filter("name", dapp_name).Count()
-	if i != 0 {
+	dapp_table := models.DappTable{}
+	o.Table("dapp_table").Where("name = ?", dapp_name).First(&dapp_table)
+	if dapp_table.Id != 0 {
 		data = common.NewErrorResponse(500, "该名字已存在!", nil)
 		return
 	}
@@ -1098,8 +1154,8 @@ func InsertDAPP(c *gin.Context) {
 		Image:           image_url,
 		CreateTime:      time.Now().Format("2006-01-02 15:04:05"),
 	}
-	_, err := o.Insert(&dapp)
-	if err != nil {
+	er := o.Create(&dapp)
+	if er.Error != nil {
 		data = common.NewErrorResponse(500, "新增失败,请重试!", nil)
 		return
 	}
@@ -1123,27 +1179,28 @@ func UpdateDAPP(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_id               = c.GetInt("dapp_id")
-		dapp_name             = c.GetString("dapp_name")
-		image_url             = c.GetString("image_url")
-		dapp_type             = c.GetString("dapp_type")
-		dapp_link_address     = c.GetString("dapp_link_address")
-		dapp_contract_address = c.GetString("dapp_contract_address")
+		dapp_id_str = c.PostForm("dapp_id")
+		dapp_id, _  = strconv.Atoi(dapp_id_str)
+
+		dapp_name             = c.PostForm("dapp_name")
+		image_url             = c.PostForm("image_url")
+		dapp_type             = c.PostForm("dapp_type")
+		dapp_link_address     = c.PostForm("dapp_link_address")
+		dapp_contract_address = c.PostForm("dapp_contract_address")
 	)
 	defer func() {
 		c.JSON(200, data)
 	}()
 
-	_, err := o.Raw(
-		"update dapp_table set name=?,agreement_type=?,the_link_address=?,contract_address=?,image=?,update_time=? where id=?",
-		dapp_name,
-		dapp_type,
-		dapp_link_address,
-		dapp_contract_address,
-		image_url,
-		time.Now().Format("2006-01-02 15:04:05"),
-		dapp_id).Exec()
-	if err != nil {
+	er := o.Model(&models.DappTable{}).Where("id = ?", dapp_id).Update(map[string]interface{}{
+		"name":             dapp_name,
+		"agreement_type":   dapp_type,
+		"the_link_address": dapp_link_address,
+		"contract_address": dapp_contract_address,
+		"image":            image_url,
+		"update_time":      time.Now().Format("2006-01-02 15:04:05"),
+	})
+	if er.Error != nil {
 		data = common.NewErrorResponse(500, "更新失败,请重试!", nil)
 		return
 	}
@@ -1163,8 +1220,11 @@ func UpdateDAPPState(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_id    = c.GetInt("dapp_id")
-		dapp_state = c.GetInt("dapp_state")
+		dapp_id_str = c.PostForm("dapp_id")
+		dapp_id, _  = strconv.Atoi(dapp_id_str)
+
+		dapp_state_str = c.PostForm("dapp_state")
+		dapp_state, _  = strconv.Atoi(dapp_state_str)
 
 		state = true
 	)
@@ -1175,12 +1235,12 @@ func UpdateDAPPState(c *gin.Context) {
 	if dapp_state == 2 {
 		state = false
 	}
-	_, err := o.Raw(
-		"update dapp_table set state=?,update_time=? where id=?",
-		state,
-		time.Now().Format("2006-01-02 15:04:05"),
-		dapp_id).Exec()
-	if err != nil {
+	er := o.Model(&models.DappTable{}).Where("id = ?", dapp_id).Update(map[string]interface{}{
+		"state":       state,
+		"update_time": time.Now().Format("2006-01-02 15:04:05"),
+	})
+
+	if er.Error != nil {
 		data = common.NewErrorResponse(500, "更改状态失败,请重试!", nil)
 		return
 	}
@@ -1200,14 +1260,15 @@ func DeleteDAPP(c *gin.Context) {
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
 
-		dapp_id = c.GetInt("dapp_id")
+		dapp_id_str = c.PostForm("dapp_id")
+		dapp_id, _  = strconv.Atoi(dapp_id_str)
 	)
 	defer func() {
 		c.JSON(200, data)
 	}()
 
-	_, err := o.Raw("delete from dapp_table where id=?", dapp_id).Exec()
-	if err != nil {
+	er := o.Delete(&models.DappTable{}, "id = ?", dapp_id)
+	if er.Error != nil {
 		data = common.NewErrorResponse(500, "删除应用失败,请重试!", nil)
 		return
 	}
@@ -1234,7 +1295,7 @@ func ShowGroupByType(c *gin.Context) {
 
 	m := make(map[string][]models.DappTable)
 
-	o.Raw("select * from dapp_table").QueryRows(&list)
+	o.Raw("select * from dapp_table").Find(&list)
 
 	for _, v := range list {
 		m[v.AgreementType] = append(m[v.AgreementType], v)

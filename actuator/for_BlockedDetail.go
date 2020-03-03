@@ -6,8 +6,6 @@ import (
 	"ecology/utils"
 	"github.com/jinzhu/gorm"
 
-	"github.com/astaxie/beego/orm"
-
 	"errors"
 	"fmt"
 	"strconv"
@@ -163,7 +161,7 @@ func ForAddCoin(o *gorm.DB, father_id string, coin float64, proportion float64) 
 }
 
 //条件查询对象包含的则视为条件
-func SelectPondMachinemsgForAcc(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
+func SelectPondMachinemsgForAcc(o *gorm.DB, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
 	list, err := SqlCreateValues(o, p, table_name)
 	if err != nil {
 		return []models.BlockedDetailIndex{}, models.Page{}, err
@@ -175,11 +173,9 @@ func SelectPondMachinemsgForAcc(o orm.Ormer, p models.FindObj, page models.Page,
 
 	lists := []models.BlockedDetailIndex{}
 	for _, v := range listle {
-		value, ok := v.(models.AccountDetail)
-		fmt.Println(ok)
+		value, _ := v.(models.AccountDetail)
 		var u models.User
-		u.UserId = value.UserId
-		o.Read(&u, "user_id")
+		o.Table("user").Where("user_id = ?", value.UserId).First(&u)
 		blo := models.BlockedDetailIndex{
 			Id:             value.Id,
 			UserId:         value.UserId,
@@ -199,7 +195,7 @@ func SelectPondMachinemsgForAcc(o orm.Ormer, p models.FindObj, page models.Page,
 	return lists, page, nil
 }
 
-func SelectPondMachinemsgForBlo(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
+func SelectPondMachinemsgForBlo(o *gorm.DB, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
 	list, err := SqlCreateValues(o, p, table_name)
 	if err != nil {
 		return []models.BlockedDetailIndex{}, models.Page{}, err
@@ -211,11 +207,9 @@ func SelectPondMachinemsgForBlo(o orm.Ormer, p models.FindObj, page models.Page,
 
 	lists := []models.BlockedDetailIndex{}
 	for _, v := range listle {
-		value, ok := v.(models.BlockedDetail)
-		fmt.Println(ok)
+		value, _ := v.(models.BlockedDetail)
 		var u models.User
-		u.UserId = value.UserId
-		o.Read(&u, "user_id")
+		o.Table("user").Where("user_id = ?", value.UserId).First(&u)
 		blo := models.BlockedDetailIndex{
 			Id:             value.Id,
 			UserId:         value.UserId,
@@ -236,30 +230,30 @@ func SelectPondMachinemsgForBlo(o orm.Ormer, p models.FindObj, page models.Page,
 }
 
 // 释放流水查询－－处理
-func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.Flow, models.Page, error) {
+func SelectFlows(o *gorm.DB, p models.FindObj, page models.Page, table_name string) ([]models.Flow, models.Page, error) {
 	us := []models.User{}
 	blos := []models.BlockedDetail{}
 
-	q_user := o.QueryTable("user")
+	q_user := o.Table("user")
 
 	if p.UserName != "" {
-		q_user = q_user.Filter("user_name", p.UserName)
+		q_user = q_user.Where("user_name = ?", p.UserName)
 	}
 	if p.UserId != "" {
-		q_user = q_user.Filter("user_id", p.UserId)
+		q_user = q_user.Where("user_id = ?", p.UserId)
 	}
-	q_user.All(&us)
+	q_user.Find(&us)
 	user_ids := []string{}
 	for _, v := range us {
 		user_ids = append(user_ids, v.UserId)
 	}
 
-	q_blos := o.QueryTable(table_name).Filter("user_id__in", user_ids)
+	q_blos := o.Table(table_name).Where("user_id in (?)", user_ids)
 
 	if p.StartTime != "" && p.EndTime != "" {
-		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
+		q_blos = q_blos.Where("create_date >= ?", p.StartTime).Where("create_date <= ?", p.EndTime)
 	}
-	q_blos.OrderBy("-create_date").All(&blos)
+	q_blos.Order("create_date desc").Find(&blos)
 
 	QuickSortBlockedDetail(blos, 0, len(blos)-1)
 
@@ -277,13 +271,12 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 		v := value.(models.BlockedDetail)
 		flow := models.Flow{}
 		zhitui := models.BlockedDetail{}
-		o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日直推收益").QueryRow(&zhitui)
+		o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日直推收益").First(&zhitui)
 		tuandui := models.BlockedDetail{}
-		o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日团队收益").QueryRow(&tuandui)
+		o.Raw("select * from "+table_name+" where create_date=? and user_id=? and comment=?", v.CreateDate, v.UserId, "每日团队收益").First(&tuandui)
 
 		var u models.User
-		u.UserId = v.UserId
-		o.Read(&u, "user_id")
+		o.Table("user").Where("user_id = ?", v.UserId).First(&u)
 		flow.UserId = v.UserId
 		flow.UserName = u.UserName
 		hold, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", v.CurrentOutlay), 64)
@@ -301,17 +294,17 @@ func SelectFlows(o orm.Ormer, p models.FindObj, page models.Page, table_name str
 }
 
 // Find user ecology information
-func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]models.U_E_OBJ, models.Page) {
+func FindU_E_OBJ(o *gorm.DB, page models.Page, user_id, user_name string) ([]models.U_E_OBJ, models.Page) {
 	users := []models.User{}
 
-	q_user := o.QueryTable("user")
+	q_user := o.Table("user")
 	if user_name != "" {
-		q_user = q_user.Filter("user_name", user_name)
+		q_user = q_user.Where("user_name = ?", user_name)
 	}
 	if user_id != "" {
-		q_user = q_user.Filter("user_id", user_id)
+		q_user = q_user.Where("user_id = ?", user_id)
 	}
-	q_user.All(&users)
+	q_user.Find(&users)
 	user_ids := []string{}
 	for _, v := range users {
 		user_ids = append(user_ids, v.UserId)
@@ -322,10 +315,10 @@ func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]mo
 		user_e_obj := models.U_E_OBJ{}
 		account := models.Account{}
 		formula := models.Formula{}
-		blos := orm.ParamsList{}
+		blos := []models.BlockedDetail{}
 
-		o.Raw("select * from account where user_id=? ", v.UserId).QueryRow(&account)
-		o.Raw("select * from formula where ecology_id=? ", account.Id).QueryRow(&formula)
+		o.Raw("select * from account where user_id=? ", v.UserId).First(&account)
+		o.Raw("select * from formula where ecology_id=? ", account.Id).First(&formula)
 
 		user_e_obj.UserId = v.UserId
 		user_e_obj.UserName = v.UserName
@@ -334,12 +327,13 @@ func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]mo
 		user_e_obj.CoinAll = account.Balance
 		user_e_obj.ToBeReleased = account.BockedBalance
 
-		o.Raw("select sum(current_outlay) from blocked_detail where user_id=? and comment=?", v.UserId, "每日释放").ValuesFlat(&blos)
+		o.Raw("select * from blocked_detail where user_id=? and comment=?", v.UserId, "每日释放").Find(&blos)
 
 		var zhichu float64
-		if len(blos) > 0 && blos[0] != nil {
-			z, _ := strconv.ParseFloat(blos[0].(string), 64)
-			zhichu = z
+		if len(blos) > 0 {
+			for _, v := range blos {
+				zhichu += v.CurrentOutlay
+			}
 		}
 		user_e_obj.Released = zhichu
 		user_e_obj.HoldReturnRate = formula.HoldReturnRate * account.Balance
@@ -364,10 +358,12 @@ func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]mo
 
 	for i := 0; i < len(list); i++ {
 		team, _ := IndexTeamABouns(o, list[i].UserId)
-		acc := models.Account{UserId: list[i].UserId}
-		o.Read(&acc, "user_id")
-		for_m := models.Formula{EcologyId: acc.Id}
-		o.Read(&for_m, "ecology_id")
+		acc := models.Account{}
+		o.Table("account").Where("user_id = ?", list[i].UserId).First(&acc)
+
+		for_m := models.Formula{}
+		o.Table("account").Where("ecology_id = ?", acc.Id).First(&for_m)
+
 		list[i].TeamReturnRate = team * for_m.TeamReturnRate
 	}
 	u_e_objs := make([]models.U_E_OBJ, 0)
@@ -395,23 +391,23 @@ func FindU_E_OBJ(o orm.Ormer, page models.Page, user_id, user_name string) ([]mo
 }
 
 // Find user ecology information
-func FindFalseUser(o orm.Ormer, page models.Page, user_id, user_name string) ([]models.FalseUser, models.Page) {
+func FindFalseUser(o *gorm.DB, page models.Page, user_id, user_name string) ([]models.FalseUser, models.Page) {
 	users := []models.User{}
 
-	q_user := o.QueryTable("user")
+	q_user := o.Table("user")
 	if user_name != "" {
-		q_user = q_user.Filter("user_name", user_name)
+		q_user = q_user.Where("user_name = ?", user_name)
 	}
 	if user_id != "" {
-		q_user = q_user.Filter("user_id", user_id)
+		q_user = q_user.Where("user_id = ?", user_id)
 	}
-	q_user.All(&users)
+	q_user.Find(&users)
 
 	f_u_s := []interface{}{}
 	for _, v := range users {
 		account := models.Account{}
 		f_u := models.FalseUser{}
-		o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?)", v.UserId, false, false).QueryRow(&account)
+		o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?)", v.UserId, false, false).First(&account)
 		if account.Id > 0 {
 			f_u.UserName = v.UserName
 			f_u.UserId = v.UserId
@@ -438,7 +434,7 @@ func FindFalseUser(o orm.Ormer, page models.Page, user_id, user_name string) ([]
 }
 
 // Find user ecology information
-func FindUserAccountOFF(o orm.Ormer, page models.Page, obj models.FindObj) ([]models.AccountOFF, models.Page, error) {
+func FindUserAccountOFF(o *gorm.DB, page models.Page, obj models.FindObj) ([]models.AccountOFF, models.Page, error) {
 	accounts, err := SqlCreateValues(o, obj, "account")
 	if err != nil {
 		return []models.AccountOFF{}, models.Page{}, err
@@ -446,7 +442,7 @@ func FindUserAccountOFF(o orm.Ormer, page models.Page, obj models.FindObj) ([]mo
 
 	user_accounts := make([]models.AccountOFF, 0)
 	g := []models.GlobalOperations{}
-	o.Raw("select * from global_operations").QueryRows(&g)
+	o.Raw("select * from global_operations").Find(&g)
 	m := make(map[string]bool)
 	for _, v := range g {
 		m[v.Operation] = v.State
@@ -481,16 +477,14 @@ func FindUserAccountOFF(o orm.Ormer, page models.Page, obj models.FindObj) ([]mo
 	if end > len(user_accounts) {
 		for i := start; i < len(user_accounts); i++ {
 			var u models.User
-			u.UserId = user_accounts[i].UserId
-			o.Read(&u, "user_id")
+			o.Table("user").Where("user_id = ?", user_accounts[i].UserId).First(&u)
 			user_accounts[i].UserName = u.UserName
 		}
 		return user_accounts[start:], page, nil
 	} else {
 		for i := start; i < len(user_accounts); i++ {
 			var u models.User
-			u.UserId = user_accounts[i].UserId
-			o.Read(&u, "user_id")
+			o.Table("user").Where("user_id = ?", user_accounts[i].UserId).First(&u)
 			user_accounts[i].UserName = u.UserName
 		}
 		return user_accounts[start:end], page, nil
@@ -498,7 +492,7 @@ func FindUserAccountOFF(o orm.Ormer, page models.Page, obj models.FindObj) ([]mo
 }
 
 //	对象包含的则视为条件     sql 生成并　查询
-func SqlCreateValues(o orm.Ormer, p models.FindObj, table_name string) ([]interface{}, error) {
+func SqlCreateValues(o *gorm.DB, p models.FindObj, table_name string) ([]interface{}, error) {
 	// 根据条件  进行数据插叙
 	if list, err := GeneratedSQLAndExec(o, table_name, p); err != nil {
 		return []interface{}{}, err
@@ -507,22 +501,22 @@ func SqlCreateValues(o orm.Ormer, p models.FindObj, table_name string) ([]interf
 	}
 }
 
-func ShowMrsfTable(o orm.Ormer, page models.Page, user_name, user_id, date string, state bool) ([]models.MrsfStateTable, models.Page, error) {
+func ShowMrsfTable(o *gorm.DB, page models.Page, user_name, user_id, date string, state bool) ([]models.MrsfStateTable, models.Page, error) {
 	list := make([]models.MrsfStateTable, 0)
-	acc := models.Account{UserId: user_id}
-	o.Read(&acc, "user_id")
+	acc := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&acc)
 
-	q := o.QueryTable("mrsf_state_table")
+	q := o.Table("mrsf_state_table")
 	if user_name != "" {
-		q = q.Filter("user_name", user_name)
+		q = q.Where("user_name = ?", user_name)
 	}
 	if user_id != "" {
-		q = q.Filter("user_id", user_id)
+		q = q.Where("user_id = ?", user_id)
 	}
 	if date != "" {
-		q = q.Filter("date", date)
+		q = q.Where("date = ?", date)
 	}
-	q.Filter("state", state).OrderBy("-time").All(&list)
+	q.Where("state", state).Order("time desc").Find(&list)
 
 	start, end := InitPage(&page, len(list))
 	if end > len(list) && start < len(list) {
@@ -536,7 +530,7 @@ func ShowMrsfTable(o orm.Ormer, page models.Page, user_name, user_id, date strin
 }
 
 // 查看节点收益流水
-func SelectPeerABounsList(o orm.Ormer, page models.Page, user_name, start_time, end_time string) ([]models.PeerAbouns, models.Page, error) {
+func SelectPeerABounsList(o *gorm.DB, page models.Page, user_name, start_time, end_time string) ([]models.PeerAbouns, models.Page, error) {
 	peer_a_bouns := []models.TxIdList{}
 	time := ""
 	if start_time != "" {
@@ -544,17 +538,17 @@ func SelectPeerABounsList(o orm.Ormer, page models.Page, user_name, start_time, 
 	}
 	switch user_name {
 	case "":
-		o.Raw("select * from tx_id_list where comment=? "+time+" order by create_time desc", "节点分红").QueryRows(&peer_a_bouns)
+		o.Raw("select * from tx_id_list where comment=? "+time+" order by create_time desc", "节点分红").Find(&peer_a_bouns)
 	default:
 		users := []models.User{}
-		_, err_1 := o.Raw("select * from user where user_name=?", user_name).QueryRows(&users)
-		if err_1 != nil || len(users) < 1 {
-			return []models.PeerAbouns{}, page, err_1
+		err_1 := o.Raw("select * from user where user_name=?", user_name).Find(&users)
+		if err_1.Error != nil || len(users) < 1 {
+			return []models.PeerAbouns{}, page, err_1.Error
 		}
 		for _, v := range users {
-			_, err := o.Raw("select * from tx_id_list where user_id=? and comment=? "+time+" order by create_time desc", v.UserId, "节点分红").QueryRows(&peer_a_bouns)
-			if err != nil || len(peer_a_bouns) < 1 {
-				return []models.PeerAbouns{}, page, err
+			err := o.Raw("select * from tx_id_list where user_id=? and comment=? "+time+" order by create_time desc", v.UserId, "节点分红").Find(&peer_a_bouns)
+			if err.Error != nil || len(peer_a_bouns) < 1 {
+				return []models.PeerAbouns{}, page, err.Error
 			}
 		}
 	}
@@ -577,10 +571,8 @@ func SelectPeerABounsList(o orm.Ormer, page models.Page, user_name, start_time, 
 	}
 	if len(peer_a_bouns[start:end]) > 0 {
 		for _, v := range peer_a_bouns[start:end] {
-			u := models.User{
-				UserId: v.UserId,
-			}
-			o.Read(&u, "user_id")
+			u := models.User{}
+			o.Table("user").Where("user_id = ?", v.UserId).First(&u)
 			_, level, _, err_tfor := ReturnSuperPeerLevel(o, v.UserId)
 			if err_tfor != nil {
 				return []models.PeerAbouns{}, page, err_tfor

@@ -4,8 +4,10 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
-	"github.com/astaxie/beego/orm"
+
+	"github.com/jinzhu/gorm"
 	"github.com/shopspring/decimal"
+
 	"strconv"
 	"time"
 )
@@ -30,21 +32,26 @@ func Second5s() {
 	symbols = append(symbols, s3)
 	var price float64 = 0
 
+	//   更新 本地 数据
+	if timing_orm.UpdateTime+3600 <= time.Now().Unix() || timing_orm.UpdateTime < 1 || timing_orm.EcologyConn == nil || timing_orm.WalletConn == nil {
+		UpdateTimingOrm()
+	}
+
 	for _, v := range symbols {
-		p := UpdateOrInsert(v.BaseCurrency, v.QuoteCurrency)
+		p := UpdateOrInsert(timing_orm.EcologyConn, timing_orm.WalletConn, v.BaseCurrency, v.QuoteCurrency)
 		if p != 0 {
 			price = p
 		}
 	}
 	if price > 0 {
-		UpdateCoinsPrice(price)
+		UpdateCoinsPrice(timing_orm.WalletConn, price)
 	}
 
 }
 
 type TimingOrm struct {
-	EcologyConn orm.Ormer
-	WalletConn  orm.Ormer
+	EcologyConn *gorm.DB
+	WalletConn  *gorm.DB
 	UpdateTime  int64
 }
 
@@ -59,18 +66,12 @@ func UpdateTimingOrm() {
 	timing_orm.WalletConn = o_wa
 }
 
-func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
+func UpdateOrInsert(o_ec, o_wa *gorm.DB, baseCurrency, quoteCurrency string) (price float64) {
 	value, err := GetQuote(baseCurrency, quoteCurrency)
 	if value.Code == 0 || len(value.Date) == 0 {
 		return 0
 	}
 
-	//   更新 本地 数据
-	if timing_orm.UpdateTime+3600 <= time.Now().Unix() || timing_orm.UpdateTime < 1 || timing_orm.EcologyConn == nil || timing_orm.WalletConn == nil {
-		UpdateTimingOrm()
-	}
-	o_ec := timing_orm.EcologyConn
-	o_wa := timing_orm.WalletConn
 	o_ec.Begin()
 	o_wa.Begin()
 	state := "成功"
@@ -104,7 +105,7 @@ func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
 	return
 }
 
-func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data_r) error {
+func EcologyH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data_r) error {
 	var err error
 	r_t_p := models.QuoteTicker{
 		//TimeStamp:     value.Date[0].T,
@@ -119,23 +120,23 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 		BaseCurrency:  baseCurrency,
 		QuoteCurrency: quoteCurrency,
 	}
-	if count, _ := o.QueryTable("quote_ticker").Filter("symbol", symbol).Count(); count == 0 {
-		_, err = o.Insert(&r_t_p)
-		if err != nil {
+	quote_ticker := []models.QuoteTicker{}
+	if o.Table("quote_ticker").Where("symbol = ?", symbol).Find(&quote_ticker); len(quote_ticker) == 0 {
+		er := o.Create(&r_t_p)
+		if er.Error != nil {
 			return err
 		}
 	} else {
-		_, err = o.Raw("update quote_ticker set close=?,high=?,low=?,open=?,volume=?,quantity=?,time_stamp=? where symbol=?",
-			r_t_p.Close,
-			r_t_p.High,
-			r_t_p.Low,
-			r_t_p.Open,
-			r_t_p.Volume,
-			r_t_p.Quantity,
-			r_t_p.TimeStamp,
-			r_t_p.Symbol,
-		).Exec()
-		if err != nil {
+		er := o.Model(&models.QuoteTicker{}).Where("symbol = ?", r_t_p.Symbol).Update(map[string]interface{}{
+			"close":      r_t_p.Close,
+			"high":       r_t_p.High,
+			"low":        r_t_p.Low,
+			"open":       r_t_p.Open,
+			"volume":     r_t_p.Volume,
+			"quantity":   r_t_p.Quantity,
+			"time_stamp": r_t_p.TimeStamp,
+		})
+		if er.Error != nil {
 			return err
 		}
 	}
@@ -149,14 +150,12 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 		Quantity:      value.Date[0].Qv,
 		BaseCurrency:  baseCurrency,
 		QuoteCurrency: quoteCurrency,
-		//SymbolId:      symbol + "-" + value.Date[0].T,
-		SymbolId: symbol + "-" + strconv.Itoa(value.Date[0].T),
+		SymbolId:      symbol + "-" + strconv.Itoa(value.Date[0].T),
 	}
-	//t, _ := strconv.Atoi(value.Date[0].T)
 	t := value.Date[0].T
 	r_h.TimeStamp = time.Unix(int64(t)/1000, 0).Format("2006-01-02 15:04:05")
-	_, err = o.Insert(&r_h)
-	if err != nil {
+	er := o.Create(&r_h)
+	if er.Error != nil {
 		if err.Error() == "Error 1062: Duplicate entry '"+r_h.SymbolId+"' for key 'symbol_id'" {
 			o.Update(&r_h)
 		} else {
@@ -166,14 +165,15 @@ func EcologyH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Dat
 	return nil
 }
 
-func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data_r) error {
+func WalletH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data_r) error {
 	var err error
 	price, _ := strconv.ParseFloat(value.Date[0].C, 64)
 	a := make([]models.WtQuote, 0)
 	b := models.WtQuote{}
-	o.Raw("select * from wt_quote where code=?", symbol).QueryRow(&b)
-	o.Raw("select * from wt_quote", symbol).QueryRows(&a)
-	if count, _ := o.QueryTable("wt_quote").Filter("code", symbol).Count(); count == 0 {
+	o.Raw("select * from wt_quote where code=?", symbol).First(&b)
+	o.Raw("select * from wt_quote", symbol).Find(&a)
+	wt := []models.WtQuote{}
+	if o.Table("wt_quote").Where("code = ?", symbol).Find(&wt); len(wt) == 0 {
 		w_q := models.WtQuote{
 			CreatedAt:     time.Now(),
 			Code:          symbol,
@@ -181,25 +181,27 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 			QuoteCurrency: quoteCurrency,
 			Price:         price,
 		}
-		_, err = o.Insert(&w_q)
-		if err != nil {
+		er := o.Create(&w_q)
+		if er.Error != nil {
 			return err
 		}
 	} else {
-		_, err = o.Raw("update wt_quote set price=? , updated_at=? where code=?", price, time.Now(), symbol).Exec()
-		if err != nil {
+		er := o.Model(&models.QuoteTicker{}).Where("code = ?", symbol).Update(map[string]interface{}{
+			"price":      price,
+			"updated_at": time.Now(),
+		})
+		if er.Error != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func UpdateCoinsPrice(price float64) {
-	o := db.NewWalletOrm()
+func UpdateCoinsPrice(o *gorm.DB, price float64) {
 	w_q := make([]models.WtQuote, 0)
 	var count float64 = 1
-	num, _ := o.Raw("select * from wt_quote").QueryRows(&w_q)
-	if num > 0 {
+	o.Raw("select * from wt_quote").Find(&w_q)
+	if len(w_q) > 0 {
 		items := make([]models.WtQuote, 0)
 		p := div(count, price)
 		for _, v := range w_q {
@@ -216,13 +218,9 @@ func UpdateCoinsPrice(price float64) {
 			items = append(items, v)
 		}
 		if len(items) > 0 {
-			timer := time.Now()
-			q, _ := o.Raw("update wt_quote set updated_at=?,price=? where id=?").Prepare()
 			for _, v := range items {
-				_, _ = q.Exec(timer, v.Price, v.Id)
-
+				o.Save(&v)
 			}
-			_ = q.Close()
 		}
 	}
 }

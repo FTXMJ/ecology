@@ -3,11 +3,9 @@ package actuator
 import (
 	"ecology/logs"
 	"ecology/models"
-	"github.com/jinzhu/gorm"
-
-	"github.com/astaxie/beego/orm"
-
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 func TheWheel(o *gorm.DB, user_id string, acc models.Account, index *models.Ecology_index_obj) error {
@@ -47,11 +45,11 @@ func TheWheel(o *gorm.DB, user_id string, acc models.Account, index *models.Ecol
 }
 
 // 查看用户团队收益 首页查看
-func IndexTeamABouns(o orm.Ormer, user_id string) (float64, error) {
+func IndexTeamABouns(o *gorm.DB, user_id string) (float64, error) {
 	coins := make([]float64, 0)
 	user_current_layer := make([]models.User, 0)
 	// 团队收益　开始
-	o.QueryTable("user").Filter("father_id", user_id).All(&user_current_layer)
+	o.Table("user").Where("father_id = ?", user_id).Find(&user_current_layer)
 	if len(user_current_layer) > 0 {
 		for _, v := range user_current_layer {
 			if user_id != v.UserId {

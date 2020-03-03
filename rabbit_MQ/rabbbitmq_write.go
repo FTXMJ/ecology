@@ -1,9 +1,10 @@
 package rabbitmq
 
 import (
+	"ecology/conf"
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego"
+
 	"github.com/streadway/amqp"
 )
 
@@ -35,9 +36,9 @@ func initChannel() bool {
 	if channel != nil {
 		return true
 	}
-	user_name := beego.AppConfig.String("rabbit_mq::user_name")
-	user_passwd := beego.AppConfig.String("rabbit_mq::user_passwd")
-	ip_port := beego.AppConfig.String("rabbit_mq::ip_port")
+	user_name := conf.ConfInfo.RQ_user_name
+	user_passwd := conf.ConfInfo.RQ_user_passwd
+	ip_port := conf.ConfInfo.RQ_ip_port
 	conn, e := amqp.Dial("amqp://" + user_name + ":" + user_passwd + "@" + ip_port + "/")
 	if e != nil {
 		//log.Log.Println(e.Error())

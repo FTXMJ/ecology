@@ -32,7 +32,7 @@ func ShowRealTimePrice(c *gin.Context) {
 	)
 
 	value := []models.QuoteTicker{}
-	o.Raw("select * from quote_ticker").QueryRows(&value)
+	o.Raw("select * from quote_ticker").Find(&value)
 
 	data = common.NewResponse(value)
 	c.JSON(200, data)

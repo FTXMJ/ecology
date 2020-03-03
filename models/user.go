@@ -1,10 +1,9 @@
 package models
 
 import (
+	"ecology/conf"
 	"ecology/consul"
 	"encoding/json"
-
-	"github.com/astaxie/beego"
 
 	"errors"
 	"fmt"
@@ -30,7 +29,7 @@ type Response struct {
 func PingUserAdmin(token, user_id string) (interface{}, interface{}, error) {
 	client := &http.Client{}
 	//生成要访问的url
-	url := consul.GetAuthApi + beego.AppConfig.String("api::apiurl_auth_get_user")
+	url := consul.GetAuthApi + conf.ConfInfo.Apiurl_auth_get_user
 
 	//提交请求
 	reqest, errnr := http.NewRequest("GET", url, nil)
@@ -72,7 +71,7 @@ func PingUserAdmin(token, user_id string) (interface{}, interface{}, error) {
 func PingUser(token, user_id string) (interface{}, interface{}, error) {
 	client := &http.Client{}
 	//生成要访问的url
-	url := consul.GetUserApi + beego.AppConfig.String("api::apiurl_user_get_user")
+	url := consul.GetUserApi + conf.ConfInfo.Apiurl_user_get_user
 
 	//提交请求
 	reqest, errnr := http.NewRequest("GET", url, nil)

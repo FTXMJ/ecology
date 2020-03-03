@@ -34,6 +34,10 @@ type CCONF struct {
 
 	Schedules       string
 	Real_time_price string
+
+	RQ_user_name   string
+	RQ_user_passwd string
+	RQ_ip_port     string
 }
 
 var ConfInfo CCONF
@@ -64,4 +68,7 @@ func init() {
 	ConfInfo.Service_name, _ = Cnf.GetValue("consul", "service_name")
 	ConfInfo.Schedules, _ = Cnf.GetValue("crontab", "schedules")
 	ConfInfo.Real_time_price, _ = Cnf.GetValue("crontab", "real_time_price")
+	ConfInfo.RQ_user_name, _ = Cnf.GetValue("rabbit_mq", "user_name")
+	ConfInfo.RQ_user_passwd, _ = Cnf.GetValue("crontab", "user_passwd")
+	ConfInfo.RQ_ip_port, _ = Cnf.GetValue("crontab", "ip_port")
 }
