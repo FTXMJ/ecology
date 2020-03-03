@@ -98,7 +98,8 @@ func CreateNewWarehouse(c *gin.Context) {
 		Currency: "USDD",
 		Level:    levelstr,
 	}
-	if _, err = o.Insert(&account); err != nil {
+	if er := o.Create(&account); er.Error != nil {
+		err = er.Error
 		return
 	}
 
@@ -184,11 +185,10 @@ func ToChangeIntoUSDD(c *gin.Context) {
 	}()
 
 	o.Begin()
-	order_if := models.TxIdList{
-		TxId: order_id,
-	}
-	if err = o.Read(&order_if, "tx_id"); err != nil {
-		if err.Error() != "<QuerySeter> no row found" {
+	order_if := models.TxIdList{}
+
+	if er := o.Table("tx_id_list").Where("tx_id = ?", order_id).First(&order_if); er.Error != nil {
+		if er.Error.Error() != "<QuerySeter> no row found" {
 			err = errors.New("订单以存在，请勿提交!!")
 			return
 		}
@@ -199,7 +199,7 @@ func ToChangeIntoUSDD(c *gin.Context) {
 
 	//任务表 USDD  铸币记录
 	formula := models.Formula{}
-	o.Raw("select * from formula where ecology_id=?", ecology_id).QueryRow(&formula)
+	o.Raw("select * from formula where ecology_id=?", ecology_id).First(&formula)
 	blo_txid_dcmt := models.TxIdList{
 		TxId:        order_id,
 		OrderState:  false,
@@ -210,7 +210,7 @@ func ToChangeIntoUSDD(c *gin.Context) {
 		Expenditure: 0,
 		InCome:      formula.ReturnMultiple * coin_number,
 	}
-	if _, err = o.Insert(&blo_txid_dcmt); err != nil {
+	if er := o.Create(&blo_txid_dcmt); er.Error != nil {
 		err = errors.New("数据库操作失败!")
 		return
 	}
@@ -220,10 +220,8 @@ func ToChangeIntoUSDD(c *gin.Context) {
 	if err = actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
-	order := models.TxIdList{
-		TxId: order_id,
-	}
-	o.Read(&order, "tx_id")
+	order := models.TxIdList{}
+	o.Table("tx_id_list").Where("tx_id = ?", order_id).First(&order)
 	order.WalletState = true
 	o.Update(&order)
 
@@ -280,11 +278,9 @@ func UpgradeWarehouse(c *gin.Context) {
 	}()
 
 	o.Begin()
-	order_if := models.TxIdList{
-		TxId: order_id,
-	}
-	if err = o.Read(&order_if, "tx_id"); err != nil {
-		if err.Error() != "<QuerySeter> no row found" {
+	order_if := models.TxIdList{}
+	if er := o.Table("tx_id_list").Where("tx_id = ?", order_id).First(&order_if); er.Error != nil {
+		if er.Error.Error() != "<QuerySeter> no row found" {
 			err = errors.New("订单以存在，请勿提交!!")
 			return
 		}
@@ -292,17 +288,15 @@ func UpgradeWarehouse(c *gin.Context) {
 		err = errors.New("订单以存在，请勿提交!!")
 		return
 	}
-	formula_table := models.ForceTable{
-		Level: levelstr,
-	}
-	o.Read(&formula_table, "level")
+	formula_table := models.ForceTable{}
+	o.Table("formula_table").Where("level = ?", levelstr).First(&formula_table)
 	if float64(formula_table.LowHold) > coin_number {
 		err = errors.New("不满足升级条件,请填入规定的升级金额")
 		return
 	}
 
 	formula := models.Formula{EcologyId: ecology_id}
-	o.Read(&formula, "ecology_id")
+	o.Table("formula").Where("ecology_id = ?", ecology_id).First(&formula)
 	if err = actuator.JudgeLevel(o, user_id, levelstr, &formula); err != nil {
 		return
 	}
@@ -318,7 +312,7 @@ func UpgradeWarehouse(c *gin.Context) {
 		Expenditure: 0,
 		InCome:      formula.ReturnMultiple * coin_number,
 	}
-	if _, err = o.Insert(&blo_txid_dcmt); err != nil {
+	if er := o.Create(&blo_txid_dcmt); er.Error != nil {
 		err = errors.New("数据库操作失败!")
 		return
 	}
@@ -329,22 +323,20 @@ func UpgradeWarehouse(c *gin.Context) {
 	if err := actuator.PingWalletAdd(token, coin_number); err != nil {
 		return
 	}
-	order := models.TxIdList{
-		TxId: order_id,
-	}
-	o.Read(&order, "tx_id")
-	order.WalletState = true
-	if _, err = o.Update(&order); err != nil {
+
+	if er := o.Model(&models.TxIdList{}).Where("tx_id = ?", order_id).Update("wallet_state", true); er.Error != nil {
 		err = errors.New("数据库操作失败!")
 		return
 	}
 
 	o.Begin()
-	if _, err = o.Raw("update account set level=? where id=?", levelstr, ecology_id).Exec(); err != nil {
+	o.Model(&models.Account{}).Where("id = ?", ecology_id).Update("level", levelstr)
+	if er := o.Model(&models.Account{}).Where("id = ?", ecology_id).Update("level", levelstr); er.Error != nil {
 		err = errors.New("数据库操作失败!")
 		return
 	}
-	if _, err := o.Update(&formula); err != nil {
+	o.Save(&formula)
+	if er := o.Save(&formula); er.Error != nil {
 		err = errors.New("数据库操作失败!")
 		return
 	}

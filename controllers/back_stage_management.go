@@ -688,10 +688,10 @@ func PeerUserList(c *gin.Context) {
 
 	for _, v := range user {
 		p_u := models.PeerUser{}
-		update_date, level, tfor, _ := actuator.ReturnSuperPeerLevel(v.UserId)
+		update_date, level, tfor, _ := actuator.ReturnSuperPeerLevel(o, v.UserId)
 		if level != "" {
-			acc := models.Account{UserId: v.UserId}
-			o.Read(&acc, "user_id")
+			acc := models.Account{}
+			o.Table("account").Where("user_id = ?", v.UserId).First(&acc)
 			p_u.AccountId = acc.Id
 			p_u.UserId = v.UserId
 			p_u.UserName = v.UserName

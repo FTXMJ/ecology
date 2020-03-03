@@ -4,8 +4,7 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"errors"
-
-	"github.com/astaxie/beego/orm"
+	"github.com/jinzhu/gorm"
 )
 
 // user
@@ -13,16 +12,16 @@ func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, mod
 	o := db.NewEcologyOrm()
 
 	acc_list := make([]models.AccountDetail, 0)
-	_, acc_read_err := o.QueryTable("account_detail").Filter("account", ecology_id).All(&acc_list)
+	acc_read_err := o.Table("account_detail").Where("account = ?", ecology_id).Find(&acc_list)
 	index_values := append_acc_to_public(acc_list)
-	if acc_read_err != nil {
-		return nil, page, acc_read_err
+	if acc_read_err.Error != nil {
+		return nil, page, acc_read_err.Error
 	}
 
 	blo_list := make([]models.BlockedDetail, 0)
-	_, blo_read_err := o.QueryTable("blocked_detail").Filter("account", ecology_id).All(&blo_list)
-	if blo_read_err != nil {
-		return nil, page, blo_read_err
+	blo_read_err := o.Table("blocked_detail").Where("account = ?", ecology_id).Find(&blo_list)
+	if blo_read_err.Error != nil {
+		return nil, page, blo_read_err.Error
 	}
 	last_values := append_blo_to_public(blo_list, index_values)
 	if len(last_values) == 0 {
@@ -58,14 +57,14 @@ func SelectHostery(ecology_id int, page models.Page) ([]models.HostryValues, mod
 }
 
 //root
-func SelectHosteryRoot(o orm.Ormer, page models.Page) ([]models.HostryValues, models.Page, error) {
+func SelectHosteryRoot(o *gorm.DB, page models.Page) ([]models.HostryValues, models.Page, error) {
 	acc_list := make([]models.AccountDetail, 0)
 
-	o.Raw("select * from account_detail").QueryRows(&acc_list)
+	o.Raw("select * from account_detail").Find(&acc_list)
 	index_values := append_acc_to_public(acc_list)
 
 	blo_list := make([]models.BlockedDetail, 0)
-	o.Raw("select * from blocked_detail").QueryRows(&blo_list)
+	o.Raw("select * from blocked_detail").Find(&blo_list)
 	last_values := append_blo_to_public(blo_list, index_values)
 
 	if len(last_values) == 0 {

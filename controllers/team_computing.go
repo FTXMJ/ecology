@@ -200,7 +200,7 @@ func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
 	error_users := []models.User{}
 	m := make(map[string][]string)
 	for _, v := range users {
-		_, level, _, err := actuator.ReturnSuperPeerLevel(v.UserId)
+		_, level, _, err := actuator.ReturnSuperPeerLevel(o, v.UserId)
 		if err != nil {
 			error_users = append(error_users, v)
 		} else if level == "" && err == nil {

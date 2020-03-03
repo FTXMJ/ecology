@@ -15,11 +15,11 @@ import (
 )
 
 // 更新借贷表
-func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
+func FindLimitOneAndSaveBlo_d(o *gorm.DB, user_id, comment, tx_id string, coin_out, coin_in float64, account_id int) error {
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account_id).QueryRow(&blocked_old)
-	for_mula := models.Formula{EcologyId: account_id}
-	o.Read(&for_mula, "ecology_id")
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account_id).First(&blocked_old)
+	for_mula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account_id).First(&for_mula)
 
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
@@ -36,26 +36,26 @@ func FindLimitOneAndSaveBlo_d(o orm.Ormer, user_id, comment, tx_id string, coin_
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
-		return err
+	err := o.Create(&blocked_new)
+	if err.Error != nil {
+		return err.Error
 	}
 
 	// 更新任务完成状态
-	_, err_txid := o.Raw("update tx_id_list set order_state=? where tx_id=?", true, tx_id).Exec()
-	if err_txid != nil {
-		return err_txid
+	err_txid := o.Model(&models.TxIdList{}).Where("tx_id = ?", tx_id).Update("order_state", true)
+	if err_txid.Error != nil {
+		return err_txid.Error
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account_id).Exec()
-	if err_up != nil {
-		return err_up
+	err_up := o.Model(&models.Account{}).Where("id = ?", account_id).Update("bocked_balance", blocked_new.CurrentBalance)
+	if err_up.Error != nil {
+		return err_up.Error
 	}
 
 	//  直推收益
-	user := models.User{UserId: user_id}
-	o.Read(&user, "user_id")
+	user := models.User{}
+	o.Table("user").Where("user_id = ?", user_id).First(&user)
 	if user.FatherId != "" && coin_in >= 10 {
 		ForAddCoin(o, user.FatherId, coin_in, 0.1)
 	}
@@ -581,7 +581,7 @@ func SelectPeerABounsList(o orm.Ormer, page models.Page, user_name, start_time, 
 				UserId: v.UserId,
 			}
 			o.Read(&u, "user_id")
-			_, level, _, err_tfor := ReturnSuperPeerLevel(v.UserId)
+			_, level, _, err_tfor := ReturnSuperPeerLevel(o, v.UserId)
 			if err_tfor != nil {
 				return []models.PeerAbouns{}, page, err_tfor
 			}
