@@ -410,7 +410,7 @@ func FindFalseUser(o orm.Ormer, page models.Page, user_id, user_name string) ([]
 	for _, v := range users {
 		account := models.Account{}
 		f_u := models.FalseUser{}
-		o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?)", v.UserId, false, false).QueryRow(&account)
+		o.Raw("select * from account where user_id=? and (dynamic_revenue=? or static_return=?) order by create_date desc", v.UserId, false, false).QueryRow(&account)
 		if account.Id > 0 {
 			f_u.UserName = v.UserName
 			f_u.UserId = v.UserId
