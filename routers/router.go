@@ -15,7 +15,6 @@ import (
 func Router() {
 	router := gin.Default()
 	router.GET("/api/v1/ecology/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.GET("/check", controllers.Check)
 	router.Use(Cors())
 	router.Use(filter.HTTPInterceptor())
 	router.Use(logs.LoggerToFile())
@@ -40,7 +39,7 @@ func AuthAPI(route *gin.RouterGroup) {
 	route.GET("/show_ecology_index", controllers.ShowEcologyIndex)
 	route.POST("/to_change_into_USDD", controllers.ToChangeIntoUSDD)
 	route.POST("/upgrade_warehouse", controllers.UpgradeWarehouse)
-	route.POST("/return_page_list_hostry", controllers.ReturnPageListHostry)
+	route.GET("/return_page_list_hostry", controllers.ReturnPageListHostry)
 
 	// 后台操作模块
 	route.POST("/admin/operation_formula_list", controllers.OperationFormulaList)
@@ -66,13 +65,15 @@ func AuthAPI(route *gin.RouterGroup) {
 	route.POST("/admin/update_dapp", controllers.UpdateDAPP)
 	route.POST("/admin/update_dapp_state", controllers.UpdateDAPPState)
 	route.POST("/admin/delete_dapp", controllers.DeleteDAPP)
-	route.POST("/admin/show_group_by_type", controllers.ShowGroupByType)
-	route.POST("/admin/test_mrsf", controllers.DailyDividendAndReleaseTest)
+	route.GET("/show_group_by_type", controllers.ShowGroupByType)
+	route.GET("/admin/test_mrsf", controllers.DailyDividendAndReleaseTest)
 
 	// 展示　普通算力表__个人等级info___超级节点算力表显示
 	route.GET("/show_formula_list", controllers.ShowFormulaList)
 	route.GET("/show_user_formula", controllers.ShowUserFormula)
 	route.GET("/show_super_formula_list", controllers.ShowSuperFormulaList)
+
+	route.GET("/check", controllers.Check)
 }
 
 func Cors() gin.HandlerFunc {
