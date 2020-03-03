@@ -39,17 +39,17 @@ func GeneratedSQLAndExec(o orm.Ormer, table_name string, p models.FindObj) (blos
 		q_blos = q_blos.Filter("create_date__gte", p.StartTime).Filter("create_date__lte", p.EndTime)
 	}
 	if table_name == "blocked_detail" {
-		q_blos.OrderBy("create_date").All(&blo)
+		q_blos.OrderBy("-create_date").All(&blo)
 		for _, v := range blo {
 			blos = append(blos, v)
 		}
 	} else if table_name == "account_detail" {
-		q_blos.OrderBy("create_date").All(&acc)
+		q_blos.OrderBy("-create_date").All(&acc)
 		for _, v := range acc {
 			blos = append(blos, v)
 		}
 	} else if table_name == "account" {
-		q_blos.OrderBy("create_date").All(&ac)
+		q_blos.OrderBy("-create_date").All(&ac)
 		for _, v := range ac {
 			blos = append(blos, v)
 		}
