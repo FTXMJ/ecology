@@ -30,14 +30,19 @@ func Second5s() {
 	symbols = append(symbols, s3)
 	var price float64 = 0
 
+	//   更新 本地 数据
+	if timing_orm.UpdateTime+3600 <= time.Now().Unix() || timing_orm.UpdateTime < 1 || timing_orm.EcologyConn == nil || timing_orm.WalletConn == nil {
+		UpdateTimingOrm()
+	}
+
 	for _, v := range symbols {
-		p := UpdateOrInsert(v.BaseCurrency, v.QuoteCurrency)
+		p := UpdateOrInsert(timing_orm.EcologyConn, timing_orm.WalletConn, v.BaseCurrency, v.QuoteCurrency)
 		if p != 0 {
 			price = p
 		}
 	}
 	if price > 0 {
-		UpdateCoinsPrice(price)
+		UpdateCoinsPrice(timing_orm.WalletConn, price)
 	}
 
 }
@@ -59,18 +64,12 @@ func UpdateTimingOrm() {
 	timing_orm.WalletConn = o_wa
 }
 
-func UpdateOrInsert(baseCurrency, quoteCurrency string) (price float64) {
+func UpdateOrInsert(o_ec, o_wa orm.Ormer, baseCurrency, quoteCurrency string) (price float64) {
 	value, err := GetQuote(baseCurrency, quoteCurrency)
 	if value.Code == 0 || len(value.Date) == 0 {
 		return 0
 	}
 
-	//   更新 本地 数据
-	if timing_orm.UpdateTime+3600 <= time.Now().Unix() || timing_orm.UpdateTime < 1 || timing_orm.EcologyConn == nil || timing_orm.WalletConn == nil {
-		UpdateTimingOrm()
-	}
-	o_ec := timing_orm.EcologyConn
-	o_wa := timing_orm.WalletConn
 	o_ec.Begin()
 	o_wa.Begin()
 	state := "成功"
@@ -194,8 +193,7 @@ func WalletH(o orm.Ormer, symbol, baseCurrency, quoteCurrency string, value Data
 	return nil
 }
 
-func UpdateCoinsPrice(price float64) {
-	o := db.NewWalletOrm()
+func UpdateCoinsPrice(o orm.Ormer, price float64) {
 	w_q := make([]models.WtQuote, 0)
 	var count float64 = 1
 	num, _ := o.Raw("select * from wt_quote").QueryRows(&w_q)
