@@ -4,9 +4,8 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"errors"
-	"github.com/jinzhu/gorm"
 
-	"github.com/astaxie/beego/orm"
+	"github.com/jinzhu/gorm"
 
 	"fmt"
 	"strconv"
@@ -28,7 +27,7 @@ func GeneratedSQLAndExec(o *gorm.DB, table_name string, p models.FindObj) (blos 
 	if p.UserId != "" {
 		q_user = q_user.Where("user_id = ?", p.UserId)
 	}
-	q_user.All(&us)
+	q_user.Find(&us)
 	user_ids := []string{}
 	for _, v := range us {
 		user_ids = append(user_ids, v.UserId)
@@ -97,16 +96,17 @@ func ListLimit(list []interface{}, start, end int) []interface{} {
 
 // 直推算力的计算　　　－－　　　当天
 func RecommendReturnRate(user_id, time string) (float64, error) {
-	blo := orm.ParamsList{}
-	sql_str := "SELECT sum(current_outlay) from blocked_detail where user_id=? and create_date>=? and comment=? "
-	_, err := db.NewEcologyOrm().Raw(sql_str, user_id, time, "直推收益").ValuesFlat(&blo)
-	if err != nil {
-		return 0, err
+	blo := []models.BlockedDetail{}
+	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and comment=? "
+	er := db.NewEcologyOrm().Raw(sql_str, user_id, time, "直推收益").Find(&blo)
+	if er.Error != nil {
+		return 0, er.Error
 	}
 	var zhitui float64
-	if len(blo) > 0 && blo[0] != nil {
-		z, _ := strconv.ParseFloat(blo[0].(string), 64)
-		zhitui = z
+	if len(blo) > 0 {
+		for _, v := range blo {
+			zhitui += v.CurrentOutlay
+		}
 	}
 	zhit, _ := strconv.ParseFloat(fmt.Sprintf("%.6f", zhitui), 64)
 	return zhit, nil
@@ -114,16 +114,17 @@ func RecommendReturnRate(user_id, time string) (float64, error) {
 
 // 直推算力的计算　　　－－　　　任意天
 func RecommendReturnRateEveryDay(user_id, time_start, time_end string) (float64, error) {
-	blo := orm.ParamsList{}
-	sql_str := "SELECT sum(current_outlay) from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=? "
-	_, err := db.NewEcologyOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").ValuesFlat(&blo)
-	if err != nil {
-		return 0, err
+	blo := []models.BlockedDetail{}
+	sql_str := "SELECT * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=? "
+	er := db.NewEcologyOrm().Raw(sql_str, user_id, time_start, time_end, "直推收益").Find(&blo)
+	if er.Error != nil {
+		return 0, er.Error
 	}
 	var zhitui float64
-	if len(blo) > 0 && blo[0] != nil {
-		z, _ := strconv.ParseFloat(blo[0].(string), 64)
-		zhitui = z
+	if len(blo) > 0 {
+		for _, v := range blo {
+			zhitui += v.CurrentOutlay
+		}
 	}
 	return zhitui, nil
 }
@@ -148,18 +149,18 @@ func HandlerOperation(users []string, user_id string) (float64, error) {
 	for _, v := range users {
 		// 拿到生态项目实例
 		account := models.Account{}
-		err_acc := o.QueryTable("account").Filter("user_id", v).One(&account)
-		if err_acc != nil {
-			if err_acc.Error() != "<QuerySeter> no row found" {
-				return 0, err_acc
+		err_acc := o.Table("account").Where("user_id = ?", v).First(&account)
+		if err_acc.Error != nil {
+			if err_acc.Error.Error() != "<QuerySeter> no row found" {
+				return 0, err_acc.Error
 			}
 		}
 		// 拿到生态项目对应的算力表
 		formula := models.Formula{}
-		err_for := o.QueryTable("formula").Filter("ecology_id", account.Id).One(&formula)
-		if err_for != nil {
-			if err_for.Error() != "<QuerySeter> no row found" {
-				return 0, err_for
+		err_for := o.Table("formula").Where("ecology_id = ?", account.Id).First(&formula)
+		if err_for.Error != nil {
+			if err_for.Error.Error() != "<QuerySeter> no row found" {
+				return 0, err_for.Error
 			}
 		}
 		coin_abouns += formula.HoldReturnRate * account.Balance

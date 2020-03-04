@@ -9,11 +9,11 @@ import (
 )
 
 func TheWheel(o *gorm.DB, user_id string, acc models.Account, index *models.Ecology_index_obj) error {
-	formula_index := models.Formula{EcologyId: acc.Id}
-	errfor := o.Read(&formula_index, "ecology_id")
-	if errfor != nil {
-		logs.Log.Error(errfor)
-		return errfor
+	formula_index := models.Formula{}
+	errfor := o.Table("formula").Where("ecology_id = ?", acc.Id).First(&formula_index)
+	if errfor.Error != nil {
+		logs.Log.Error(errfor.Error)
+		return errfor.Error
 	}
 	f := models.Formulaindex{
 		Id:             acc.Id,

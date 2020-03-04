@@ -5,8 +5,8 @@ import (
 	db "ecology/db"
 	"ecology/models"
 	"ecology/utils"
-	"github.com/astaxie/beego/orm"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 
 	"errors"
 	"strconv"
@@ -42,7 +42,7 @@ type info struct {
 func DailyDividendAndReleaseTest(c *gin.Context) {
 	o := db.NewEcologyOrm()
 	user := []models.User{}
-	o.QueryTable("user").All(&user)
+	o.Table("user").Find(&user)
 
 	//    每日释放___and___团队收益___and___直推收益
 	error_users := ProducerEcology(user, "") // 返回错误的用户名单
@@ -62,12 +62,12 @@ func DailyDividendAndReleaseTest(c *gin.Context) {
 			SuperPeer:        in_fo.two,
 			CreationPeer:     in_fo.three,
 		}
-		o.Insert(&perr_h)
+		o.Create(&perr_h)
 	}
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
-	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
+	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").Find(&blo)
 	shouyi := 0.0
 	if len(blo) >= 1 {
 		for _, v := range blo {
@@ -81,7 +81,7 @@ func DailyDividendAndReleaseTest(c *gin.Context) {
 func DailyDividendAndRelease() {
 	o := db.NewEcologyOrm()
 	user := []models.User{}
-	o.QueryTable("user").All(&user)
+	o.Table("user").Find(&user)
 
 	//    每日释放___and___团队收益___and___直推收益
 	error_users := ProducerEcology(user, "") // 返回错误的用户名单
@@ -101,12 +101,12 @@ func DailyDividendAndRelease() {
 			SuperPeer:        in_fo.two,
 			CreationPeer:     in_fo.three,
 		}
-		o.Insert(&perr_h)
+		o.Create(&perr_h)
 	}
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
-	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
+	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").Find(&blo)
 	shouyi := 0.0
 	for _, v := range blo {
 		shouyi += v.CurrentOutlay
@@ -119,8 +119,8 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 	o := db.NewEcologyOrm()
 	users := []models.User{}
 	for _, v := range user {
-		u := models.User{UserId: v}
-		o.Read(&u)
+		u := models.User{}
+		o.Table("user").Where("user_id = ?", v).First(&u)
 		users = append(users, u)
 	}
 
@@ -142,12 +142,12 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 			SuperPeer:        in_fo.two,
 			CreationPeer:     in_fo.three,
 		}
-		o.Insert(&perr_h)
+		o.Create(&perr_h)
 	}
 
 	// 让收益回归今日
 	blo := []models.BlockedDetail{}
-	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").QueryRows(&blo)
+	o.Raw("select * form blocked_detail where create_date>=?", time.Now().Format("2006-01-02")+" 00:00:00").Find(&blo)
 	shouyi := 0.0
 	for _, v := range blo {
 		shouyi += v.CurrentOutlay
@@ -157,9 +157,9 @@ func DailyDividendAndReleaseToSomeOne(user []string, order_id string) {
 }
 
 // 设置 全局状态
-func OperationSet(o orm.Ormer, account *models.Account) {
+func OperationSet(o *gorm.DB, account *models.Account) {
 	g_o := []models.GlobalOperations{}
-	o.Raw("select * from global_operations").QueryRows(&g_o)
+	o.Raw("select * from global_operations").Find(&g_o)
 	for _, v := range g_o {
 		switch v.Operation {
 		case "全局静态收益控制":
@@ -192,8 +192,8 @@ func ProducerEcology(users []models.User, order_id string) []models.User {
 //超级节点　的　释放
 func ProducerPeer(users []models.User, in_fo *info, order_id string) error {
 	o := db.NewEcologyOrm()
-	g_o := models.GlobalOperations{Operation: "全局节点分红控制"}
-	o.Read(&g_o, "operation")
+	g_o := models.GlobalOperations{}
+	o.Table("global_operations").Where("operation = ?", "全局节点分红控制").First(&g_o)
 	if g_o.State == false && g_o.Id > 0 {
 		return errors.New("err")
 	}
@@ -223,10 +223,8 @@ func Worker(user models.User, order_id string) error {
 	ziyou_a_bouns := 0.0
 	zhitui_a_bouns := 0.0
 	o.Begin()
-	account := models.Account{
-		UserId: user.UserId,
-	}
-	o.Read(&account, "user_id")
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", user.UserId).First(&account)
 
 	OperationSet(o, &account)
 
@@ -307,7 +305,7 @@ func Worker(user models.User, order_id string) error {
 	return nil
 }
 
-func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_tate bool, order_id string, ziyou, zhitui, team float64) {
+func CreateMrsfTable(o *gorm.DB, user models.User, account models.Account, s_tate bool, order_id string, ziyou, zhitui, team float64) {
 	switch order_id {
 	case "":
 		mrsf_table := models.MrsfStateTable{
@@ -321,30 +319,30 @@ func CreateMrsfTable(o orm.Ormer, user models.User, account models.Account, s_ta
 			ZhiTuiABouns: zhitui,
 			TeamABouns:   team,
 		}
-		_, err := o.Insert(&mrsf_table)
-		if err != nil {
+		er := o.Create(&mrsf_table)
+		if er.Error != nil {
 			CreateMrsfTable(o, user, account, s_tate, order_id, ziyou, zhitui, team)
 		}
 	default:
-		m := models.MrsfStateTable{OrderId: order_id}
-		o.Read(&m, "order_id")
+		m := models.MrsfStateTable{}
+		o.Table("mrsf_state_table").Where("order_id = ?", order_id).First(&m)
 		m.State = s_tate
 		m.Time = time.Now().Format("2006-01-02 15:04:05")
 		m.ZiYouABouns = ziyou
 		m.ZhiTuiABouns = zhitui
 		m.TeamABouns = team
-		_, err := o.Update(&m)
-		if err != nil {
+		er := o.Update(&m)
+		if er.Error != nil {
 			CreateMrsfTable(o, user, account, s_tate, order_id, ziyou, zhitui, team)
 		}
 	}
 }
 
-func Team(o orm.Ormer, user models.User) (float64, error) {
+func Team(o *gorm.DB, user models.User) (float64, error) {
 	coins := []float64{}
 	user_current_layer := []models.User{}
 	// 团队收益　开始
-	o.QueryTable("user").Filter("father_id", user.UserId).All(&user_current_layer)
+	o.Table("user").Where("father_id = ?", user.UserId).Find(&user_current_layer)
 	if len(user_current_layer) > 0 {
 		for _, v := range user_current_layer {
 			if user.UserId != v.UserId {
@@ -374,7 +372,7 @@ func Team(o orm.Ormer, user models.User) (float64, error) {
 	return value, nil
 }
 
-func Jintai(o orm.Ormer, user models.User) (float64, error) {
+func Jintai(o *gorm.DB, user models.User) (float64, error) {
 	z, err := DailyRelease(o, user.UserId)
 	if err != nil {
 		return 0, err
@@ -383,7 +381,7 @@ func Jintai(o orm.Ormer, user models.User) (float64, error) {
 }
 
 // 去掉最大的 团队收益
-func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, error) {
+func SortABonusRelease(o *gorm.DB, coins []float64, user_id string) (float64, error) {
 	for i := 0; i < len(coins)-1; i++ {
 		for j := i + 1; j < len(coins); j++ {
 			if coins[i] > coins[j] {
@@ -400,28 +398,15 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 		return 0, nil
 	}
 
-	acc := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&acc, "user_id")
-	for_m := models.Formula{
-		EcologyId: acc.Id,
-	}
-	o.Read(&for_m, "ecology_id")
+	acc := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&acc)
+	for_m := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", acc.Id).First(&for_m)
 
 	value = value * for_m.TeamReturnRate
 
-	var account = models.Account{
-		UserId: user_id,
-	}
-	o.Read(&account, "user_id")
-	var formula = models.Formula{
-		EcologyId: account.Id,
-	}
-	o.Read(&formula, "ecology_id")
-
-	if value > account.BockedBalance {
-		value = account.BockedBalance
+	if value > acc.BockedBalance {
+		value = acc.BockedBalance
 	}
 
 	if value == 0 {
@@ -440,14 +425,14 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 		Expenditure: value,
 		InCome:      0,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		return 0, errtxid_blo
+	errtxid_blo := o.Create(&blo_txid_dcmt)
+	if errtxid_blo.Error != nil {
+		return 0, errtxid_blo.Error
 	}
 
 	//找最近的数据记录表
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, acc.Id).First(&blocked_old)
 
 	blocked_new := models.BlockedDetail{
 		UserId:         user_id,
@@ -458,32 +443,31 @@ func SortABonusRelease(o orm.Ormer, coins []float64, user_id string) (float64, e
 		CreateDate:     time.Now().Format("2006-01-02 15:04:05"),
 		Comment:        "每日团队收益",
 		TxId:           order_id,
-		Account:        account.Id,
+		Account:        acc.Id,
 		CoinType:       "USDD",
 	}
 
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
-		return 0, err
+	er := o.Create(&blocked_new)
+	if er.Error != nil {
+		return 0, er.Error
 	}
 
 	//更新生态仓库属性
-	_, err_up := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account.Id).Exec()
-	if err_up != nil {
-		return 0, err_up
+	err_up := o.Model(&models.Account{}).Where("id = ?", acc.Id).Update("bocked_balance", blocked_new.CurrentBalance)
+	if err_up.Error != nil {
+		return 0, err_up.Error
 	}
 
 	err_ping_shifang := actuator.PingAddWalletCoin(user_id, value)
 	if err_ping_shifang != nil {
 		return 0, err_ping_shifang
 	}
-
-	_, err_up_tx := o.Raw("update tx_id_list set wallet_state=? where tx_id=?", true, order_id).Exec()
-	if err_up_tx != nil {
-		return 0, err_up_tx
+	err_up_tx := o.Model(&models.TxIdList{}).Where("tx_id = ?", order_id).Update("wallet_state", true)
+	if err_up_tx.Error != nil {
+		return 0, err_up_tx.Error
 	}
 
 	db.NetIncome += value
@@ -507,8 +491,8 @@ func AddFormulaABonus(user_id string, abonus float64) {
 		Expenditure: abonus,
 		InCome:      0,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
+	errtxid_blo := o.Create(&blo_txid_dcmt)
+	if errtxid_blo.Error != nil {
 		o.Rollback()
 		AddFormulaABonus(user_id, abonus)
 		return
@@ -518,26 +502,24 @@ func AddFormulaABonus(user_id string, abonus float64) {
 }
 
 // 每日释放
-func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
-	account := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&account, "user_id")
-	formula := models.Formula{
-		EcologyId: account.Id,
-	}
-	o.Read(&formula, "ecology_id")
+func DailyRelease(o *gorm.DB, user_id string) (float64, error) {
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&account)
+
+	formula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account.Id).First(&formula)
+
 	blocked_yestoday := models.AccountDetail{}
 	date_time := time.Now().AddDate(0, 0, -1).Format("2006-01-02 ") + "23:59:59"
 	err_raw := o.Raw(
-		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1", user_id, date_time).QueryRow(&blocked_yestoday)
-	if err_raw != nil {
-		if err_raw.Error() != "<QuerySeter> no row found" {
-			return 0, err_raw
+		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1", user_id, date_time).First(&blocked_yestoday)
+	if err_raw.Error != nil {
+		if err_raw.Error.Error() != "<QuerySeter> no row found" {
+			return 0, err_raw.Error
 		}
 	}
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).First(&blocked_old)
 	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
@@ -559,9 +541,9 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 		Expenditure: abonus,
 		InCome:      0,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		return 0, errtxid_blo
+	errtxid_blo := o.Create(&blo_txid_dcmt)
+	if errtxid_blo.Error != nil {
+		return 0, errtxid_blo.Error
 	}
 
 	blocked_new := models.BlockedDetail{
@@ -576,16 +558,16 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 		Account:        account.Id,
 		CoinType:       "USDD",
 	}
-	_, err := o.Insert(&blocked_new)
-	if err != nil {
-		return 0, err
+	er := o.Create(&blocked_new)
+	if er.Error != nil {
+		return 0, er.Error
 	}
 
 	//更新生态仓库属性
 	account.BockedBalance = aabonus
-	_, err_up := o.Raw("update account set bocked_balance=? where id=?", aabonus, account.Id).Exec()
-	if err_up != nil {
-		return 0, err_up
+	err_up := o.Model(&models.Account{}).Where("id = ?", account.Id).Update("bocked_balance", aabonus)
+	if err_up.Error != nil {
+		return 0, err_up.Error
 	}
 
 	// 钱包　数据　修改
@@ -593,33 +575,29 @@ func DailyRelease(o orm.Ormer, user_id string) (float64, error) {
 	if err_ping != nil {
 		return 0, err_ping
 	}
-	_, err_up_tx := o.Raw("update tx_id_list set wallet_state=? where tx_id=?", true, order_id).Exec()
-	if err_up_tx != nil {
-		return 0, err_up_tx
+	err_up_tx := o.Model(&models.TxIdList{}).Where("tx_id = ?", order_id).Update("wallet_state", true)
+	if err_up_tx.Error != nil {
+		return 0, err_up_tx.Error
 	}
 	db.NetIncome += abonus
 	return abonus, nil
 }
 
 //　直推收益
-func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
-	account := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&account, "user_id")
+func ZhiTui(o *gorm.DB, user_id string) (float64, error) {
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&account)
 
-	formula := models.Formula{
-		EcologyId: account.Id,
-	}
-	o.Read(&formula, "ecology_id")
+	formula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account.Id).First(&formula)
 
 	blos := []models.BlockedDetail{}
 	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
 	time_end := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
-	_, err := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
-	if err != nil {
-		if err.Error() != "<QuerySeter> no row found" {
-			return 0, err
+	er := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").Find(&blos)
+	if er.Error != nil {
+		if er.Error.Error() != "<QuerySeter> no row found" {
+			return 0, er.Error
 		}
 	}
 	shouyi := 0.0
@@ -628,7 +606,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	}
 
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).First(&blocked_old)
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
 		shouyia = 0
@@ -651,9 +629,9 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 		Expenditure: shouyi,
 		InCome:      0,
 	}
-	_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-	if errtxid_blo != nil {
-		return 0, errtxid_blo
+	errtxid_blo := o.Create(&blo_txid_dcmt)
+	if errtxid_blo.Error != nil {
+		return 0, errtxid_blo.Error
 	}
 
 	blocked_new := models.BlockedDetail{
@@ -672,15 +650,15 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	if blocked_new.CurrentBalance < 0 {
 		blocked_new.CurrentBalance = 0
 	}
-	_, err_in := o.Insert(&blocked_new)
-	if err_in != nil {
-		return 0, err_in
+	err_in := o.Create(&blocked_new)
+	if err_in.Error != nil {
+		return 0, err_in.Error
 	}
 
 	account.BockedBalance = blocked_new.CurrentBalance
-	_, err_update := o.Raw("update account set bocked_balance=? where id=?", blocked_new.CurrentBalance, account.Id).Exec()
-	if err_update != nil {
-		return 0, err_update
+	err_update := o.Model(&models.Account{}).Where("id = ?", account.Id).Update("bocked_balance", blocked_new.CurrentBalance)
+	if err_update.Error != nil {
+		return 0, err_update.Error
 	}
 
 	// 钱包　数据　修改
@@ -688,9 +666,10 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 	if err_ping != nil {
 		return 0, err_ping
 	}
-	_, err_up_tx := o.Raw("update tx_id_list set wallet_state=? where tx_id=?", true, order_id).Exec()
-	if err_up_tx != nil {
-		return 0, err_up_tx
+
+	err_up_tx := o.Model(&models.TxIdList{}).Where("tx_id = ?", order_id).Update("wallet_state", true)
+	if err_up_tx.Error != nil {
+		return 0, err_up_tx.Error
 	}
 
 	db.NetIncome += shouyi
@@ -700,7 +679,7 @@ func ZhiTui(o orm.Ormer, user_id string) (float64, error) {
 // 创建用于超级节点　等级记录的　map 每个　values 第一个元素都是　等级标示
 func ReturnMap(m map[string][]string) {
 	s_f_t := []models.SuperForceTable{}
-	db.NewEcologyOrm().QueryTable("super_force_table").All(&s_f_t)
+	db.NewEcologyOrm().Table("super_force_table").Find(&s_f_t)
 	for _, v := range s_f_t {
 		if m[v.Level] == nil {
 			m[v.Level] = append(m[v.Level], v.Level)
@@ -709,17 +688,17 @@ func ReturnMap(m map[string][]string) {
 }
 
 // 处理map数据并给定收益
-func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string) {
+func HandlerMap(o *gorm.DB, m map[string][]string, in_fo *info, order_id string) {
 	err_m := make(map[string][]string)
 	for k_level, vv := range m {
-		s_f_t := models.SuperForceTable{
-			Level: k_level,
-		}
-		o.Read(&s_f_t, "level")
+		s_f_t := models.SuperForceTable{}
+		o.Table("super_force_table").Where("level = ?", k_level).First(&s_f_t)
+
 		tfor_some := db.NetIncome * s_f_t.BonusCalculation
 		for _, v := range vv {
-			acc := models.Account{UserId: v}
-			o.Read(&acc, "user_id")
+			acc := models.Account{}
+			o.Table("super_force_table").Where("user_id = ?", v).First(&acc)
+
 			if acc.PeerState == true {
 				err := actuator.PingAddWalletCoin(v, tfor_some/float64(len(vv)))
 				if err != nil {
@@ -729,17 +708,14 @@ func HandlerMap(o orm.Ormer, m map[string][]string, in_fo *info, order_id string
 						AddFormulaABonus(v, tfor_some/float64(len(vv)))
 						in_fo.peer_a_bouns += tfor_some / float64(len(vv))
 						if order_id != "" {
-							o.Raw("update mrsf_state_table set peer_a_bouns=? where order_id=? and user_id=?", tfor_some/float64(len(vv)), order_id, v).Exec()
+							o.Model(&models.MrsfStateTable{}).Where("order_id = ?", order_id).Where("user_id = ?", v).Update("peer_a_bouns", tfor_some/float64(len(vv)))
 						} else {
 							mrsf := models.MrsfStateTable{}
 							o.Raw("select * from mrsf_state_table where user_id=? and order_id=? order by id desc limit 1",
-								v, strconv.Itoa(acc.Id)+time.Now().AddDate(0, 0, -1).Format("2006-01-02")).QueryRow(&mrsf)
+								v, strconv.Itoa(acc.Id)+time.Now().AddDate(0, 0, -1).Format("2006-01-02")).First(&mrsf)
 							mrsf.Time = time.Now().Format("2006-01-02 15:04:05")
 							mrsf.PeerABouns = tfor_some / float64(len(vv))
-							o.Raw("update mrsf_state_table set time=?,peer_a_bouns=? where id=?",
-								mrsf.Time,
-								mrsf.PeerABouns,
-								mrsf.Id).Exec()
+							o.Model(&models.MrsfStateTable{}).Where("id = ?", mrsf.Id).Update(map[string]interface{}{"time": mrsf.Time, "peer_a_bouns": mrsf.PeerABouns})
 						}
 					}
 					if k_level == "钻石节点" {
@@ -775,8 +751,8 @@ func CreateErrUserTxList(users []models.User) {
 			Expenditure: 0,
 			InCome:      0,
 		}
-		_, errtxid_blo := o.Insert(&blo_txid_dcmt)
-		if errtxid_blo != nil {
+		errtxid_blo := o.Create(&blo_txid_dcmt)
+		if errtxid_blo.Error != nil {
 			err_users = append(err_users, v)
 		}
 	}
@@ -786,28 +762,24 @@ func CreateErrUserTxList(users []models.User) {
 }
 
 //静态的收益累加
-func JintaiBuShiFang(o orm.Ormer, user_id string) error {
-	account := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&account, "user_id")
-	formula := models.Formula{
-		EcologyId: account.Id,
-	}
-	o.Read(&formula, "ecology_id")
+func JintaiBuShiFang(o *gorm.DB, user_id string) error {
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&account)
+	formula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account.Id).First(&formula)
 	blocked_yestoday := models.AccountDetail{}
 	err_raw := o.Raw(
 		"select * from account_detail where user_id=? and create_date<=? order by create_date desc,id desc limit 1",
 		user_id,
 		time.Now().AddDate(0, 0, -1).Format("2006-01-02 ")+"23:59:59").
-		QueryRow(&blocked_yestoday)
-	if err_raw != nil {
-		if err_raw.Error() != "<QuerySeter> no row found" {
-			return err_raw
+		First(&blocked_yestoday)
+	if err_raw.Error != nil {
+		if err_raw.Error.Error() != "<QuerySeter> no row found" {
+			return err_raw.Error
 		}
 	}
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).First(&blocked_old)
 	abonus := formula.HoldReturnRate * blocked_yestoday.CurrentBalance
 	aabonus := blocked_old.CurrentBalance - abonus
 	if aabonus < 0 {
@@ -823,24 +795,20 @@ func JintaiBuShiFang(o orm.Ormer, user_id string) error {
 }
 
 //直推累加
-func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
-	account := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&account, "user_id")
+func DongtaiBuShiFang(o *gorm.DB, user_id string) error {
+	account := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&account)
 
-	formula := models.Formula{
-		EcologyId: account.Id,
-	}
-	o.Read(&formula, "ecology_id")
+	formula := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account.Id).First(&formula)
 
 	blos := []models.BlockedDetail{}
 	time_start := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 00:00:00"
 	time_end := time.Now().AddDate(0, 0, -1).Format("2006-01-02") + " 23:59:59"
-	_, err := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").QueryRows(&blos)
-	if err != nil {
-		if err.Error() != "<QuerySeter> no row found" {
-			return err
+	er := o.Raw("select * from blocked_detail where user_id=? and create_date>=? and create_date<=? and comment=?", user_id, time_start, time_end, "直推收益").Find(&blos)
+	if er.Error != nil {
+		if er.Error.Error() != "<QuerySeter> no row found" {
+			return er.Error
 		}
 	}
 	shouyi := 0.0
@@ -849,7 +817,7 @@ func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 	}
 
 	blocked_old := models.BlockedDetail{}
-	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).QueryRow(&blocked_old)
+	o.Raw("select * from blocked_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account.Id).First(&blocked_old)
 
 	shouyia := blocked_old.CurrentBalance - shouyi
 	if shouyia < 0 {
@@ -865,11 +833,11 @@ func DongtaiBuShiFang(o orm.Ormer, user_id string) error {
 }
 
 // 团队累加
-func TeamBuShiFang(o orm.Ormer, user_id string) error {
+func TeamBuShiFang(o *gorm.DB, user_id string) error {
 	coins := []float64{}
 	user_current_layer := []models.User{}
 	// 团队收益　开始
-	o.Raw("select * from user where father_id=?", user_id).QueryRows(&user_current_layer)
+	o.Raw("select * from user where father_id=?", user_id).Find(&user_current_layer)
 	if len(user_current_layer) > 0 {
 		for _, v := range user_current_layer {
 			if user_id != v.UserId {
@@ -900,7 +868,7 @@ func TeamBuShiFang(o orm.Ormer, user_id string) error {
 }
 
 //　计算团队的收益,但是不给定
-func TeamWork(o orm.Ormer, coins []float64, user_id string) error {
+func TeamWork(o *gorm.DB, coins []float64, user_id string) error {
 	for i := 0; i < len(coins)-1; i++ {
 		for j := i + 1; j < len(coins); j++ {
 			if coins[i] > coins[j] {
@@ -917,25 +885,20 @@ func TeamWork(o orm.Ormer, coins []float64, user_id string) error {
 		return nil
 	}
 
-	acc := models.Account{
-		UserId: user_id,
-	}
-	o.Read(&acc, "user_id")
-	for_m := models.Formula{
-		EcologyId: acc.Id,
-	}
-	o.Read(&for_m, "ecology_id")
+	acc := models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&acc)
+
+	for_m := models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", acc.Id).First(&for_m)
 
 	value = value * for_m.TeamReturnRate
 
-	var account = models.Account{
-		UserId: user_id,
-	}
-	o.Read(&account, "user_id")
-	var formula = models.Formula{
-		EcologyId: account.Id,
-	}
-	o.Read(&formula, "ecology_id")
+	var account = models.Account{}
+	o.Table("account").Where("user_id = ?", user_id).First(&account)
+
+	var formula = models.Formula{}
+	o.Table("formula").Where("ecology_id = ?", account.Id).First(&formula)
+
 	value = value * formula.TeamReturnRate
 
 	if value > account.BockedBalance {

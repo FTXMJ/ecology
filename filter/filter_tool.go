@@ -40,15 +40,14 @@ func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomCl
 		return 401, "数据格式不正确", tockken
 	}
 	o := db.NewEcologyOrm()
-	u := models.User{
-		UserId: tockken.UserID,
-	}
+	u := models.User{}
+
 	_, nicke_name, err_ping_user := models.PingUserAdmin(token, tockken.UserID)
 	if err_ping_user != nil {
 		return 500, err_ping_user.Error(), tockken
 	}
-	err_read := o.Read(&u, "user_id")
-	if err_read != nil && err_read.Error() == "<QuerySeter> no row found" && tockken.NameSpace == "" {
+	err_read := o.Table("user").Where("user_id = ?", tockken.UserID).First(&u)
+	if err_read.Error != nil && err_read.Error.Error() == "<QuerySeter> no row found" && tockken.NameSpace == "" {
 		o.Begin()
 		f, _, err_get_user := models.PingUser(token, tockken.UserID)
 		if err_get_user != nil {
@@ -64,8 +63,8 @@ func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomCl
 			user.UserName = tockken.Name
 		}
 
-		_, erruser := o.Insert(&user)
-		if erruser != nil {
+		erruser := o.Create(&user)
+		if erruser.Error != nil {
 			o.Rollback()
 			return 500, "创建用户失败!", tockken
 		}
@@ -76,8 +75,8 @@ func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomCl
 			StaticReturn:   true,
 			PeerState:      true,
 		}
-		_, account_def_err := o.Insert(&account_def)
-		if account_def_err != nil {
+		account_def_err := o.Create(&account_def)
+		if account_def_err.Error != nil {
 			o.Rollback()
 			return 500, "创建生态仓库失败!", tockken
 		}
@@ -85,8 +84,8 @@ func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomCl
 			EcologyId:      account_def.Id,
 			ReturnMultiple: 1,
 		}
-		_, err_for := o.Insert(&formula)
-		if err_for != nil {
+		err_for := o.Create(&formula)
+		if err_for.Error != nil {
 			o.Rollback()
 			return 500, "创建算力表失败!", tockken
 		}
@@ -96,7 +95,7 @@ func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomCl
 		u.UserName = nicke_name.(string)
 		o.Update(&u, "user_name")
 		o.Commit()
-	} else if err_read != nil && err_read.Error() != "<QuerySeter> no row found" {
+	} else if err_read != nil && err_read.Error.Error() != "<QuerySeter> no row found" {
 		return 500, "后端服务期错误!", tockken
 	}
 	return 0, "", tockken
