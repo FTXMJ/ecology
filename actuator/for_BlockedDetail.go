@@ -189,6 +189,13 @@ func SelectPondMachinemsg(o *gorm.DB, p models.FindObj, page models.Page) ([]mod
 		}
 		lists = append(lists, blo)
 	}
+	for i := 0; i < len(lists); i++ {
+		var blo models.BlockedDetail
+		o.Table("blocked_detail").Where("tx_id = ?", lists[i].TxId).First(&blo)
+		lists[i].BloCurrentRevenue = blo.CurrentRevenue
+		rm := blo.CurrentRevenue / lists[i].AccCurrentRevenue
+		lists[i].ReturnMultiple = int(rm)
+	}
 	return lists, page, nil
 }
 
