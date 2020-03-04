@@ -162,8 +162,8 @@ func ForAddCoin(o orm.Ormer, father_id string, coin float64, proportion float64)
 }
 
 //条件查询对象包含的则视为条件
-func SelectPondMachinemsgForAcc(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
-	list, err := SqlCreateValues(o, p, table_name)
+func SelectPondMachinemsg(o orm.Ormer, p models.FindObj, page models.Page) ([]models.BlockedDetailIndex, models.Page, error) {
+	list, err := SqlCreateValues(o, p, "account_detail")
 	if err != nil {
 		return []models.BlockedDetailIndex{}, models.Page{}, err
 	}
@@ -174,62 +174,29 @@ func SelectPondMachinemsgForAcc(o orm.Ormer, p models.FindObj, page models.Page,
 
 	lists := []models.BlockedDetailIndex{}
 	for _, v := range listle {
-		value, ok := v.(models.AccountDetail)
-		fmt.Println(ok)
+		value, _ := v.(models.AccountDetail)
 		var u models.User
 		u.UserId = value.UserId
 		o.Read(&u, "user_id")
 		blo := models.BlockedDetailIndex{
-			Id:             value.Id,
-			UserId:         value.UserId,
-			UserName:       u.UserName,
-			CurrentRevenue: value.CurrentRevenue,
-			CurrentOutlay:  value.CurrentOutlay,
-			OpeningBalance: value.OpeningBalance,
-			CurrentBalance: value.CurrentBalance,
-			CreateDate:     value.CreateDate,
-			Comment:        value.Comment,
-			TxId:           value.TxId,
-			Account:        value.Account,
-			CoinType:       value.CoinType,
+			Id:                value.Id,
+			UserId:            value.UserId,
+			UserName:          u.UserName,
+			AccCurrentRevenue: value.CurrentRevenue,
+			CreateDate:        value.CreateDate,
+			Comment:           value.Comment,
+			TxId:              value.TxId,
+			Account:           value.Account,
+			CoinType:          value.CoinType,
 		}
 		lists = append(lists, blo)
 	}
-	return lists, page, nil
-}
-
-func SelectPondMachinemsgForBlo(o orm.Ormer, p models.FindObj, page models.Page, table_name string) ([]models.BlockedDetailIndex, models.Page, error) {
-	list, err := SqlCreateValues(o, p, table_name)
-	if err != nil {
-		return []models.BlockedDetailIndex{}, models.Page{}, err
-	}
-
-	start, end := InitPage(&page, len(list))
-
-	listle := ListLimit(list, start, end)
-
-	lists := []models.BlockedDetailIndex{}
-	for _, v := range listle {
-		value, ok := v.(models.BlockedDetail)
-		fmt.Println(ok)
-		var u models.User
-		u.UserId = value.UserId
-		o.Read(&u, "user_id")
-		blo := models.BlockedDetailIndex{
-			Id:             value.Id,
-			UserId:         value.UserId,
-			UserName:       u.UserName,
-			CurrentRevenue: value.CurrentRevenue,
-			CurrentOutlay:  value.CurrentOutlay,
-			OpeningBalance: value.OpeningBalance,
-			CurrentBalance: value.CurrentBalance,
-			CreateDate:     value.CreateDate,
-			Comment:        value.Comment,
-			TxId:           value.TxId,
-			Account:        value.Account,
-			CoinType:       value.CoinType,
-		}
-		lists = append(lists, blo)
+	for i := 0; i < len(lists); i++ {
+		var blo models.BlockedDetail
+		o.QueryTable("blocked_detail").Filter("tx_id", lists[i].TxId).One(&blo)
+		lists[i].BloCurrentRevenue = blo.CurrentRevenue
+		rm := blo.CurrentRevenue / lists[i].AccCurrentRevenue
+		lists[i].ReturnMultiple = int(rm)
 	}
 	return lists, page, nil
 }

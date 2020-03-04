@@ -310,13 +310,12 @@ func (this *BackStageManagement) ReturnPageHostryRoot() {
 // @Produce json
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
-// @Param type query string true "查询的s数据类型　　 blocked_detail=铸币表　account_detail=充值表"
 // @Param user_id query string true "用户id"
 // @Param tx_id query string true "订单id"
 // @Param start_time query string true "开始时间"
 // @Param end_time query string true "结束时间"
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
-// @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
+// @Success 200____交易的历史记录 {object} models.HostryFindInfoTest
 // @router /admin/filter_history_info [GET]
 func (this *BackStageManagement) FilterHistoryInfo() {
 	var (
@@ -325,7 +324,6 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 
 		current_page, _   = this.GetInt("page")
 		page_size, _      = this.GetInt("pageSize")
-		table_name        = this.GetString("type")
 		user_id           = this.GetString("user_id")
 		user_name         = this.GetString("user_name")
 		tx_id             = this.GetString("tx_id")
@@ -364,11 +362,8 @@ func (this *BackStageManagement) FilterHistoryInfo() {
 	list := make([]models.BlockedDetailIndex, 0)
 	page := models.Page{}
 	var err error
-	if table_name == "account_detail" {
-		list, page, err = actuator.SelectPondMachinemsgForAcc(o, find_obj, p, table_name)
-	} else if table_name == "blocked_detail" {
-		list, page, err = actuator.SelectPondMachinemsgForBlo(o, find_obj, p, table_name)
-	}
+
+	list, page, err = actuator.SelectPondMachinemsg(o, find_obj, p)
 	if err != nil {
 		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", []models.HostryFindInfo{})

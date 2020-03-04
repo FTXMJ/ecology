@@ -128,16 +128,15 @@ type AccountOFF struct {
 }
 
 type BlockedDetailIndex struct {
-	Id             int     `json:"id"`
-	UserId         string  `json:"user_id"`
-	UserName       string  `json:"user_name"`
-	CurrentRevenue float64 `json:"current_revenue"` //本期收入
-	CurrentOutlay  float64 `json:"current_outlay"`  //本期支出
-	OpeningBalance float64 `json:"opening_balance"` //上期余额
-	CurrentBalance float64 `json:"current_balance"` //本期余额
-	CreateDate     string  `json:"create_date"`     //创建时间
-	Comment        string  `json:"comment"`         //评论
-	TxId           string  `json:"tx_id"`           //任务id
-	Account        int     `json:"account"`         //生态仓库id
-	CoinType       string  `json:"coin_type"`       // 币种信息
+	Id                int     `json:"id"`
+	UserId            string  `json:"user_id"`             // 用户id
+	UserName          string  `json:"user_name"`           // 用户名
+	AccCurrentRevenue float64 `json:"acc_current_revenue"` //转入数量
+	BloCurrentRevenue float64 `json:"blo_current_revenue"` //铸币数量
+	ReturnMultiple    int     `json:"return_multiple"`     //铸币倍数
+	CreateDate        string  `json:"create_date"`         //创建时间
+	Comment           string  `json:"comment"`             //评论
+	TxId              string  `json:"tx_id"`               //任务id
+	Account           int     `json:"account"`             //生态仓库id
+	CoinType          string  `json:"coin_type"`           // 币种信息
 }

@@ -217,3 +217,23 @@ type RealTimePriceTest struct {
 	Volume交易量    string `orm:"column(volume)" json:"volume"`
 	Quantity交易额  string `orm:"column(quantity)" json:"quantity"`
 }
+
+// history information
+type HostryFindInfoTest struct {
+	Items []BlockedDetailIndexTest `json:"items"` //数据列表
+	Page  Page                     `json:"page"`  //分页信息
+}
+
+type BlockedDetailIndexTest struct {
+	Id                    int     `json:"id"`
+	UserId用户id            string  `json:"user_id"`             // 用户id
+	UserName用户名           string  `json:"user_name"`           // 用户名
+	AccCurrentRevenue转入数量 float64 `json:"acc_current_revenue"` //转入数量
+	BloCurrentRevenue铸币数量 float64 `json:"blo_current_revenue"` //铸币数量
+	ReturnMultiple铸币倍数    int     `json:"return_multiple"`     //铸币倍数
+	CreateDate创建时间        string  `json:"create_date"`         //创建时间
+	Comment类型             string  `json:"comment"`             //评论
+	TxId订单号               string  `json:"tx_id"`               //任务id
+	Account生态仓库id         int     `json:"account"`             //生态仓库id
+	CoinType币种信息          string  `json:"coin_type"`           // 币种信息
+}

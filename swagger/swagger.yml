@@ -166,11 +166,6 @@ paths:
         required: true
         type: string
       - in: query
-        name: type
-        description: 查询的s数据类型　　 blocked_detail=铸币表　account_detail=充值表
-        required: true
-        type: string
-      - in: query
         name: user_id
         description: 用户id
         required: true
@@ -199,7 +194,7 @@ paths:
         200____交易的历史记录:
           description: ""
           schema:
-            $ref: '#/definitions/models.HostryPageInfo_test'
+            $ref: '#/definitions/models.HostryFindInfoTest'
   /ecology/admin/insert_dapp:
     post:
       tags:
@@ -945,6 +940,37 @@ paths:
           schema:
             $ref: '#/definitions/models.RealTimePriceTest'
 definitions:
+  models.BlockedDetailIndexTest:
+    title: BlockedDetailIndexTest
+    type: object
+    properties:
+      acc_current_revenue:
+        type: number
+        format: double
+      account:
+        type: integer
+        format: int64
+      blo_current_revenue:
+        type: number
+        format: double
+      coin_type:
+        type: string
+      comment:
+        type: string
+      create_date:
+        type: string
+      id:
+        type: integer
+        format: int64
+      return_multiple:
+        type: integer
+        format: int64
+      tx_id:
+        type: string
+      user_id:
+        type: string
+      user_name:
+        type: string
   models.DAPPListTest:
     title: DAPPListTest
     type: object
@@ -1117,6 +1143,16 @@ definitions:
       to_day_rate___今日算力:
         type: number
         format: double
+  models.HostryFindInfoTest:
+    title: HostryFindInfoTest
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/models.BlockedDetailIndexTest'
+      page:
+        $ref: '#/definitions/models.Page'
   models.HostryPageInfo_test:
     title: HostryPageInfo_test
     type: object
