@@ -715,7 +715,7 @@ func HandlerMap(o *gorm.DB, m map[string][]string, in_fo *info, order_id string)
 								v, strconv.Itoa(acc.Id)+time.Now().AddDate(0, 0, -1).Format("2006-01-02")).First(&mrsf)
 							mrsf.Time = time.Now().Format("2006-01-02 15:04:05")
 							mrsf.PeerABouns = tfor_some / float64(len(vv))
-							o.Model(&models.MrsfStateTable{}).Where("id = ?", mrsf.Id).Update(map[string]interface{}{"time": mrsf.Time, "peer_a_bouns": mrsf.PeerABouns})
+							o.Model(&models.MrsfStateTable{}).Where("id = ?", mrsf.Id).Updates(map[string]interface{}{"time": mrsf.Time, "peer_a_bouns": mrsf.PeerABouns})
 						}
 					}
 					if k_level == "钻石节点" {

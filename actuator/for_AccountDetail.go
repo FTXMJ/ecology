@@ -2,6 +2,7 @@ package actuator
 
 import (
 	"ecology/models"
+	"fmt"
 	"github.com/jinzhu/gorm"
 
 	"time"
@@ -10,7 +11,8 @@ import (
 // 生成充值表的借贷记录
 func FindLimitOneAndSaveAcc_d(o *gorm.DB, user_id, comment, tx_id string, money_out, money_in float64, account_id int) error {
 	account_old := models.AccountDetail{}
-	o.Raw("select * from account_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account_id).First(&account_old)
+	e := o.Raw("select * from account_detail where user_id=? and account=? order by create_date desc,id desc limit 1", user_id, account_id).First(&account_old).Error
+	fmt.Println(e)
 	if account_old.Id == 0 {
 		account_old.CurrentBalance = 0
 	}

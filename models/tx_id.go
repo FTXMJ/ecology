@@ -8,7 +8,7 @@ type TxIdList struct {
 	TxId        string  `gorm:"column:tx_id" json:"tx_id"`             //任务id
 	UserId      string  `gorm:"column:user_id" json:"user_id"`         //任务id
 	Comment     string  `gorm:"column:comment" json:"comment"`         // 解释注释
-	CreateTime  string  `gorm:"column:expenditure" json:"expenditure"` //任务id
+	CreateTime  string  `gorm:"column:create_time" json:"create_time"` //任务id
 	Expenditure float64 `gorm:"column:expenditure" json:"expenditure"` //任务id
 	InCome      float64 `gorm:"column:in_come" json:"in_come"`         //任务id
 }

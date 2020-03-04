@@ -65,5 +65,7 @@ func init() {
 		&models.User{},
 	)
 
-	db_wallet.AutoMigrate(&models.WtQuote{})
+	db_wallet.AutoMigrate(
+		&models.WtQuote{},
+	)
 }

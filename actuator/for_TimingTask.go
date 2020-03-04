@@ -4,6 +4,7 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
+	"fmt"
 
 	"github.com/jinzhu/gorm"
 	"github.com/shopspring/decimal"
@@ -127,7 +128,7 @@ func EcologyH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data
 			return err
 		}
 	} else {
-		er := o.Model(&models.QuoteTicker{}).Where("symbol = ?", r_t_p.Symbol).Update(map[string]interface{}{
+		er := o.Model(&models.QuoteTicker{}).Where("symbol = ?", r_t_p.Symbol).Updates(map[string]interface{}{
 			"close":      r_t_p.Close,
 			"high":       r_t_p.High,
 			"low":        r_t_p.Low,
@@ -156,7 +157,7 @@ func EcologyH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data
 	r_h.TimeStamp = time.Unix(int64(t)/1000, 0).Format("2006-01-02 15:04:05")
 	er := o.Create(&r_h)
 	if er.Error != nil {
-		if err.Error() == "Error 1062: Duplicate entry '"+r_h.SymbolId+"' for key 'symbol_id'" {
+		if er.Error.Error() == "Error 1062: Duplicate entry '"+r_h.SymbolId+"' for key 'symbol_id'" {
 			o.Update(&r_h)
 		} else {
 			return err
@@ -170,12 +171,15 @@ func WalletH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data_
 	price, _ := strconv.ParseFloat(value.Date[0].C, 64)
 	a := make([]models.WtQuote, 0)
 	b := models.WtQuote{}
-	o.Raw("select * from wt_quote where code=?", symbol).First(&b)
-	o.Raw("select * from wt_quote", symbol).Find(&a)
+	//o.Where("code = ?", symbol).First(&b)
+	e := o.Table("wt_quote").Where("code = ?", symbol).First(&b).Error
+	fmt.Println(e)
+	//o.Raw(`SELECT * FROM wt_quote WHERE code = ?`, symbol).Scan(&b)
+	//o.Raw(`SELECT * FROM wt_quote`, symbol).Scan(&a)
+	o.Table("wt_quote").Find(&a)
 	wt := []models.WtQuote{}
 	if o.Table("wt_quote").Where("code = ?", symbol).Find(&wt); len(wt) == 0 {
 		w_q := models.WtQuote{
-			CreatedAt:     time.Now(),
 			Code:          symbol,
 			BaseCurrency:  baseCurrency,
 			QuoteCurrency: quoteCurrency,
@@ -186,7 +190,7 @@ func WalletH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data_
 			return err
 		}
 	} else {
-		er := o.Model(&models.QuoteTicker{}).Where("code = ?", symbol).Update(map[string]interface{}{
+		er := o.Model(&models.QuoteTicker{}).Where("code = ?", symbol).Updates(map[string]interface{}{
 			"price":      price,
 			"updated_at": time.Now(),
 		})
@@ -200,7 +204,9 @@ func WalletH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data_
 func UpdateCoinsPrice(o *gorm.DB, price float64) {
 	w_q := make([]models.WtQuote, 0)
 	var count float64 = 1
-	o.Raw("select * from wt_quote").Find(&w_q)
+	//o.Raw("select * from wt_quote").Scan(&w_q)
+	//o.Table("wt_quote").Find(&w_q)
+	o.Raw("SELECT * FROM wt_qoute").Scan(&w_q)
 	if len(w_q) > 0 {
 		items := make([]models.WtQuote, 0)
 		p := div(count, price)

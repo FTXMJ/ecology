@@ -184,11 +184,11 @@ func ToChangeIntoUSDD(c *gin.Context) {
 		}
 	}()
 
-	o.Begin()
+	one := o.Begin()
 	order_if := models.TxIdList{}
 
 	if er := o.Table("tx_id_list").Where("tx_id = ?", order_id).First(&order_if); er.Error != nil {
-		if er.Error.Error() != "<QuerySeter> no row found" {
+		if er.Error.Error() != "record not found" {
 			err = errors.New("订单以存在，请勿提交!!")
 			return
 		}
@@ -214,7 +214,7 @@ func ToChangeIntoUSDD(c *gin.Context) {
 		err = errors.New("数据库操作失败!")
 		return
 	}
-	o.Commit()
+	one.Commit()
 
 	token := c.Request.Header.Get("Authorization")
 	if err = actuator.PingWalletAdd(token, coin_number); err != nil {
@@ -225,7 +225,7 @@ func ToChangeIntoUSDD(c *gin.Context) {
 	order.WalletState = true
 	o.Update(&order)
 
-	o.Begin()
+	two := o.Begin()
 	//TFOR交易记录 - 更新生态仓库的交易余额
 	if err = actuator.FindLimitOneAndSaveAcc_d(o, user_id, "普通转入", order_id, 0, coin_number, ecology_id); err != nil {
 		err = errors.New("数据库操作失败!!")
@@ -236,7 +236,7 @@ func ToChangeIntoUSDD(c *gin.Context) {
 		err = errors.New("数据库操作失败!!")
 		return
 	}
-	o.Commit()
+	two.Commit()
 
 	data = common.NewResponse(nil)
 	return
@@ -256,11 +256,12 @@ func UpgradeWarehouse(c *gin.Context) {
 	var (
 		data            *common.ResponseData
 		o               = db.NewEcologyOrm()
-		coin_number_str = c.GetString("cion_number")
-		order_id        = c.GetString("order_id")
+		coin_number_str = c.PostForm("cion_number")
+		order_id        = c.PostForm("order_id")
 		coin_number, _  = strconv.ParseFloat(coin_number_str, 64)
-		ecology_id      = c.GetInt("ecology_id")
-		levelstr        = c.GetString("levelstr")
+		ecology_id_str  = c.PostForm("ecology_id")
+		ecology_id, _   = strconv.Atoi(ecology_id_str)
+		levelstr        = c.PostForm("levelstr")
 		jwtValues       = filter.GetJwtValues(c)
 		user_id         = jwtValues.UserID
 		err             error
@@ -277,10 +278,10 @@ func UpgradeWarehouse(c *gin.Context) {
 		}
 	}()
 
-	o.Begin()
+	one := o.Begin()
 	order_if := models.TxIdList{}
 	if er := o.Table("tx_id_list").Where("tx_id = ?", order_id).First(&order_if); er.Error != nil {
-		if er.Error.Error() != "<QuerySeter> no row found" {
+		if er.Error.Error() != "record not found" {
 			err = errors.New("订单以存在，请勿提交!!")
 			return
 		}
@@ -316,7 +317,7 @@ func UpgradeWarehouse(c *gin.Context) {
 		err = errors.New("数据库操作失败!")
 		return
 	}
-	o.Commit()
+	one.Commit()
 
 	//钱包操作
 	token := c.Request.Header.Get("Authorization")
@@ -329,7 +330,7 @@ func UpgradeWarehouse(c *gin.Context) {
 		return
 	}
 
-	o.Begin()
+	two := o.Begin()
 	o.Model(&models.Account{}).Where("id = ?", ecology_id).Update("level", levelstr)
 	if er := o.Model(&models.Account{}).Where("id = ?", ecology_id).Update("level", levelstr); er.Error != nil {
 		err = errors.New("数据库操作失败!")
@@ -350,7 +351,7 @@ func UpgradeWarehouse(c *gin.Context) {
 		err = errors.New("数据库操作失败!")
 		return
 	}
-	o.Commit()
+	two.Commit()
 	data = common.NewResponse(nil)
 	return
 }

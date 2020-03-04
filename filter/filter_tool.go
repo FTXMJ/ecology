@@ -90,12 +90,12 @@ func UserFilter(ctx *gin.Context, api string) (code int, msg string, c *CustomCl
 			return 500, "创建算力表失败!", tockken
 		}
 		o.Commit()
-	} else if err_read == nil && u.UserName != nicke_name.(string) && tockken.NameSpace == "" {
+	} else if err_read.Error == nil && u.UserName != nicke_name.(string) && tockken.NameSpace == "" {
 		o.Begin()
 		u.UserName = nicke_name.(string)
 		o.Update(&u, "user_name")
 		o.Commit()
-	} else if err_read != nil && err_read.Error.Error() != "<QuerySeter> no row found" {
+	} else if err_read.Error != nil && err_read.Error.Error() != "<QuerySeter> no row found" {
 		return 500, "后端服务期错误!", tockken
 	}
 	return 0, "", tockken

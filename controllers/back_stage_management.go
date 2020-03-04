@@ -245,7 +245,7 @@ func OperationSuperFormulaList(c *gin.Context) {
 		}
 	case "update":
 		id, _ := strconv.Atoi(super_force_id)
-		if er := o.Model(&models.SuperForceTable{}).Where("id = ?", id).Update(map[string]interface{}{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force}); er.Error != nil {
+		if er := o.Model(&models.SuperForceTable{}).Where("id = ?", id).Updates(map[string]interface{}{"level": levelstr, "coin_number_rule": coin_number, "bonus_calculation": force}); er.Error != nil {
 			err = errors.New("节点算力表 更新失败!")
 			return
 		}
@@ -318,8 +318,8 @@ func ReturnPageHostryRoot(c *gin.Context) {
 // @Param end_time query string true "结束时间"
 // @Param user_name query string true "用户名字  不搜就传空，搜索就传user_name"
 // @Success 200____交易的历史记录 {object} models.HostryPageInfo_test
-// @router /admin/where_history_info [GET]
-func whereHistoryInfo(c *gin.Context) {
+// @router /admin/filter_history_info [GET]
+func FilterHistoryInfo(c *gin.Context) {
 	var (
 		data *common.ResponseData
 		o    = db.NewEcologyOrm()
@@ -1192,7 +1192,7 @@ func UpdateDAPP(c *gin.Context) {
 		c.JSON(200, data)
 	}()
 
-	er := o.Model(&models.DappTable{}).Where("id = ?", dapp_id).Update(map[string]interface{}{
+	er := o.Model(&models.DappTable{}).Where("id = ?", dapp_id).Updates(map[string]interface{}{
 		"name":             dapp_name,
 		"agreement_type":   dapp_type,
 		"the_link_address": dapp_link_address,
@@ -1235,7 +1235,7 @@ func UpdateDAPPState(c *gin.Context) {
 	if dapp_state == 2 {
 		state = false
 	}
-	er := o.Model(&models.DappTable{}).Where("id = ?", dapp_id).Update(map[string]interface{}{
+	er := o.Model(&models.DappTable{}).Where("id = ?", dapp_id).Updates(map[string]interface{}{
 		"state":       state,
 		"update_time": time.Now().Format("2006-01-02 15:04:05"),
 	})
