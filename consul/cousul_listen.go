@@ -70,7 +70,7 @@ func init() {
 func GetService(serviceid, defau string) string {
 	service, _, err := MicroClient.Agent().Service(serviceid, nil)
 	if err == nil {
-		return "http://" + service.Address // + ":" + strconv.Itoa(service.Port)
+		return "http://" + service.Address + ":" + strconv.Itoa(service.Port)
 	}
 	return defau
 }
