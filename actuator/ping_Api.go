@@ -241,10 +241,10 @@ func GetQuote(baseCurrency, quoteCurrency string) (Data_r, error) {
 	reqest, _ := http.NewRequest("GET", url, nil)
 	//处理返回结果
 	response, errdo := client.Do(reqest)
-	defer response.Body.Close()
 	if errdo != nil {
 		return Data_r{}, errdo
 	}
+	defer response.Body.Close()
 	bys, err_read := ioutil.ReadAll(response.Body)
 	if err_read != nil {
 		return Data_r{}, err_read

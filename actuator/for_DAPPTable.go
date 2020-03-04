@@ -2,6 +2,7 @@ package actuator
 
 import (
 	"ecology/models"
+	"fmt"
 	"github.com/jinzhu/gorm"
 )
 
@@ -14,9 +15,10 @@ func SelectDAPP(o *gorm.DB, dapp_name, dapp_id, dapp_type string, page *models.P
 		q = q.Where("id = ?", dapp_id)
 	}
 	if dapp_type != "" {
-		q = q.Where("dapp_type = ?", dapp_type)
+		q = q.Where("agreement_type = ?", dapp_type)
 	}
-	q.Find(&dapp_list)
+	e := q.Find(&dapp_list).Error
+	fmt.Println(e)
 
 	start, end := InitPage(page, len(dapp_list))
 

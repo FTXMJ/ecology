@@ -66,7 +66,7 @@ func ShowUserFormula(c *gin.Context) {
 	if for_mula.Level == "" {
 		for_mula_table.ReturnMultiple = 1
 	}
-	o.Table("formula_table").Where("return_multiple = ?", for_mula_table.ReturnMultiple)
+	o.Table("force_table").Where("return_multiple = ?", for_mula_table.ReturnMultiple).First(&for_mula_table)
 	data = common.NewResponse(for_mula_table)
 	return
 }
@@ -1137,7 +1137,6 @@ func InsertDAPP(c *gin.Context) {
 		c.JSON(200, data)
 	}()
 
-	o.Raw("select * from dapp_table where name=?", dapp_name)
 	dapp_table := models.DappTable{}
 	o.Table("dapp_table").Where("name = ?", dapp_name).First(&dapp_table)
 	if dapp_table.Id != 0 {
