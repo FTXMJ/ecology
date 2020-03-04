@@ -61,16 +61,16 @@ func init() {
 	if err != nil {
 		//log.Log.Fatal("consul client error : ", err)
 	}
-	GetUserApi = GetService(beego.AppConfig.String("api::user_tfor"), "http://192.168.8.126:8089")
-	GetAuthApi = GetService(beego.AppConfig.String("api::auth_tfor"), "http://192.168.8.126:8088")
-	GetWalletApi = GetService(beego.AppConfig.String("api::wallet_tfor"), "http://192.168.8.126:8088")
+	GetUserApi = GetService(beego.AppConfig.String("api::user_tfor"), "http://192.168.8.126")
+	GetAuthApi = GetService(beego.AppConfig.String("api::auth_tfor"), "http://192.168.8.126")
+	GetWalletApi = GetService(beego.AppConfig.String("api::wallet_tfor"), "http://192.168.8.126")
 	//consulDeRegister()
 }
 
 func GetService(serviceid, defau string) string {
 	service, _, err := MicroClient.Agent().Service(serviceid, nil)
 	if err == nil {
-		return "http://" + service.Address + ":" + strconv.Itoa(service.Port)
+		return "http://" + service.Address // + ":" + strconv.Itoa(service.Port)
 	}
 	return defau
 }

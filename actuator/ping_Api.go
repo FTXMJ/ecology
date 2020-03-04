@@ -220,7 +220,7 @@ func GetTeams(user models.User) ([]string, error) {
 	values := data_users{}
 	err := json.Unmarshal(bys, &values)
 	if err != nil {
-		return values.Data, errors.New("钱包金额操作失败!")
+		return values.Data, errors.New("获取团队人员失败!")
 	} else if values.Code != 200 {
 		return values.Data, errors.New(values.Msg)
 	}
