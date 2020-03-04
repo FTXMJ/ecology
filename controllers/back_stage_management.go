@@ -311,7 +311,6 @@ func ReturnPageHostryRoot(c *gin.Context) {
 // @Produce json
 // @Param page query string true "分页信息　－　当前页数"
 // @Param pageSize query string true "分页信息　－　每页数据量"
-// @Param type query string true "查询的s数据类型　　 blocked_detail=铸币表　account_detail=充值表"
 // @Param user_id query string true "用户id"
 // @Param tx_id query string true "订单id"
 // @Param start_time query string true "开始时间"
@@ -328,7 +327,6 @@ func FilterHistoryInfo(c *gin.Context) {
 		current_page, _    = strconv.Atoi(current_page_str)
 		page_size_str      = c.PostForm("pageSize")
 		page_size, _       = strconv.Atoi(page_size_str)
-		table_name         = c.PostForm("type")
 		user_id            = c.PostForm("user_id")
 		user_name          = c.PostForm("user_name")
 		tx_id              = c.PostForm("tx_id")
@@ -368,11 +366,9 @@ func FilterHistoryInfo(c *gin.Context) {
 	list := make([]models.BlockedDetailIndex, 0)
 	page := models.Page{}
 	var err error
-	if table_name == "account_detail" {
-		list, page, err = actuator.SelectPondMachinemsgForAcc(o, find_obj, p, table_name)
-	} else if table_name == "blocked_detail" {
-		list, page, err = actuator.SelectPondMachinemsgForBlo(o, find_obj, p, table_name)
-	}
+
+	list, page, err = actuator.SelectPondMachinemsg(o, find_obj, p)
+
 	if err != nil {
 		logs.Log.Error("   更新状态失败,数据库错误", err)
 		data = common.NewErrorResponse(500, "更新状态失败,数据库错误", []models.HostryFindInfo{})
