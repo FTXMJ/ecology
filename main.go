@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ecology/actuator"
 	"ecology/conf"
 	"ecology/controllers"
 	"ecology/filter"
@@ -14,7 +15,7 @@ var c = cron.New()
 func main() {
 	//定时更新首页数据
 	c.AddFunc(conf.ConfInfo.Schedules, controllers.DailyDividendAndRelease)
-	//c.AddFunc(conf.ConfInfo.Real_time_price, actuator.Second5s)
+	c.AddFunc(conf.ConfInfo.Real_time_price, actuator.Second5s)
 
 	c.Start()
 	//http://localhost:8080/swagger/

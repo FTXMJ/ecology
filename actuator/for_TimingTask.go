@@ -4,8 +4,6 @@ import (
 	db "ecology/db"
 	"ecology/logs"
 	"ecology/models"
-	"fmt"
-
 	"github.com/jinzhu/gorm"
 	"github.com/shopspring/decimal"
 
@@ -171,11 +169,7 @@ func WalletH(o *gorm.DB, symbol, baseCurrency, quoteCurrency string, value Data_
 	price, _ := strconv.ParseFloat(value.Date[0].C, 64)
 	a := make([]models.WtQuote, 0)
 	b := models.WtQuote{}
-	//o.Where("code = ?", symbol).First(&b)
-	e := o.Table("wt_quote").Where("code = ?", symbol).First(&b).Error
-	fmt.Println(e)
-	//o.Raw(`SELECT * FROM wt_quote WHERE code = ?`, symbol).Scan(&b)
-	//o.Raw(`SELECT * FROM wt_quote`, symbol).Scan(&a)
+	o.Table("wt_quote").Where("code = ?", symbol).First(&b)
 	o.Table("wt_quote").Find(&a)
 	wt := []models.WtQuote{}
 	if o.Table("wt_quote").Where("code = ?", symbol).Find(&wt); len(wt) == 0 {
