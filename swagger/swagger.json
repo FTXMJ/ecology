@@ -1452,8 +1452,8 @@
                     "format": "int64"
                 },
                 "return_multiple": {
-                    "type": "integer",
-                    "format": "int64"
+                    "type": "number",
+                    "format": "double"
                 },
                 "tx_id": {
                     "type": "string"

@@ -230,7 +230,7 @@ type BlockedDetailIndexTest struct {
 	UserName用户名           string  `json:"user_name"`           // 用户名
 	AccCurrentRevenue转入数量 float64 `json:"acc_current_revenue"` //转入数量
 	BloCurrentRevenue铸币数量 float64 `json:"blo_current_revenue"` //铸币数量
-	ReturnMultiple铸币倍数    int     `json:"return_multiple"`     //铸币倍数
+	ReturnMultiple铸币倍数    float64 `json:"return_multiple"`     //铸币倍数
 	CreateDate创建时间        string  `json:"create_date"`         //创建时间
 	Comment类型             string  `json:"comment"`             //评论
 	TxId订单号               string  `json:"tx_id"`               //任务id

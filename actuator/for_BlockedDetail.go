@@ -196,7 +196,7 @@ func SelectPondMachinemsg(o orm.Ormer, p models.FindObj, page models.Page) ([]mo
 		o.QueryTable("blocked_detail").Filter("tx_id", lists[i].TxId).One(&blo)
 		lists[i].BloCurrentRevenue = blo.CurrentRevenue
 		rm := blo.CurrentRevenue / lists[i].AccCurrentRevenue
-		lists[i].ReturnMultiple = int(rm)
+		lists[i].ReturnMultiple = rm
 	}
 	return lists, page, nil
 }
