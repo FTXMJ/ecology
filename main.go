@@ -4,6 +4,7 @@ import (
 	"ecology/actuator"
 	"ecology/controllers"
 	"ecology/filter"
+	"ecology/kafka"
 	_ "ecology/routers"
 	"github.com/astaxie/beego"
 	"github.com/robfig/cron"
@@ -12,14 +13,16 @@ import (
 var c = cron.New()
 
 func main() {
-	//定时更新首页数据
+	//开启 kafka ,监听队列消息,并处理
+	go kafka.AllTheTimeListen()
+
+	//定时 每日释放
 	c.AddFunc(beego.AppConfig.String("crontab::schedules"), controllers.DailyDividendAndRelease)
+
+	//定时 行情更新
 	c.AddFunc(beego.AppConfig.String("crontab::real_time_price"), actuator.Second5s)
 	c.Start()
-	//http://localhost:8080/swagger/
-	//bee run -gendoc=true -downdoc=true
-	//bee pack -be GOOS=linux
-	//	"github.com/shopspring/decv"
+
 	if beego.DEV == "dev" {
 		beego.SetStaticPath("/api/v1/ecology/swagger", "swagger")
 	}
@@ -28,3 +31,8 @@ func main() {
 	filter.SetSignKey(sk)
 	beego.Run()
 }
+
+//http://localhost:8080/swagger/
+//bee run -gendoc=true -downdoc=true
+//bee pack -be GOOS=linux
+//	"github.com/shopspring/decv"
