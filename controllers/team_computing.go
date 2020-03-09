@@ -2,7 +2,6 @@ package controllers
 
 import (
 	db "ecology/db"
-	"ecology/kafka"
 	"ecology/models"
 
 	"github.com/astaxie/beego"
@@ -36,7 +35,7 @@ type info struct {
 	three        int
 }
 
-var ecology_orm orm.Ormer
+var Ecology_orm orm.Ormer
 
 // @Tags 测试每日释放
 // @Accept  json
@@ -44,11 +43,11 @@ var ecology_orm orm.Ormer
 // @Success 200
 // @router /admin/test_mrsf [GET]
 func (this *Test) Mrsf() {
-	if ecology_orm == nil {
-		ecology_orm = db.NewEcologyOrm()
+	if Ecology_orm == nil {
+		Ecology_orm = db.NewEcologyOrm()
 	}
 	users := []models.User{}
-	ecology_orm.QueryTable("user").All(&users)
+	Ecology_orm.QueryTable("user").All(&users)
 
 	for _, v := range users {
 		DailyDividendAndReleaseTest(v)
@@ -56,25 +55,12 @@ func (this *Test) Mrsf() {
 	PeerABounsHandler(users)
 }
 
-//                                                         将要处理的数据,加入队列
-func BeginCorn() {
-	if ecology_orm == nil {
-		ecology_orm = db.NewEcologyOrm()
-	}
-	users := []models.User{}
-	ecology_orm.QueryTable("user").All(&users)
-	for _, v := range users {
-		kafka.SendMsg(v, "ecology", "mrsf")
-	}
-	kafka.SendMsg(users, "ecology", "peer")
-}
-
 // 释放 - 团队 - 直推   收益的给定
 func DailyDividendAndReleaseTest(user models.User) {
-	if ecology_orm == nil {
-		ecology_orm = db.NewEcologyOrm()
+	if Ecology_orm == nil {
+		Ecology_orm = db.NewEcologyOrm()
 	}
-	o := ecology_orm
+	o := Ecology_orm
 
 	//    每日释放___and___团队收益___and___直推收益
 	ProducerEcology(o, user, "") // 返回错误的用户名单
@@ -85,10 +71,10 @@ func DailyDividendAndReleaseTest(user models.User) {
 
 // 节点用户的收益分发 - 全网总收益回归正常
 func PeerABounsHandler(users []models.User) {
-	if ecology_orm == nil {
-		ecology_orm = db.NewEcologyOrm()
+	if Ecology_orm == nil {
+		Ecology_orm = db.NewEcologyOrm()
 	}
-	o := ecology_orm
+	o := Ecology_orm
 	// 超级节点的分红
 	in_fo := info{}
 	err_peer := ProducerPeer(users, &in_fo, "")
@@ -118,6 +104,23 @@ func PeerABounsHandler(users []models.User) {
 }
 
 // 执行错误的释放用户
-func ErrorUserMrsf(users, order_id string) {
+func ErrorUserMrsf(users_str []string, order_id string) {
+	if Ecology_orm == nil {
+		Ecology_orm = db.NewEcologyOrm()
+	}
+	o := Ecology_orm
+	users := []models.User{}
+	for _, v := range users_str {
+		u := models.User{UserId: v}
+		o.Read(&u)
+		users = append(users, u)
+	}
 
+	for _, v := range users {
+		//    每日释放___and___团队收益___and___直推收益
+		ProducerEcology(o, v, order_id) // 返回错误的用户名单
+
+		//    给失败的用户　添加失败的任务记录表
+		CreateErrUserTxList(v)
+	}
 }

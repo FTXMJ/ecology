@@ -2,7 +2,6 @@ package main
 
 import (
 	"ecology/actuator"
-	"ecology/controllers"
 	"ecology/filter"
 	"ecology/kafka"
 	_ "ecology/routers"
@@ -17,7 +16,7 @@ func main() {
 	go kafka.AllTheTimeListen()
 
 	//定时 每日释放
-	c.AddFunc(beego.AppConfig.String("crontab::schedules"), controllers.DailyDividendAndRelease)
+	c.AddFunc(beego.AppConfig.String("crontab::schedules"), kafka.BeginCorn)
 
 	//定时 行情更新
 	c.AddFunc(beego.AppConfig.String("crontab::real_time_price"), actuator.Second5s)

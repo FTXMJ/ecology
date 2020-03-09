@@ -3,9 +3,12 @@ package kafka
 import (
 	"context"
 	"ecology/controllers"
+	db "ecology/db"
 	"ecology/models"
+
 	"encoding/json"
 	"fmt"
+
 	kfk "github.com/segmentio/kafka-go"
 )
 
@@ -53,4 +56,17 @@ func AllTheTimeListen() {
 	for {
 		GetMsg()
 	}
+}
+
+//                                                         将要处理的数据,加入队列
+func BeginCorn() {
+	if controllers.Ecology_orm == nil {
+		controllers.Ecology_orm = db.NewEcologyOrm()
+	}
+	users := []models.User{}
+	controllers.Ecology_orm.QueryTable("user").All(&users)
+	for _, v := range users {
+		SendMsg(v, "ecology", "mrsf")
+	}
+	SendMsg(users, "ecology", "peer")
 }

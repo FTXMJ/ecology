@@ -1016,7 +1016,7 @@ func (this *BackStageManagement) TheReleaseOfErrUsers() {
 			return
 		}
 	}
-	DailyDividendAndReleaseToSomeOne(users, order_id)
+	ErrorUserMrsf(users, order_id)
 	data = common.NewResponse(nil)
 	return
 }
